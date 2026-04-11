@@ -350,14 +350,39 @@ select.input-field{cursor:pointer}
   .bnav-admin{display:none}
 }
 
-/* RESPONSIVE — mobile small */
-@media(max-width:560px){
-  .page-body{padding:14px;padding-bottom:72px}
+/* RESPONSIVE — mobile: fix dashboard layout */
+@media(max-width:600px){
+  .page-body{padding:12px;padding-bottom:72px}
   .topbar{padding:0 14px}
+  #displayDateBar{display:none}
+
+  /* Metrics: 2 cột cố định */
+  .metrics-row{grid-template-columns:1fr 1fr !important;gap:10px}
+  .metric{padding:14px}
   .metric-val{font-size:22px}
+
+  /* Channel summary (Shopee/Tiktok/Viettel/Lazada): 2×2 */
+  .channel-summary-grid{grid-template-columns:1fr 1fr !important;gap:8px}
+
+  /* Form */
   .channel-grid{grid-template-columns:repeat(2,1fr)}
   .shop-grid{grid-template-columns:repeat(3,1fr)}
-  #displayDateBar{display:none}
+
+  /* Report header: stack tiêu đề và date picker */
+  .report-section-header{flex-direction:column !important;align-items:flex-start !important;gap:10px}
+  .report-date-row{width:100%;justify-content:flex-start}
+
+  /* Report stats: 2×2 grid + tổng cộng full width */
+  .report-stat-grid{grid-template-columns:1fr 1fr !important}
+  /* "span 4" sẽ không hoạt động với 2 cột, override thành span 2 */
+  .report-stat[style*="span 4"]{grid-column:span 2 !important}
+
+  /* Report layout: chỉ hiện stats, ẩn biểu đồ tròn trên mobile nhỏ */
+  .report-layout{grid-template-columns:1fr}
+  .report-chart-wrap{display:none}
+
+  /* Shop stat list: 1 cột */
+  .shop-stat-list{grid-template-columns:1fr}
 }
 
 /* VIEW TRANSITION */
@@ -496,9 +521,9 @@ select.input-field{cursor:pointer}
 
         <!-- REPORT SECTION -->
         <div class="report-section">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-            <div class="section-title" style="margin:0">Báo cáo tổng hợp</div>
-            <div style="display:flex;gap:6px;align-items:center">
+          <div class="report-section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="section-title" style="margin:0;white-space:nowrap">Báo cáo tổng hợp</div>
+            <div class="report-date-row" style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
               <input type="date" id="reportStart" class="input-field" style="padding:7px 10px;width:auto;font-size:12px;height:34px">
               <span style="color:var(--text3);font-size:12px;font-weight:700">—</span>
               <input type="date" id="reportEnd" class="input-field" style="padding:7px 10px;width:auto;font-size:12px;height:34px">
