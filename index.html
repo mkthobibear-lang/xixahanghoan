@@ -488,6 +488,23 @@ select.input-field{cursor:pointer}
 
       <!-- ADMIN DASHBOARD VIEW -->
       <div id="adminView">
+
+        <!-- DASHBOARD LOADING OVERLAY -->
+        <div id="dashLoading" style="display:none;position:fixed;inset:0;background:rgba(var(--bg-rgb,245,245,240),.85);backdrop-filter:blur(3px);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:18px">
+          <div style="position:relative;width:64px;height:64px">
+            <svg style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)" viewBox="0 0 64 64">
+              <circle cx="32" cy="32" r="28" fill="none" stroke="var(--border)" stroke-width="5"/>
+              <circle id="dashProgressCircle" cx="32" cy="32" r="28" fill="none" stroke="var(--text)" stroke-width="5" stroke-linecap="round"
+                stroke-dasharray="175.93" stroke-dashoffset="175.93" style="transition:stroke-dashoffset .3s ease"/>
+            </svg>
+            <div id="dashPctText" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:800;color:var(--text)">0%</div>
+          </div>
+          <div id="dashLoadingText" style="font-size:13px;font-weight:600;color:var(--text2)">Đang tải dữ liệu...</div>
+          <div style="width:180px;height:3px;background:var(--border);border-radius:100px;overflow:hidden">
+            <div id="dashProgressBar" style="height:100%;background:var(--text);width:0%;transition:width .3s ease;border-radius:100px"></div>
+          </div>
+        </div>
+
         <div class="metrics-row" id="adminMetrics">
           <div class="metric" style="cursor:pointer" onclick="openMetricDetail('all')"><div class="metric-label">Tổng tháng này</div><div class="metric-val" id="m-total">—</div><div class="metric-sub">đơn hoàn</div><div class="metric-badge badge-sky"><span class="material-icons-round">inbox</span></div></div>
           <div class="metric" style="cursor:pointer" onclick="openMetricDetail('good')"><div class="metric-label">Hàng tốt</div><div class="metric-val" id="m-good" style="color:var(--green)">—</div><div class="metric-sub" id="m-good-pct">—%</div><div class="metric-badge badge-green"><span class="material-icons-round">check_circle</span></div></div>
@@ -937,18 +954,51 @@ function initMonthlyChart(){
   loadMonthlyStats();
 }
 
+// DASHBOARD LOADING
+let dashLoadInterval=null;
+function showDashLoading(show,text="Đang tải dữ liệu..."){
+  const el=document.getElementById('dashLoading');
+  if(show){
+    el.style.display='flex';
+    document.getElementById('dashLoadingText').innerText=text;
+    setDashProgress(0);
+    clearInterval(dashLoadInterval);
+    let p=0;
+    dashLoadInterval=setInterval(()=>{
+      if(p<88){p+=Math.random()*6;setDashProgress(Math.min(p,88));}
+    },250);
+  }else{
+    clearInterval(dashLoadInterval);
+    setDashProgress(100);
+    setTimeout(()=>{el.style.display='none';setDashProgress(0)},350);
+  }
+}
+function setDashProgress(p){
+  const pct=Math.floor(p);
+  const circumference=175.93;
+  const offset=circumference-(circumference*p/100);
+  const circle=document.getElementById('dashProgressCircle');
+  const bar=document.getElementById('dashProgressBar');
+  const txt=document.getElementById('dashPctText');
+  if(circle)circle.style.strokeDashoffset=offset;
+  if(bar)bar.style.width=pct+'%';
+  if(txt)txt.innerText=pct+'%';
+}
+
 function loadMonthlyStats(){
   const m=document.getElementById('monthSelect').value;
   if(!m)return;
+  showDashLoading(true,"Đang tải tháng "+m.slice(5)+" / "+m.slice(0,4)+" ...");
+  let done=0;
+  const checkDone=()=>{done++;if(done>=2)showDashLoading(false)};
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"report_daily_channel",month:m})})
-  .then(r=>r.json()).then(d=>{if(d.result==='success')renderMonthlyChart(d)});
+  .then(r=>r.json()).then(d=>{if(d.result==='success')renderMonthlyChart(d);checkDone();})
+  .catch(checkDone);
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:m})})
   .then(r=>r.json()).then(res=>{
-    if(res.result==='success'){
-      renderShopStats(res.data);
-      updateAdminMetrics(res.data);
-    }
-  });
+    if(res.result==='success'){renderShopStats(res.data);updateAdminMetrics(res.data);}
+    checkDone();
+  }).catch(checkDone);
 }
 
 function updateAdminMetrics(orders){
