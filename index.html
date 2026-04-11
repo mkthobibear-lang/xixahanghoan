@@ -78,6 +78,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .icon-btn .material-icons-round{font-size:18px}
 .page-body{padding:24px 28px;flex:1}
 
+@media(max-width:860px){
+  .topbar{position:fixed;top:0;left:0;right:0;z-index:80}
+  .main-content{padding-top:56px}
+}
+
 /* CARDS & SURFACES */
 .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow)}
 .card-header{padding:18px 20px 0;display:flex;justify-content:space-between;align-items:center}
