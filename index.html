@@ -1,1440 +1,1331 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>XIXA - Kho Hàng Hoàn V7.4 (Fixed Ripple)</title>
-    
-    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/679/679720.png" type="image/x-icon">
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
-    
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-    <script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>XIXA — Kho Hàng Hoàn v8</title>
+<link rel="icon" href="https://cdn-icons-png.flaticon.com/512/679/679720.png" type="image/x-icon">
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+<script src="https://unpkg.com/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+<style>
+:root {
+  --bg: #f5f5f0;
+  --surface: #ffffff;
+  --surface2: #fafaf8;
+  --border: rgba(0,0,0,0.08);
+  --border-strong: rgba(0,0,0,0.15);
+  --text: #1a1a18;
+  --text2: #5c5c58;
+  --text3: #9a9a94;
+  --accent: #1a1a18;
+  --blue: #2563eb;
+  --orange: #ea580c;
+  --green: #16a34a;
+  --amber: #d97706;
+  --red: #dc2626;
+  --sky: #0ea5e9;
+  --r: 12px;
+  --r-lg: 20px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  --shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+}
+body.dark {
+  --bg: #0d0d0b;
+  --surface: #1a1a18;
+  --surface2: #141412;
+  --border: rgba(255,255,255,0.08);
+  --border-strong: rgba(255,255,255,0.15);
+  --text: #f5f5f0;
+  --text2: #a0a09a;
+  --text3: #5c5c58;
+  --blue: #60a5fa;
+  --orange: #fb923c;
+  --green: #4ade80;
+  --amber: #fbbf24;
+  --red: #f87171;
+  --sky: #38bdf8;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .2s,color .2s}
 
-    <style>
-        /* --- CSS VARIABLES --- */
-        :root {
-            /* [LIGHT MODE] */
-            --xixa-grad: linear-gradient(135deg, #0ea5e9, #84cc16, #f43f5e, #eab308);
-            --xixa-blue: #0ea5e9;
-            --xixa-red: #f43f5e;
-            
-            --bg-body: #f8fafc;
-            --bg-card: #ffffff;
-            --bg-input: #f1f5f9;
-            --bg-input-focus: #ffffff;
-            --bg-hover: #f0f9ff;
-            
-            --text-main: #1e293b;
-            --text-sub: #64748b;
-            --text-muted: #94a3b8;
-            
-            --border-color: #e2e8f0;
-            --border-dashed: #cbd5e1;
-            
-            --glass-shadow: 0 10px 40px -10px rgba(0,0,0,0.1);
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.03);
-            
-            --lazada-color: #0f146d; 
-        }
+/* LAYOUT */
+.app-shell{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;position:fixed;top:0;left:0;bottom:0;z-index:100;transition:.3s}
+.sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
+.sidebar-logo img{height:36px}
+.sidebar-logo .ver{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-top:4px}
+.nav-section{padding:12px 10px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;padding:8px 10px 4px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--text2);transition:.15s;margin-bottom:2px}
+.nav-item:hover{background:var(--bg);color:var(--text)}
+.nav-item.active{background:var(--text);color:var(--bg)}
+.nav-item .material-icons-round{font-size:18px}
+.sidebar-footer{padding:14px 10px;border-top:1px solid var(--border)}
+.sidebar-footer .user-row{display:flex;align-items:center;gap:10px}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:var(--text);color:var(--bg);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;flex-shrink:0}
+.user-name{font-weight:700;font-size:13px;color:var(--text)}
+.user-role{font-size:11px;color:var(--text3)}
 
-        /* [DARK MODE] */
-        body.dark-mode {
-            --bg-body: #0f172a;
-            --bg-card: #1e293b;
-            --bg-input: #334155;
-            --bg-input-focus: #475569;
-            --bg-hover: #334155;
-            
-            --text-main: #f1f5f9;
-            --text-sub: #cbd5e1;
-            --text-muted: #64748b;
-            
-            --border-color: #334155;
-            --border-dashed: #475569;
-            
-            --glass-shadow: 0 10px 40px -10px rgba(0,0,0,0.5);
-            --card-shadow: 0 4px 20px rgba(0,0,0,0.2);
+.main-content{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.page-title{font-size:15px;font-weight:700;color:var(--text)}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.15s}
+.icon-btn:hover{background:var(--bg);color:var(--text)}
+.icon-btn .material-icons-round{font-size:18px}
+.page-body{padding:24px 28px;flex:1}
 
-            --lazada-color: #38bdf8;
-        }
+/* CARDS & SURFACES */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow)}
+.card-header{padding:18px 20px 0;display:flex;justify-content:space-between;align-items:center}
+.card-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
+.card-body{padding:18px 20px}
 
-        /* [VIEW TRANSITION API - HIỆU ỨNG LAN TỎA] */
-        ::view-transition-old(root),
-        ::view-transition-new(root) {
-            animation: none;
-            mix-blend-mode: normal;
-            height: 100%;
-        }
-        
-        /* Giữ lại màn hình cũ trong khi màn hình mới phủ lên */
-        ::view-transition-old(root) {
-            z-index: 1;
-        }
-        
-        /* Màn hình mới sẽ nằm trên và được clip-path mở rộng ra */
-        ::view-transition-new(root) {
-            z-index: 9999;
-        }
+/* METRIC CARDS */
+.metrics-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
+.metric-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
+.metric-val{font-size:28px;font-weight:800;letter-spacing:-1px;font-family:'JetBrains Mono',monospace;color:var(--text)}
+.metric-sub{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500}
+.metric-badge{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center}
+.metric-badge .material-icons-round{font-size:16px}
+.badge-green{background:rgba(22,163,74,.12);color:var(--green)}
+.badge-amber{background:rgba(217,119,6,.12);color:var(--amber)}
+.badge-red{background:rgba(220,38,38,.12);color:var(--red)}
+.badge-sky{background:rgba(14,165,233,.12);color:var(--sky)}
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        body { font-family: 'Manrope', sans-serif; background-color: var(--bg-body); margin: 0; padding: 15px; min-height: 100vh; display: flex; justify-content: center; color: var(--text-main); }
-        
-        .container { 
-            width: 100%; 
-            max-width: 600px;
-            background: var(--bg-card); border-radius: 24px; 
-            box-shadow: var(--glass-shadow); 
-            padding: 25px; 
-            position: relative; overflow: hidden; display: none; 
-            transition: max-width 0.3s ease; 
-        }
-        .top-line { position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--xixa-grad); }
-        .text-gradient { background: var(--xixa-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; display: inline-block; }
-        .icon-gradient { background: var(--xixa-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; vertical-align: middle; margin-right: 6px; font-size: 20px; }
-        
-        .header-section { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; margin-bottom: 25px; border-bottom: 1px dashed var(--border-color); position: relative; }
-        .logo-img { height: 60px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05)); position: relative; z-index: 2; }
-        .header-center { position: absolute; left: 50%; transform: translateX(-50%); text-align: center; width: 100%; z-index: 1; pointer-events: none; }
-        .app-title { font-size: 24px; font-weight: 800; margin: 0; letter-spacing: -0.5px; text-transform: uppercase; background: var(--xixa-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .user-info { text-align: right; position: relative; z-index: 2; background: var(--bg-card); padding-left: 10px; }
-        .user-name { font-weight: 800; color: var(--xixa-blue); font-size: 15px; }
-        
-        .user-actions { display: flex; gap: 15px; justify-content: flex-end; margin-top: 4px; font-size: 12px; font-weight: 600; color: var(--text-sub); }
-        .action-link { cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 3px; }
-        .action-link:hover { color: var(--xixa-blue); }
-        
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
-        label { font-size: 12px; font-weight: 700; color: var(--text-sub); text-transform: uppercase; margin-bottom: 8px; display: block; letter-spacing: 0.5px; }
-        
-        .input-wrapper { position: relative; border-radius: 12px; background: var(--bg-input); padding: 2px; transition: 0.3s; display: flex; align-items: center; }
-        .input-wrapper::before { content: ""; position: absolute; inset: 0; border-radius: 12px; padding: 2px; background: var(--xixa-grad); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
-        .input-wrapper:focus-within::before, .input-wrapper.active-border::before { opacity: 1; animation: borderRotate 3s linear infinite; background-size: 200% 200%; }
-        
-        .input-box { width: 100%; padding: 12px 15px; border: none; border-radius: 10px; background: var(--bg-input); color: var(--text-main); font-family: 'Manrope'; font-size: 15px; font-weight: 600; outline: none; transition: 0.3s; }
-        .input-wrapper:focus-within { background: var(--bg-card); box-shadow: 0 4px 15px rgba(0,0,0,0.05); transform: translateY(-1px); }
-        .input-wrapper:focus-within .input-box { background: var(--bg-input-focus); }
-        
-        @keyframes borderRotate { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
-        
-        .channel-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 25px; }
-        .channel-opt { display: none; }
-        .channel-card { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 15px 10px; border-radius: 16px; background: var(--bg-card); border: 1px solid var(--border-color); cursor: pointer; transition: all 0.25s ease; height: 100px; overflow: hidden; }
-        .channel-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: var(--xixa-blue); }
-        .channel-card img { width: 36px; height: 36px; object-fit: contain; margin-bottom: 8px; filter: grayscale(100%); opacity: 0.6; transition: 0.2s; }
-        .channel-card span { font-size: 13px; font-weight: 600; color: var(--text-sub); transition: 0.2s; }
-        .channel-opt:checked + .channel-card { border-color: transparent; background: var(--bg-card); box-shadow: 0 8px 20px rgba(14, 165, 233, 0.15); }
-        .channel-opt:checked + .channel-card::after { content: ""; position: absolute; inset: 0; border-radius: 16px; padding: 2px; background: var(--xixa-grad); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; }
-        .channel-opt:checked + .channel-card img { filter: grayscale(0); opacity: 1; transform: scale(1.1); }
-        .channel-opt:checked + .channel-card span { color: var(--text-main); font-weight: 800; background: var(--xixa-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        
-        .shop-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; animation: fadeIn 0.3s ease; }
-        .shop-opt { display: none; }
-        .shop-card { display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 8px 2px; border-radius: 10px; border: 1px solid var(--border-color); background: var(--bg-input); cursor: pointer; transition: 0.2s; height: 95px; }
-        .shop-card img { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; margin-bottom: 6px; border: 1px solid var(--bg-card); box-shadow: 0 2px 5px rgba(0,0,0,0.05); filter: grayscale(100%); transition: 0.2s; }
-        .shop-card span { font-size: 9px; font-weight: 700; text-align: center; color: var(--text-sub); line-height: 1.2; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; word-break: break-word; }
-        .shop-opt:checked + .shop-card { background: var(--bg-card); border-color: var(--xixa-blue); box-shadow: 0 3px 10px rgba(14, 165, 233, 0.1); transform: translateY(-2px); }
-        .shop-opt:checked + .shop-card img { filter: grayscale(0); border-color: var(--xixa-blue); transform: scale(1.1); }
-        .shop-opt:checked + .shop-card span { color: var(--xixa-blue); }
+/* STATUS PILLS */
+.pill{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:100px;font-size:11px;font-weight:700}
+.pill-green{background:rgba(22,163,74,.1);color:var(--green)}
+.pill-amber{background:rgba(217,119,6,.1);color:var(--amber)}
+.pill-red{background:rgba(220,38,38,.1);color:var(--red)}
+.pill-sky{background:rgba(14,165,233,.1);color:var(--sky)}
+.pill-gray{background:rgba(0,0,0,.06);color:var(--text2)}
 
-        .btn-scan { background: none; border: none; cursor: pointer; padding: 0 10px; color: var(--text-sub); transition: 0.2s; border-left: 1px solid var(--border-dashed); height: 24px; display: flex; align-items: center; justify-content: center; }
-        .btn-scan:hover { color: var(--xixa-blue); transform: scale(1.1); }
+/* FORM ELEMENTS */
+label.form-label{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;display:block;margin-bottom:7px}
+.input-field{width:100%;padding:11px 14px;border:1px solid var(--border-strong);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;outline:none;transition:.15s}
+.input-field:focus{border-color:var(--text);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+.input-field::placeholder{color:var(--text3)}
+.input-with-action{display:flex;align-items:center;gap:0;border:1px solid var(--border-strong);border-radius:var(--r);background:var(--surface2);overflow:hidden;transition:.15s}
+.input-with-action:focus-within{border-color:var(--text);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+.input-with-action .input-field{border:none;background:transparent;box-shadow:none}
+.input-action-btn{padding:0 12px;border:none;border-left:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;height:100%;display:flex;align-items:center;transition:.15s}
+.input-action-btn:hover{color:var(--text);background:var(--bg)}
+.input-action-btn .material-icons-round{font-size:17px}
 
-        .btn-copy-mini { background: none; border: none; cursor: pointer; padding: 4px; color: var(--text-sub); transition: 0.2s; display: flex; align-items: center; justify-content: center; border-radius: 4px; margin-left: 8px; }
-        .btn-copy-mini:hover { background: var(--bg-hover); color: var(--xixa-blue); }
-        
-        .product-row, .missing-row { display: flex; gap: 10px; margin-bottom: 10px; animation: fadeIn 0.3s ease; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
-        .btn-icon-only { width: 44px; display: flex; align-items: center; justify-content: center; border-radius: 10px; background: #fee2e2; color: #ef4444; border: none; cursor: pointer; transition: 0.2s; }
-        .btn-text { background: none; border: none; color: var(--xixa-blue); font-weight: 700; font-family: 'Manrope'; cursor: pointer; padding: 8px 0; display: inline-flex; align-items: center; gap: 5px; font-size: 14px; }
-        .btn-submit { width: 100%; padding: 18px; border: none; border-radius: 16px; background-image: var(--xixa-grad); background-size: 200% auto; color: white; font-family: 'Manrope'; font-size: 16px; font-weight: 800; text-transform: uppercase; cursor: pointer; margin-top: 25px; box-shadow: 0 10px 30px -5px rgba(14, 165, 233, 0.4); transition: 0.3s; }
-        .btn-submit:hover { background-position: right center; transform: translateY(-2px); box-shadow: 0 15px 35px -5px rgba(14, 165, 233, 0.5); }
-        
-        .upload-zone { border: 2px dashed var(--border-dashed); border-radius: 16px; overflow: hidden; text-align: center; background: var(--bg-input); transition: 0.3s; position: relative; }
-        .upload-zone:hover { border-color: var(--xixa-blue); }
-        .upload-actions { display: flex; height: 90px; }
-        .upload-btn-half { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; cursor: pointer; transition: 0.2s; border-right: 1px dashed var(--border-dashed); }
-        .upload-btn-half:last-child { border-right: none; }
-        .upload-btn-half:active { background: var(--border-color); }
-        .upload-btn-half .mat-icon { font-size: 28px; margin-bottom: 5px; color: var(--xixa-blue); }
-        .upload-btn-half span { font-size: 12px; font-weight: 700; color: var(--text-sub); }
-        #imagePreviewBox { display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr)); gap: 8px; width: 100%; padding: 15px; border-top: 1px dashed var(--border-color); background: var(--bg-card); }
-        .img-wrapper { position: relative; aspect-ratio: 1; width: 100%; }
-        .img-preview { width: 100%; height: 100%; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
-        .btn-del-img { position: absolute; top: -5px; right: -5px; background: var(--xixa-red); color: white; width: 20px; height: 20px; border-radius: 50%; font-size: 10px; display: flex; justify-content: center; align-items: center; cursor: pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-        
-        .history-section { margin-top: 40px; padding-top: 25px; border-top: 2px dashed var(--border-color); }
-        .search-box { position: relative; }
-        .search-input { width: 100%; padding: 12px 45px 12px 20px; border-radius: 50px; border: 1px solid var(--border-color); outline: none; transition: 0.3s; background: var(--bg-input); font-family: 'Manrope'; color: var(--text-main); }
-        .search-input:focus { border-color: var(--xixa-blue); background: var(--bg-card); box-shadow: 0 0 0 4px rgba(14,165,233,0.1); }
-        .search-btn { position: absolute; right: 5px; top: 50%; transform: translateY(-50%); width: 34px; height: 34px; border-radius: 50%; background: var(--xixa-grad); border: none; color: white; display: flex; justify-content: center; align-items: center; cursor: pointer; }
-        
-        .channel-group { background: var(--bg-card); border: 1px solid var(--bg-input); border-radius: 16px; margin-bottom: 12px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.02); transition: 0.3s; }
-        .channel-header { padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; background: var(--bg-input); transition: 0.2s; }
-        .channel-header:hover { background: var(--bg-hover); }
-        .channel-items { display: block; border-top: 1px solid var(--bg-input); animation: expand 0.3s ease-out; }
-        .channel-group.collapsed .channel-items { display: none; }
-        .channel-group.collapsed .chevron { transform: rotate(-90deg); }
-        .chevron { transition: 0.3s; color: var(--text-muted); }
-        @keyframes expand { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
-        
-        .history-item { padding: 12px 15px; border-bottom: 1px dashed var(--bg-input); display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: 0.2s; }
-        .history-item:last-child { border-bottom: none; }
-        .history-item:hover { background: var(--bg-hover); }
-        
-        #loginScreen { position: fixed; inset: 0; background: var(--bg-body); z-index: 5000; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 30px; transition: background 0.3s; }
-        .login-card { width: 100%; max-width: 380px; text-align: center; display: flex; flex-direction: column; align-items: center; }
-        .login-logo { width: 140px; margin-bottom: 25px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.08)); }
-        #loginForm { width: 100%; }
-        .password-toggle { cursor: pointer; padding: 0 10px; color: var(--text-muted); user-select: none; }
-        
-        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; opacity: 0; transition: 0.3s; }
-        .modal-content { background: var(--bg-card); width: 100%; max-width: 450px; border-radius: 24px; overflow: hidden; transform: scale(0.9); transition: 0.3s; position: relative; color: var(--text-main); }
-        .modal-open { display: flex; opacity: 1; }
-        .modal-open .modal-content { transform: scale(1); }
-        .modal-header { padding: 20px; background: linear-gradient(to bottom, var(--bg-hover), var(--bg-card)); border-bottom: 1px solid var(--border-color); text-align: center; }
-        .modal-body { padding: 25px; }
-        .close-btn { position: absolute; top: 15px; right: 15px; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--bg-card); color: var(--text-sub); cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
-        .close-btn:hover { background: var(--bg-hover); color: var(--xixa-red); }
+select.input-field{cursor:pointer}
 
-        #subDetailModal { z-index: 3000; }
-        #subDetailModal .modal-content { max-width: 360px; border: 1px solid var(--border-color); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+.form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 
-        .scan-upload-btn { background: #334155; color: white; border: 1px solid #475569; padding: 10px 20px; border-radius: 50px; font-family: 'Manrope'; font-size: 13px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; margin-top: 15px; transition: 0.2s; }
-        .scan-upload-btn:active { transform: scale(0.95); }
-        
-        .detail-row { margin-bottom: 15px; border-bottom: 1px dashed var(--border-color); padding-bottom: 10px; }
-        .detail-label { font-size: 12px; color: var(--text-muted); font-weight: 800; text-transform: uppercase; margin-bottom: 6px; letter-spacing: 0.5px; }
-        .detail-value { font-size: 17px; color: var(--text-main); font-weight: 700; line-height: 1.5; display: flex; align-items: center; gap: 8px;}
-        .detail-imgs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-        .detail-img-thumb { width: 70px; height: 70px; border-radius: 12px; object-fit: cover; border: 2px solid var(--bg-card); cursor: pointer; background: var(--bg-input); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
-        
-        .report-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
-        .stat-box { padding: 15px; border-radius: 12px; text-align: center; background: var(--bg-input); border: 1px solid var(--border-color); }
-        .stat-val { font-size: 20px; font-weight: 900; }
-        .stat-lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-sub); margin-top: 5px; }
-        
-        #scanner-container { width: 100%; border-radius: 16px; overflow: hidden; background: black; position: relative; }
-        #reader { width: 100%; height: 100%; }
-        #reader video { object-fit: cover; }
-        #ocr-status { margin-top: 10px; font-size: 12px; font-weight: 700; color: #f59e0b; animation: pulse 1s infinite; }
-        @media (max-width: 600px) { .header-section { height: auto; min-height: 60px; } .form-grid { grid-template-columns: 1fr; } .container { padding: 20px; } }
+/* CHANNEL SELECTOR */
+.channel-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:22px}
+.channel-opt{display:none}
+.channel-card{border:2px solid var(--border);border-radius:var(--r);padding:14px 10px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:8px;background:var(--surface);position:relative}
+.channel-card:hover{border-color:var(--border-strong);transform:translateY(-2px);box-shadow:var(--shadow)}
+.channel-card img{width:36px;height:36px;object-fit:contain;filter:grayscale(1);opacity:.45;transition:.2s}
+.channel-card span{font-size:12px;font-weight:700;color:var(--text3);transition:.15s}
+.channel-opt:checked+.channel-card{border-color:var(--blue);background:rgba(37,99,235,.06);box-shadow:0 0 0 3px rgba(37,99,235,.1),var(--shadow);transform:translateY(-2px)}
+.channel-opt:checked+.channel-card img{filter:grayscale(0);opacity:1;transform:scale(1.1)}
+.channel-opt:checked+.channel-card span{color:var(--blue);font-weight:800}
 
-        #loading { position: fixed; inset: 0; background: rgba(255,255,255,0.95); z-index: 6000; display: none; justify-content: center; align-items: center; flex-direction: column; transition: background 0.3s; }
-        body.dark-mode #loading { background: rgba(15, 23, 42, 0.95); }
-        .loading-logo-spin { width: 100px; animation: pulse 1s infinite; filter: drop-shadow(0 10px 10px rgba(14, 165, 233, 0.3)); }
-        @keyframes pulse { 0% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.05); opacity: 0.8; } 100% { transform: scale(1); opacity: 1; } }
-        
-        .progress-container { width: 220px; margin-top: 20px; }
-        .progress-bar-bg { width: 100%; height: 8px; background: var(--border-color); border-radius: 10px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; background: var(--xixa-grad); width: 0%; transition: width 0.3s ease; }
-        .progress-status { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
-        .status-text { font-size: 13px; font-weight: 600; color: var(--text-sub); }
-        .percent-text { font-size: 14px; font-weight: 800; color: var(--xixa-blue); }
+/* SHOP GRID */
+.shop-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px}
+.shop-opt{display:none}
+.shop-card{border:1px solid var(--border);border-radius:var(--r);padding:10px 6px;cursor:pointer;transition:.15s;display:flex;flex-direction:column;align-items:center;gap:6px;background:var(--surface2)}
+.shop-card:hover{border-color:var(--border-strong)}
+.shop-card img{width:34px;height:34px;border-radius:50%;object-fit:cover;filter:grayscale(.8);transition:.15s;border:2px solid transparent}
+.shop-card span{font-size:9.5px;font-weight:700;color:var(--text3);text-align:center;line-height:1.3;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.shop-opt:checked+.shop-card{border-color:var(--blue);background:rgba(37,99,235,.05)}
+.shop-opt:checked+.shop-card img{filter:grayscale(0);border-color:var(--blue)}
+.shop-opt:checked+.shop-card span{color:var(--blue)}
 
-        .admin-only { display: none !important; }
-        .admin-only.visible { display: flex !important; }
-        
-        #adminDashboard { display: none; margin-bottom: 25px; animation: fadeIn 0.5s; }
-        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .chart-container { position: relative; height: 320px; width: 100%; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 20px; padding: 15px; box-shadow: var(--card-shadow); }
+/* PRODUCT ROWS */
+.product-row,.missing-row{display:flex;gap:8px;margin-bottom:8px;animation:fadeUp .2s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+.btn-remove{width:40px;flex-shrink:0;border-radius:var(--r);border:1px solid rgba(220,38,38,.2);background:rgba(220,38,38,.06);color:var(--red);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s}
+.btn-remove:hover{background:rgba(220,38,38,.15)}
+.btn-remove .material-icons-round{font-size:17px}
+.btn-text-action{background:none;border:none;color:var(--blue);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;padding:6px 0;display:inline-flex;align-items:center;gap:5px}
+.btn-text-action .material-icons-round{font-size:16px}
 
-        .clickable-box { flex: 1; background: var(--bg-card); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center; cursor: pointer; transition: 0.2s; user-select: none; }
-        .clickable-box:hover { transform: translateY(-3px); box-shadow: var(--card-shadow); border-color: var(--xixa-blue); }
-        .clickable-box:active { transform: scale(0.95); }
+/* SUBMIT */
+.btn-primary{width:100%;padding:15px;border:none;border-radius:var(--r-lg);background:var(--text);color:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:.15s;margin-top:24px}
+.btn-primary:hover{opacity:.85;transform:translateY(-1px)}
+.btn-primary:active{transform:scale(.99)}
 
-        .admin-shop-group { margin-top: 15px; background: var(--bg-input); border-radius: 12px; padding: 10px; border: 1px dashed var(--border-dashed); }
-        .admin-shop-group-title { font-size: 12px; font-weight: 800; color: var(--text-sub); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
-        
-        .admin-shop-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        
-        .admin-shop-item { 
-            background: var(--bg-card); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px; 
-            display: flex; align-items: center; gap: 8px; cursor: pointer; transition: 0.2s; 
-            min-width: 0; 
-        }
-        .admin-shop-item:hover { border-color: var(--xixa-blue); transform: translateX(2px); }
-        .admin-shop-item img { width: 28px; height: 28px; border-radius: 50%; object-fit: cover; border: 1px solid var(--bg-input); flex-shrink: 0; }
-        .admin-shop-name { 
-            font-size: 11px; font-weight: 600; color: var(--text-main); line-height: 1.2; 
-            white-space: nowrap; overflow: hidden; text-overflow: ellipsis; 
-            flex: 1; min-width: 0; 
-        }
-        
-        /* [V6.9] NEW STAT PILLS IN ADMIN SHOP ITEM */
-        .shop-stat-bar { display: flex; gap: 3px; align-items: center; margin: 0 5px; }
-        .stat-dot { 
-            font-size: 9px; padding: 1px 5px; border-radius: 4px; font-weight: 700; 
-            color: white; min-width: 14px; text-align: center; 
-            cursor: pointer; transition: 0.2s;
-        }
-        .stat-dot:hover { transform: scale(1.2); }
-        .stat-dot.good { background: #10b981; }
-        .stat-dot.dirty { background: #f59e0b; }
-        .stat-dot.error { background: #ef4444; }
-        .stat-dot.warranty { background: #0ea5e9; }
+/* UPLOAD */
+.upload-zone{border:2px dashed var(--border-strong);border-radius:var(--r-lg);overflow:hidden;background:var(--surface2);transition:.2s}
+.upload-zone:hover{border-color:var(--blue)}
+.upload-actions{display:grid;grid-template-columns:1fr 1fr;min-height:110px;gap:0}
+.upload-half{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;cursor:pointer;transition:.2s;border-right:2px dashed var(--border-strong);padding:20px 10px;position:relative;overflow:hidden}
+.upload-half:last-child{border-right:none}
+.upload-half:hover{background:rgba(37,99,235,.04)}
+.upload-half:hover .upload-icon-wrap{background:var(--blue);color:white;transform:scale(1.08)}
+.upload-half:hover .upload-label{color:var(--blue)}
+.upload-icon-wrap{width:44px;height:44px;border-radius:12px;background:rgba(37,99,235,.1);color:var(--blue);display:flex;align-items:center;justify-content:center;transition:.2s;flex-shrink:0}
+.upload-icon-wrap .material-icons-round{font-size:22px}
+.upload-label{font-size:12px;font-weight:800;color:var(--text2);text-transform:uppercase;letter-spacing:.6px;transition:.15s}
+.upload-sublabel{font-size:10px;font-weight:500;color:var(--text3)}
+#imagePreviewBox{display:grid;grid-template-columns:repeat(auto-fill,minmax(72px,1fr));gap:8px;padding:14px;border-top:2px dashed var(--border)}
+#imagePreviewBox:empty{display:none}
+.img-wrapper{position:relative;aspect-ratio:1;border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.img-preview{width:100%;height:100%;object-fit:cover;display:block;transition:.2s}
+.img-wrapper:hover .img-preview{transform:scale(1.04)}
+.btn-del-img{position:absolute;top:4px;right:4px;width:20px;height:20px;border-radius:6px;background:rgba(0,0,0,.65);backdrop-filter:blur(4px);color:white;font-size:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;font-weight:800}
+.btn-del-img:hover{background:var(--red)}
+.upload-count-badge{position:absolute;top:8px;left:8px;background:var(--blue);color:white;font-size:10px;font-weight:800;padding:2px 7px;border-radius:100px;font-family:'JetBrains Mono',monospace}
 
-        .admin-shop-count { font-weight: 800; color: var(--xixa-blue); margin-left: auto; font-size: 13px; flex-shrink: 0; }
+/* HISTORY */
+.history-group{border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden;background:var(--surface)}
+.history-group-header{padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;background:var(--surface2);transition:.15s}
+.history-group-header:hover{background:var(--bg)}
+.chevron{transition:.25s;color:var(--text3)}
+.history-group.collapsed .chevron{transform:rotate(-90deg)}
+.history-group.collapsed .group-body{display:none}
+.group-body{border-top:1px solid var(--border);animation:fadeUp .2s ease}
+.history-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:.15s}
+.history-item:last-child{border-bottom:none}
+.history-item:hover{background:var(--bg)}
+.history-code{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-product{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-shop{font-size:10px;color:var(--text3);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.history-time{font-size:10px;color:var(--text3);font-weight:600;font-family:'JetBrains Mono',monospace}
 
-        @media (min-width: 768px) {
-            .container { max-width: 900px; }
-            .channel-grid { grid-template-columns: repeat(4, 1fr); }
-            .admin-shop-list { grid-template-columns: repeat(2, 1fr); } 
-            .shop-grid { grid-template-columns: repeat(5, 1fr); }
-            .modal-content { max-width: 600px; }
-            #channelDetailModal .modal-content { max-width: 700px; }
-            .upload-actions { gap: 20px; }
-            .upload-btn-half { border-right: none; background: var(--bg-card); border: 1px dashed var(--border-dashed); border-radius: 12px; }
-            .upload-btn-half:hover { border-color: var(--xixa-blue); background: var(--bg-hover); }
-        }
-    </style>
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);z-index:1000;display:none;align-items:center;justify-content:center;padding:16px;opacity:0;transition:opacity .2s}
+.overlay.open{display:flex;opacity:1}
+.modal{background:var(--surface);border-radius:var(--r-lg);border:1px solid var(--border);max-width:480px;width:100%;overflow:hidden;transform:scale(.96);transition:.2s;box-shadow:var(--shadow-lg);max-height:90vh;display:flex;flex-direction:column}
+.overlay.open .modal{transform:scale(1)}
+.modal-head{padding:20px 20px 0;position:relative;flex-shrink:0}
+.modal-close{position:absolute;top:16px;right:16px;width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.15s}
+.modal-close:hover{background:rgba(220,38,38,.1);color:var(--red);border-color:rgba(220,38,38,.2)}
+.modal-close .material-icons-round{font-size:16px}
+.modal-body{padding:20px;overflow-y:auto}
+.modal-detail-row{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border)}
+.modal-detail-row:last-child{border-bottom:none;margin-bottom:0}
+.detail-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px}
+.detail-value{font-size:14px;font-weight:700;color:var(--text)}
+.detail-code{font-family:'JetBrains Mono',monospace;font-size:16px;font-weight:700;color:var(--text);background:var(--surface2);padding:10px 14px;border-radius:var(--r);border:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.detail-imgs{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.detail-img-thumb{width:72px;height:72px;border-radius:10px;object-fit:cover;border:1px solid var(--border);cursor:pointer;transition:.15s}
+.detail-img-thumb:hover{transform:scale(1.05)}
+.btn-copy-sm{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.btn-copy-sm:hover{background:var(--bg);color:var(--text)}
+.btn-copy-sm .material-icons-round{font-size:15px}
+
+/* SCANNER */
+#scanner-container{width:100%;border-radius:var(--r-lg);overflow:hidden;background:black}
+#reader{width:100%}
+#reader video{object-fit:cover}
+.scan-upload-btn{background:var(--surface2);color:var(--text);border:1px solid var(--border);padding:9px 18px;border-radius:100px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;margin-top:14px;transition:.15s}
+.scan-upload-btn:hover{border-color:var(--border-strong)}
+
+/* LOADING */
+#loading{position:fixed;inset:0;background:var(--surface);z-index:9999;display:none;justify-content:center;align-items:center;flex-direction:column;gap:16px}
+.spinner{width:44px;height:44px;border:3px solid var(--border);border-top-color:var(--text);border-radius:50%;animation:spin .6s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{font-size:13px;font-weight:600;color:var(--text2)}
+.progress-track{width:200px;height:4px;background:var(--border);border-radius:100px;overflow:hidden}
+.progress-fill{height:100%;background:var(--text);width:0%;transition:width .3s ease;border-radius:100px}
+.progress-row{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--text3);margin-top:6px}
+
+/* LOGIN */
+#loginScreen{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px}
+.login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px 32px;box-shadow:var(--shadow-lg)}
+.login-logo{height:44px;margin-bottom:28px}
+.login-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-weight:500}
+.password-toggle{cursor:pointer;padding:0 12px;color:var(--text3);user-select:none;display:flex;align-items:center}
+.password-toggle .material-icons-round{font-size:18px}
+
+/* ADMIN DASHBOARD */
+#adminView{display:none;animation:fadeUp .3s ease}
+.section-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:14px}
+.chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:20px;box-shadow:var(--shadow)}
+.channel-summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.channel-sum-card{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;cursor:pointer;transition:.15s;text-align:center}
+.channel-sum-card:hover{border-color:var(--border-strong);transform:translateY(-1px);background:var(--surface)}
+.channel-sum-card img{height:22px;object-fit:contain;margin-bottom:6px;opacity:.7}
+.channel-sum-num{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.channel-sum-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+
+.shop-stat-section{margin-top:22px}
+.channel-shop-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden}
+.channel-shop-header{padding:12px 16px;background:var(--surface2);display:flex;align-items:center;gap:10px;font-size:13px;font-weight:700;color:var(--text)}
+.shop-stat-list{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border)}
+.shop-stat-item{background:var(--surface);padding:10px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:.15s}
+.shop-stat-item:hover{background:var(--bg)}
+.shop-stat-item img{width:30px;height:30px;border-radius:50%;object-fit:cover;border:1px solid var(--border);flex-shrink:0}
+.shop-stat-name{font-size:11.5px;font-weight:700;color:var(--text);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shop-pills{display:flex;gap:3px;flex-shrink:0}
+.spill{font-size:10px;font-weight:800;padding:2px 6px;border-radius:4px;color:white;cursor:pointer;transition:.15s;font-family:'JetBrains Mono',monospace}
+.spill:hover{transform:scale(1.1)}
+.spill-g{background:var(--green)}
+.spill-a{background:var(--amber)}
+.spill-r{background:var(--red)}
+.spill-b{background:var(--sky)}
+.shop-stat-count{font-size:14px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--blue);flex-shrink:0;margin-left:4px}
+
+/* REPORT SECTION */
+.report-section{margin-top:24px;padding-top:22px;border-top:1px dashed var(--border)}
+.report-stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
+.report-stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
+.report-stat-val{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.report-stat-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
+
+/* SPECIAL STATUS */
+#missingSection{background:rgba(217,119,6,.06);padding:14px;border-radius:var(--r);border:1px dashed var(--amber);margin-bottom:14px;display:none}
+#reportSection{background:rgba(220,38,38,.06);padding:12px 14px;border-radius:var(--r);border:1px dashed rgba(220,38,38,.3);display:none;align-items:center;gap:12px}
+
+/* SEARCH */
+.search-bar{position:relative}
+.search-input{width:100%;padding:10px 14px 10px 40px;border:1px solid var(--border-strong);border-radius:100px;background:var(--surface2);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:13.5px;outline:none;transition:.15s}
+.search-input:focus{border-color:var(--text);background:var(--surface);box-shadow:0 0 0 3px rgba(0,0,0,.06)}
+.search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--text3)}
+.search-icon .material-icons-round{font-size:18px}
+
+/* CHANNEL DETAIL MODAL */
+#channelDetailModal .modal{max-width:560px;height:80vh;max-height:700px}
+#channelDetailModal .modal-body{flex:1;overflow-y:auto}
+.channel-detail-item{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;cursor:pointer;transition:.15s}
+.channel-detail-item:last-child{border-bottom:none}
+.channel-detail-item:hover{background:var(--bg)}
+
+/* SUCCESS */
+#successModal .modal{max-width:340px;text-align:center}
+.success-icon{width:56px;height:56px;border-radius:50%;background:rgba(22,163,74,.1);color:var(--green);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.success-icon .material-icons-round{font-size:28px}
+.btn-ok{background:var(--green);color:white;border:none;padding:11px 32px;border-radius:100px;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:14px;cursor:pointer;margin-top:18px;transition:.15s}
+.btn-ok:hover{opacity:.85}
+
+/* COLOR DOT LEGEND */
+.legend-dots{display:flex;gap:16px;justify-content:center;margin-bottom:12px}
+.ldot{display:flex;align-items:center;gap:5px;font-size:11px;font-weight:600;color:var(--text2)}
+.ldot-circle{width:8px;height:8px;border-radius:50%}
+
+/* RESPONSIVE */
+@media(max-width:860px){
+  .sidebar{transform:translateX(-100%)}
+  .main-content{margin-left:0}
+  .metrics-row{grid-template-columns:1fr 1fr}
+  .channel-summary-grid{grid-template-columns:1fr 1fr}
+  .report-stat-grid{grid-template-columns:1fr 1fr}
+  .shop-stat-list{grid-template-columns:1fr}
+  .form-grid-2{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .page-body{padding:16px}
+  .topbar{padding:0 16px}
+  .metrics-row{grid-template-columns:1fr 1fr;gap:10px}
+  .channel-grid{grid-template-columns:repeat(2,1fr)}
+  .shop-grid{grid-template-columns:repeat(3,1fr)}
+}
+
+/* VIEW TRANSITION */
+::view-transition-old(root),::view-transition-new(root){animation:none;mix-blend-mode:normal;height:100%}
+::view-transition-old(root){z-index:1}
+::view-transition-new(root){z-index:9999}
+#ocr-status{font-size:11px;font-weight:700;color:var(--amber);margin-top:8px}
+
+/* SKELETON LOADING */
+@keyframes shimmer{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
+.skeleton-block{border-radius:6px;background:var(--border);animation:shimmer 1.2s ease infinite}
+</style>
 </head>
 <body>
+<canvas id="processCanvas" style="display:none"></canvas>
 
-<canvas id="processCanvas" style="display: none;"></canvas>
-
+<!-- LOGIN -->
 <div id="loginScreen">
-    <div class="login-card">
-        <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" class="login-logo">
-        <h2 class="text-gradient" style="margin-bottom: 10px; font-weight: 800; font-size: 24px; text-align: center;">XIXA - XIN CHÀO!</h2>
-        <div style="color: var(--text-sub); margin-bottom: 30px; font-size: 14px;">Đăng nhập để truy cập kho hàng hoàn</div>
-        <form id="loginForm">
-            <div style="margin-bottom: 20px;">
-                <div class="input-wrapper">
-                    <input type="text" class="input-box" id="loginUser" placeholder="Tên đăng nhập" style="text-align: center;" required>
-                </div>
-            </div>
-            <div style="margin-bottom: 30px;">
-                <div class="input-wrapper">
-                    <input type="password" class="input-box" id="loginPass" placeholder="Mật khẩu" style="text-align: center;" required>
-                    <span class="material-icons-round password-toggle" onclick="togglePass()">visibility</span>
-                </div>
-            </div>
-            <button type="submit" class="btn-submit" style="margin-top: 0;">ĐĂNG NHẬP</button>
-        </form>
-    </div>
-</div>
-
-<div class="container" id="mainApp">
-    <div class="top-line"></div>
-    <div class="header-section">
-        <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" class="logo-img">
-        <div class="header-center">
-            <h1 class="app-title">KHO HÀNG</h1>
-            <div style="font-size: 12px; font-weight: 700; color: var(--text-sub); letter-spacing: 1px;">V7.4 (Fixed Ripple)</div>
+  <div class="login-card">
+    <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" class="login-logo">
+    <div class="login-title">Chào mừng trở lại</div>
+    <div class="login-sub">Đăng nhập để quản lý kho hàng hoàn</div>
+    <form id="loginForm">
+      <div style="margin-bottom:14px">
+        <label class="form-label">Tên đăng nhập</label>
+        <div class="input-with-action">
+          <input type="text" class="input-field" id="loginUser" placeholder="Nhập tên đăng nhập" required>
         </div>
-        <div class="user-info">
-            <div style="font-size: 11px; font-weight: 700; color: var(--text-muted); text-transform: uppercase;" id="displayDate">--/--/----</div>
-            <div class="user-name" id="displayName">...</div>
-            <div class="user-actions">
-                <span class="action-link" onclick="toggleTheme()" title="Giao diện tối/sáng">
-                    <span class="material-icons-round" id="themeIcon" style="font-size: 16px;">dark_mode</span>
-                </span>
-                <span class="action-link" onclick="openModal('changePassModal')" title="Đổi mật khẩu">
-                    <span class="material-icons-round" style="font-size: 16px;">vpn_key</span>
-                </span>
-                <span class="action-link" onclick="logout()" style="color: var(--xixa-red);" title="Đăng xuất">
-                    <span class="material-icons-round" style="font-size: 16px;">logout</span>
-                </span>
-            </div>
+      </div>
+      <div style="margin-bottom:24px">
+        <label class="form-label">Mật khẩu</label>
+        <div class="input-with-action">
+          <input type="password" class="input-field" id="loginPass" placeholder="Nhập mật khẩu" required>
+          <span class="input-action-btn password-toggle" onclick="togglePass()"><span class="material-icons-round">visibility</span></span>
         </div>
-    </div>
-
-    <div id="adminDashboard">
-        <div class="dashboard-header">
-            <div style="font-weight: 800; font-size: 16px;" class="text-gradient">THỐNG KÊ KÊNH BÁN</div>
-            <input type="month" id="monthSelect" class="input-box" style="width: auto; padding: 5px 10px; height: 34px;" onchange="loadMonthlyStats()">
-        </div>
-        <div class="chart-container">
-            <canvas id="monthlyChart"></canvas>
-        </div>
-        
-        <div id="monthlySummary" style="display: flex; gap: 8px; margin-top: 15px;">
-            <div class="clickable-box" onclick="openChannelPopup('Shopee')">
-                <img src="https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png" style="height: 24px; opacity: 0.8; margin-bottom: 5px;">
-                <div style="font-size: 10px; color: var(--text-sub); font-weight: 700;">SHOPEE</div>
-                <div id="sumShopee" style="font-size: 16px; font-weight: 900; color: #ea580c;">0</div>
-            </div>
-            <div class="clickable-box" onclick="openChannelPopup('Tiktok')">
-                <img src="https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png" style="height: 24px; opacity: 0.8; margin-bottom: 5px;">
-                <div style="font-size: 10px; color: var(--text-sub); font-weight: 700;">TIKTOK</div>
-                <div id="sumTiktok" style="font-size: 16px; font-weight: 900; color: var(--text-main);">0</div>
-            </div>
-            <div class="clickable-box" onclick="openChannelPopup('VTP')">
-                <img src="https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png" style="height: 24px; opacity: 0.8; margin-bottom: 5px;">
-                <div style="font-size: 10px; color: var(--text-sub); font-weight: 700;">VIETTEL</div>
-                <div id="sumVTP" style="font-size: 16px; font-weight: 900; color: #dc2626;">0</div>
-            </div>
-            <div class="clickable-box" onclick="openChannelPopup('Lazada')">
-                <img src="https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png" style="height: 24px; opacity: 0.8; margin-bottom: 5px;">
-                <div style="font-size: 10px; color: var(--text-sub); font-weight: 700;">LAZADA</div>
-                <div id="sumLazada" style="font-size: 16px; font-weight: 900; color: var(--lazada-color);">0</div>
-            </div>
-        </div>
-
-        <div id="adminShopStats" style="margin-top: 25px;">
-            <div style="font-weight: 800; font-size: 16px; margin-bottom: 10px;" class="text-gradient">CHI TIẾT SHOP</div>
-            
-            <div style="display:flex; gap:15px; justify-content:center; margin-bottom:10px; font-size:11px; font-weight:700; color:var(--text-sub);">
-                <div style="display:flex;align-items:center;gap:4px"><span class="stat-dot good" style="width:8px;height:8px;padding:0"></span> Tốt</div>
-                <div style="display:flex;align-items:center;gap:4px"><span class="stat-dot dirty" style="width:8px;height:8px;padding:0"></span> Bẩn</div>
-                <div style="display:flex;align-items:center;gap:4px"><span class="stat-dot error" style="width:8px;height:8px;padding:0"></span> Lỗi/Thiếu</div>
-                <div style="display:flex;align-items:center;gap:4px"><span class="stat-dot warranty" style="width:8px;height:8px;padding:0"></span> Bảo hành</div>
-            </div>
-
-            <div id="shopStatsContainer">
-                <div style="text-align: center; color: var(--text-muted); font-size: 13px;">Chọn tháng để xem dữ liệu</div>
-            </div>
-        </div>
-
-        <div style="margin-top: 30px; border-top: 2px dashed var(--border-color); padding-top: 20px;">
-            <div style="text-align: center;">
-                <h3 class="text-gradient" style="margin:0 0 15px 0; font-size: 16px;">TỔNG HỢP & BÁO CÁO</h3>
-                <div style="display: flex; gap: 5px; justify-content: center; margin-bottom: 20px;">
-                    <input type="date" id="reportStart" class="input-box" style="padding: 5px; width: auto; font-size: 13px;">
-                    <span style="align-self: center; font-weight: 700;">-</span>
-                    <input type="date" id="reportEnd" class="input-box" style="padding: 5px; width: auto; font-size: 13px;">
-                    <button class="search-btn" style="position: relative; top: auto; right: auto; transform: none; width: 32px; height: 32px;" onclick="loadReportData()"><span class="material-icons-round" style="font-size: 18px;">refresh</span></button>
-                </div>
-                <div style="height: 200px; display: flex; justify-content: center; position: relative;">
-                    <canvas id="reportChart"></canvas>
-                </div>
-                <div class="report-grid">
-                    <div class="stat-box"><div class="stat-val" style="color:#16a34a" id="rpGood">0</div><div class="stat-lbl">Tốt</div></div>
-                    <div class="stat-box"><div class="stat-val" style="color:#d97706" id="rpDirty">0</div><div class="stat-lbl">Bẩn</div></div>
-                    <div class="stat-box"><div class="stat-val" style="color:#dc2626" id="rpFraud">0</div><div class="stat-lbl">Lỗi/Thiếu</div></div>
-                    <div class="stat-box"><div class="stat-val" style="color:#0ea5e9" id="rpWarranty">0</div><div class="stat-lbl">Bảo hành</div></div>
-                </div>
-                <div style="margin-top: 15px; font-weight: 800; font-size: 14px; color: var(--text-main);">TỔNG CỘNG: <span id="rpTotal" style="color: var(--xixa-blue);">0</span></div>
-            </div>
-        </div>
-    </div>
-
-    <form id="returnForm">
-        <input type="hidden" id="staffName">
-        
-        <label><span class="material-icons-round icon-gradient">storefront</span> KÊNH BÁN HÀNG</label>
-        <div class="channel-grid">
-            <label>
-                <input type="radio" name="channel" value="Shopee" class="channel-opt" checked onchange="handleChannelChange()">
-                <div class="channel-card">
-                    <img src="https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png">
-                    <span>Shopee</span>
-                </div>
-            </label>
-            <label>
-                <input type="radio" name="channel" value="Tiktok" class="channel-opt" onchange="handleChannelChange()">
-                <div class="channel-card">
-                    <img src="https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png">
-                    <span>Tiktok</span>
-                </div>
-            </label>
-            <label>
-                <input type="radio" name="channel" value="VTP" class="channel-opt" onchange="handleChannelChange()">
-                <div class="channel-card">
-                    <img src="https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png">
-                    <span>Viettel</span>
-                </div>
-            </label>
-            <label>
-                <input type="radio" name="channel" value="Lazada" class="channel-opt" onchange="handleChannelChange()">
-                <div class="channel-card">
-                    <img src="https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png">
-                    <span>Lazada</span>
-                </div>
-            </label>
-        </div>
-
-        <div id="shopSelectArea" style="margin-bottom: 25px;">
-            <label><span class="material-icons-round icon-gradient">store</span> CHỌN SHOP</label>
-            <div id="shopGrid" class="shop-grid"></div>
-        </div>
-
-        <div class="form-grid">
-            <div>
-                <label><span class="material-icons-round icon-gradient">qr_code_scanner</span> MÃ VẬN ĐƠN</label>
-                <div class="input-wrapper">
-                    <input type="text" class="input-box" id="maVanDon" placeholder="Quét hoặc nhập..." required>
-                    <button type="button" class="btn-scan" onclick="copyToClipboard(document.getElementById('maVanDon').value, this)" title="Copy mã">
-                        <span class="material-icons-round" style="font-size: 18px;">content_copy</span>
-                    </button>
-                    <button type="button" class="btn-scan" onclick="startScanner()" title="Quét mã">
-                        <span class="material-icons-round">qr_code_scanner</span>
-                    </button>
-                </div>
-            </div>
-            <div>
-                <label><span class="material-icons-round icon-gradient">exposure_plus_1</span> SỐ LƯỢNG</label>
-                <div class="input-wrapper"><input type="number" class="input-box" id="returnQty" value="1" min="1" style="text-align: center;"></div>
-            </div>
-        </div>
-
-        <div style="margin-top: 25px;">
-            <label><span class="material-icons-round icon-gradient">inventory_2</span> CHI TIẾT SẢN PHẨM</label>
-            <div id="productList"></div>
-            <button type="button" class="btn-text" onclick="addProductRow()"><span class="material-icons-round">add_circle</span> Thêm dòng sản phẩm</button>
-        </div>
-
-        <div style="margin-top: 25px;">
-            <div class="form-grid">
-                <div style="grid-column: span 2;">
-                    <label><span class="material-icons-round icon-gradient">assignment_turned_in</span> TÌNH TRẠNG</label>
-                    <div class="input-wrapper">
-                        <select class="input-box" id="status" onchange="checkStatus()">
-                            <option value="Tốt">✨ Hàng còn Tốt</option>
-                            <option value="Bị bẩn">⚠️ Bị bẩn</option>
-                            <option value="Bị tráo">❌ Bị tráo hàng</option>
-                            <option value="Thiếu hàng">📦 Thiếu hàng</option>
-                            <option value="Bảo hành">🛡️ Bảo hành</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-            <div id="specialSections">
-                <div id="missingSection" style="display: none; background: #fffbeb; padding: 15px; border-radius: 12px; border: 1px dashed #eab308; margin-bottom: 15px;">
-                    <label style="color: #ca8a04; margin-bottom: 10px;">DANH SÁCH ĐÔI THIẾU</label>
-                    <div id="missingList"></div>
-                    <button type="button" class="btn-text" style="color:#ca8a04" onclick="addMissingRow()"><span class="material-icons-round">playlist_add</span> Thêm đôi thiếu</button>
-                </div>
-                <div id="reportSection" style="display: none; background: #fef2f2; padding: 15px; border-radius: 12px; border: 1px dashed #f43f5e; align-items: center;">
-                    <input type="checkbox" id="isReported" style="width: 20px; height: 20px; margin-right: 12px; accent-color: #f43f5e;">
-                    <div><div style="font-weight: 700; color: #b91c1c;">XÁC NHẬN BÁO CÁO</div><div style="font-size: 11px; color: #ef4444;">Đã gửi khiếu nại lên sàn chưa?</div></div>
-                </div>
-            </div>
-        </div>
-
-        <div style="margin-top: 25px;">
-            <label><span class="material-icons-round icon-gradient">add_a_photo</span> HÌNH ẢNH SẢN PHẨM</label>
-            <div class="upload-zone">
-                <div class="upload-actions">
-                    <div class="upload-btn-half" onclick="triggerCam()">
-                        <span class="material-icons-round mat-icon">photo_camera</span>
-                        <span>CHỤP ẢNH</span>
-                    </div>
-                    <div class="upload-btn-half" onclick="triggerFile()">
-                        <span class="material-icons-round mat-icon">photo_library</span>
-                        <span>THƯ VIỆN</span>
-                    </div>
-                </div>
-                <div id="imagePreviewBox"></div>
-                <input type="file" id="imgInputCam" hidden accept="image/*" capture="environment" onchange="handleImageInput(this)">
-                <input type="file" id="imgInputFile" hidden multiple accept="image/*" onchange="handleImageInput(this)">
-            </div>
-        </div>
-        <button type="submit" class="btn-submit">CẬP NHẬT ĐƠN HÀNG</button>
+      </div>
+      <button type="submit" class="btn-primary" style="margin-top:0">Đăng nhập</button>
     </form>
-
-    <div class="history-section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-            <div style="font-weight: 800;" class="text-gradient">LỊCH SỬ NHẬP</div>
-            <div style="display: flex; gap: 8px;">
-                <input type="date" id="historyDate" class="input-box" style="width: auto; padding: 5px 10px; height: 34px;" onchange="loadHistory()">
-            </div>
-        </div>
-        <div class="search-box">
-            <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm đơn hàng..." onkeyup="handleSearch(event)">
-            <button class="search-btn" onclick="executeSearch()"><span class="material-icons-round">search</span></button>
-        </div>
-        <div id="historyList" style="margin-top: 20px;"></div>
-    </div>
+  </div>
 </div>
 
-<div id="changePassModal" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-btn" onclick="closeModal('changePassModal')"><span class="material-icons-round">close</span></button>
-        <div class="modal-header"><h3 class="text-gradient" style="margin:0;">ĐỔI MẬT KHẨU</h3></div>
-        <div class="modal-body">
-            <div style="margin-bottom: 15px;"><div class="input-wrapper"><input type="password" id="oldPass" class="input-box" placeholder="Mật khẩu cũ"></div></div>
-            <div style="margin-bottom: 15px;"><div class="input-wrapper"><input type="password" id="newPass" class="input-box" placeholder="Mật khẩu mới"></div></div>
-            <button onclick="changePassword()" class="btn-submit" style="margin-top:10px;">XÁC NHẬN</button>
-        </div>
-    </div>
-</div>
-
-<div id="scannerModal" class="modal-overlay">
-    <div class="modal-content" style="background: black; border: none; max-width: 500px;">
-        <button class="close-btn" onclick="stopScanner()" style="z-index: 1000; background: white; top: 10px; right: 10px;"><span class="material-icons-round">close</span></button>
-        <div style="padding: 20px; text-align: center;">
-            <h3 style="color: white; margin-top: 0;">QUÉT MÃ VẬN ĐƠN</h3>
-            <div id="scanner-container"><div id="reader"></div></div>
-            <label class="scan-upload-btn">
-                <span class="material-icons-round">image_search</span> DÙNG ẢNH ĐỂ ĐỌC CHỮ (OCR)
-                <input type="file" id="scanFileInput" hidden accept="image/*" onchange="scanFromFile(this)">
-            </label>
-            <div style="color: #94a3b8; font-size: 12px; margin-top: 15px;">Đưa mã vào khung. Nếu không được, dùng nút Tải Ảnh để AI đọc chữ.</div>
-        </div>
-    </div>
-</div>
-
-<div id="successModal" class="modal-overlay">
-    <div class="modal-content" style="text-align: center; padding: 30px;">
-        <div style="margin-bottom: 10px;"><img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" style="width: 80px;"></div>
-        <h2 style="color: #16a34a; font-weight: 900; margin: 10px 0;">THÀNH CÔNG!</h2>
-        <div style="color: var(--text-sub); margin-bottom: 20px;" id="successMsg">Thao tác thành công.</div>
-        <button onclick="closeModal('successModal')" class="btn-submit" style="background: #16a34a; margin-top: 0; padding: 12px; font-size: 14px;">OK</button>
-    </div>
-</div>
-
-<div id="detailModal" class="modal-overlay">
-    <div class="modal-content">
-        <button class="close-btn" onclick="closeModal('detailModal')"><span class="material-icons-round">close</span></button>
-        <div class="modal-header">
-            <h3 style="margin: 0;" class="text-gradient">CHI TIẾT ĐƠN</h3>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;" id="modalTime">--:--</div>
-        </div>
-        <div class="modal-body">
-            <div class="detail-row">
-                <div class="detail-label">MÃ VẬN ĐƠN</div>
-                <div class="input-wrapper active-border" style="padding: 2px;">
-                    <div class="detail-value" style="font-size: 20px; padding: 10px; width: 100%; background:var(--bg-card); border-radius:10px; font-weight:800; display: flex; justify-content: space-between; align-items: center;">
-                        <span id="modalCode">---</span>
-                        <button type="button" class="btn-copy-mini" onclick="copyToClipboard(document.getElementById('modalCode').innerText, this)">
-                            <span class="material-icons-round" style="font-size: 18px;">content_copy</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 20px;">
-                <div class="detail-row" style="flex:1"><div class="detail-label">NHÂN VIÊN</div><div class="detail-value" id="modalStaff">---</div></div>
-                <div class="detail-row" style="flex:1"><div class="detail-label">KÊNH BÁN</div><div class="detail-value"><img id="modalChannelIcon" style="width: 24px; border-radius: 50%; margin-right:5px;"><span id="modalChannel">---</span></div></div>
-            </div>
-            <div class="detail-row"><div class="detail-label">SẢN PHẨM</div><div class="detail-value" id="modalProduct" style="font-style: italic; color:#0ea5e9;">---</div></div>
-            <div class="detail-row"><div class="detail-label">CHI TIẾT</div><div class="detail-value">SL: <span id="modalQty" style="font-weight:900;">---</span> | <span id="modalStatus">---</span></div></div>
-            <div class="detail-row">
-                <div class="detail-label">GIAN HÀNG (SHOP)</div>
-                <div class="detail-value">
-                    <img id="modalShopIcon" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); margin-right: 8px;">
-                    <span id="modalShop" style="font-weight: 800;">---</span>
-                </div>
-            </div>
-            <div class="detail-row"><div class="detail-label">BÁO CÁO SÀN</div><div class="detail-value" id="modalReport">---</div></div>
-            <div><div class="detail-label">HÌNH ẢNH</div><div class="detail-imgs" id="modalImages"></div></div>
-        </div>
-    </div>
-</div>
-
-<div id="subDetailModal" class="modal-overlay">
-    <div class="modal-content" style="max-width: 380px;">
-        <button class="close-btn" onclick="closeModal('subDetailModal')"><span class="material-icons-round">close</span></button>
-        <div class="modal-header" style="padding: 15px;">
-            <h3 style="margin: 0; font-size: 18px;" class="text-gradient">CHI TIẾT ĐƠN</h3>
-            <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;" id="subModalTime">--:--</div>
-        </div>
-        <div class="modal-body" style="padding: 20px;">
-            <div class="detail-row">
-                <div class="detail-label">MÃ VẬN ĐƠN</div>
-                <div class="input-wrapper active-border" style="padding: 2px;">
-                    <div class="detail-value" style="font-size: 18px; padding: 10px; width: 100%; background:var(--bg-card); border-radius:8px; font-weight:800; display: flex; justify-content: space-between; align-items: center;">
-                        <span id="subModalCode">---</span>
-                        <button type="button" class="btn-copy-mini" onclick="copyToClipboard(document.getElementById('subModalCode').innerText, this)">
-                            <span class="material-icons-round" style="font-size: 18px;">content_copy</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="detail-row" style="flex:1"><div class="detail-label">NHÂN VIÊN</div><div class="detail-value" id="subModalStaff">---</div></div>
-                <div class="detail-row" style="flex:1"><div class="detail-label">KÊNH BÁN</div><div class="detail-value"><img id="subModalChannelIcon" style="width: 20px; border-radius: 50%; margin-right:5px;"><span id="subModalChannel">---</span></div></div>
-            </div>
-            <div class="detail-row"><div class="detail-label">SẢN PHẨM</div><div class="detail-value" id="subModalProduct" style="font-style: italic; color:#0ea5e9;">---</div></div>
-            <div class="detail-row"><div class="detail-label">CHI TIẾT</div><div class="detail-value">SL: <span id="subModalQty" style="font-weight:900;">---</span> | <span id="subModalStatus">---</span></div></div>
-            <div class="detail-row">
-                <div class="detail-label">GIAN HÀNG (SHOP)</div>
-                <div class="detail-value">
-                    <img id="subModalShopIcon" style="width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border-color); margin-right: 8px;">
-                    <span id="subModalShop" style="font-weight: 800;">---</span>
-                </div>
-            </div>
-            <div class="detail-row"><div class="detail-label">BÁO CÁO SÀN</div><div class="detail-value" id="subModalReport">---</div></div>
-            <div><div class="detail-label">HÌNH ẢNH</div><div class="detail-imgs" id="subModalImages"></div></div>
-        </div>
-    </div>
-</div>
-
-<div id="channelDetailModal" class="modal-overlay">
-    <div class="modal-content" style="height: 80vh; display: flex; flex-direction: column;">
-        <button class="close-btn" onclick="closeModal('channelDetailModal')"><span class="material-icons-round">close</span></button>
-        <div class="modal-header">
-            <h3 style="margin: 0;" class="text-gradient" id="channelListTitle">DANH SÁCH ĐƠN</h3>
-            <div style="font-size: 13px; color: var(--text-muted); margin-top: 5px; font-weight: 600;" id="channelListSubtitle">...</div>
-        </div>
-        <div class="modal-body" style="flex: 1; overflow-y: auto; padding: 0;">
-             <div id="channelListContainer"></div>
-        </div>
-    </div>
-</div>
-
+<!-- LOADING -->
 <div id="loading">
-    <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" class="loading-logo-spin">
-    <div class="progress-container">
-        <div class="progress-bar-bg">
-            <div class="progress-bar-fill" id="progressFill"></div>
-        </div>
-        <div class="progress-status">
-            <span class="status-text" id="statusText">Đang xử lý...</span>
-            <span class="percent-text" id="percentText">0%</span>
-        </div>
+  <div class="spinner"></div>
+  <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="progress-row"><span class="loading-text" id="statusText">Đang xử lý...</span><span style="font-size:11px;font-weight:700;color:var(--text3)" id="percentText">0%</span></div>
+  <div id="ocr-status"></div>
+</div>
+
+<!-- MAIN APP -->
+<div class="app-shell" id="mainApp" style="display:none">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" alt="XIXA">
+      <div class="ver">Kho Hàng Hoàn · v8</div>
     </div>
-    <div id="ocr-status"></div>
+    <div class="nav-section">
+      <div class="nav-label">Menu</div>
+      <div class="nav-item active" id="nav-form" onclick="switchView('form')">
+        <span class="material-icons-round">add_box</span>Nhập đơn hoàn
+      </div>
+      <div class="nav-item" id="nav-history" onclick="switchView('history')">
+        <span class="material-icons-round">history</span>Lịch sử nhập
+      </div>
+      <div class="nav-item admin-only" id="nav-dashboard" onclick="switchView('dashboard')">
+        <span class="material-icons-round">dashboard</span>Dashboard
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <div class="user-row">
+        <div class="user-avatar" id="userAvatar">?</div>
+        <div>
+          <div class="user-name" id="displayName">...</div>
+          <div class="user-role" id="displayDate">--/--/----</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:12px">
+        <button class="icon-btn" onclick="toggleTheme()" title="Giao diện"><span class="material-icons-round" id="themeIcon">dark_mode</span></button>
+        <button class="icon-btn" onclick="openModal('changePassModal')" title="Đổi mật khẩu"><span class="material-icons-round">vpn_key</span></button>
+        <button class="icon-btn" onclick="logout()" style="color:var(--red)" title="Đăng xuất"><span class="material-icons-round">logout</span></button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="topbar">
+      <div class="page-title" id="pageTitleBar">Nhập đơn hoàn</div>
+      <div class="topbar-actions">
+        <div id="displayDateBar" style="font-size:12px;font-weight:700;color:var(--text3);font-family:'JetBrains Mono',monospace"></div>
+      </div>
+    </div>
+
+    <div class="page-body">
+
+      <!-- ADMIN DASHBOARD VIEW -->
+      <div id="adminView">
+        <div class="metrics-row" id="adminMetrics">
+          <div class="metric"><div class="metric-label">Tổng tháng này</div><div class="metric-val" id="m-total">—</div><div class="metric-sub">đơn hoàn</div><div class="metric-badge badge-sky"><span class="material-icons-round">inbox</span></div></div>
+          <div class="metric"><div class="metric-label">Hàng tốt</div><div class="metric-val" id="m-good" style="color:var(--green)">—</div><div class="metric-sub" id="m-good-pct">—%</div><div class="metric-badge badge-green"><span class="material-icons-round">check_circle</span></div></div>
+          <div class="metric"><div class="metric-label">Lỗi / Thiếu</div><div class="metric-val" id="m-error" style="color:var(--red)">—</div><div class="metric-sub" id="m-error-pct">—%</div><div class="metric-badge badge-red"><span class="material-icons-round">error</span></div></div>
+          <div class="metric"><div class="metric-label">Bẩn + BH</div><div class="metric-val" id="m-other" style="color:var(--amber)">—</div><div class="metric-sub" id="m-other-pct">—%</div><div class="metric-badge badge-amber"><span class="material-icons-round">warning</span></div></div>
+        </div>
+
+        <div class="chart-card" style="margin-bottom:22px">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+            <div class="section-title" style="margin:0">Đơn hoàn theo ngày</div>
+            <input type="month" id="monthSelect" class="input-field" style="width:auto;padding:7px 12px;height:34px;font-size:13px" onchange="loadMonthlyStats()">
+          </div>
+          <div style="position:relative;height:220px"><canvas id="monthlyChart" role="img" aria-label="Biểu đồ đơn hoàn theo ngày"></canvas></div>
+          <div class="channel-summary-grid">
+            <div class="channel-sum-card" onclick="openChannelPopup('Shopee')"><img src="https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png"><div class="channel-sum-label">Shopee</div><div class="channel-sum-num" id="sumShopee" style="color:var(--orange)">0</div></div>
+            <div class="channel-sum-card" onclick="openChannelPopup('Tiktok')"><img src="https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png"><div class="channel-sum-label">Tiktok</div><div class="channel-sum-num" id="sumTiktok" style="color:var(--text)">0</div></div>
+            <div class="channel-sum-card" onclick="openChannelPopup('VTP')"><img src="https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png"><div class="channel-sum-label">Viettel</div><div class="channel-sum-num" id="sumVTP" style="color:var(--red)">0</div></div>
+            <div class="channel-sum-card" onclick="openChannelPopup('Lazada')"><img src="https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png"><div class="channel-sum-label">Lazada</div><div class="channel-sum-num" id="sumLazada" style="color:var(--blue)">0</div></div>
+          </div>
+        </div>
+
+        <!-- SHOP STATS -->
+        <div class="shop-stat-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <div class="section-title" style="margin:0">Chi tiết theo shop</div>
+            <div class="legend-dots">
+              <div class="ldot"><div class="ldot-circle" style="background:var(--green)"></div>Tốt</div>
+              <div class="ldot"><div class="ldot-circle" style="background:var(--amber)"></div>Bẩn</div>
+              <div class="ldot"><div class="ldot-circle" style="background:var(--red)"></div>Lỗi</div>
+              <div class="ldot"><div class="ldot-circle" style="background:var(--sky)"></div>BH</div>
+            </div>
+          </div>
+          <div id="shopStatsContainer"><div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Chọn tháng để xem dữ liệu</div></div>
+        </div>
+
+        <!-- REPORT SECTION -->
+        <div class="report-section">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+            <div class="section-title" style="margin:0">Báo cáo tổng hợp</div>
+            <div style="display:flex;gap:6px;align-items:center">
+              <input type="date" id="reportStart" class="input-field" style="padding:7px 10px;width:auto;font-size:12px;height:34px">
+              <span style="color:var(--text3);font-size:12px;font-weight:700">—</span>
+              <input type="date" id="reportEnd" class="input-field" style="padding:7px 10px;width:auto;font-size:12px;height:34px">
+              <button onclick="loadReportData()" class="icon-btn"><span class="material-icons-round">refresh</span></button>
+            </div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 200px;gap:16px;align-items:start">
+            <div class="report-stat-grid">
+              <div class="report-stat"><div class="report-stat-val" style="color:var(--green)" id="rpGood">0</div><div class="report-stat-lbl">Tốt</div></div>
+              <div class="report-stat"><div class="report-stat-val" style="color:var(--amber)" id="rpDirty">0</div><div class="report-stat-lbl">Bẩn</div></div>
+              <div class="report-stat"><div class="report-stat-val" style="color:var(--red)" id="rpFraud">0</div><div class="report-stat-lbl">Lỗi/Thiếu</div></div>
+              <div class="report-stat"><div class="report-stat-val" style="color:var(--sky)" id="rpWarranty">0</div><div class="report-stat-lbl">Bảo hành</div></div>
+              <div class="report-stat" style="grid-column:span 4;background:var(--text);border-color:var(--text)"><div class="report-stat-val" style="color:var(--bg)" id="rpTotal">0</div><div class="report-stat-lbl" style="color:rgba(255,255,255,.5)">Tổng cộng</div></div>
+            </div>
+            <div style="position:relative;height:200px"><canvas id="reportChart" role="img" aria-label="Biểu đồ báo cáo tình trạng hàng"></canvas></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FORM VIEW -->
+      <div id="formView">
+        <form id="returnForm">
+          <input type="hidden" id="staffName">
+
+          <div style="margin-bottom:22px">
+            <label class="form-label">Kênh bán hàng</label>
+            <div class="channel-grid">
+              <label><input type="radio" name="channel" value="Shopee" class="channel-opt" checked onchange="handleChannelChange()"><div class="channel-card"><img src="https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png"><span>Shopee</span></div></label>
+              <label><input type="radio" name="channel" value="Tiktok" class="channel-opt" onchange="handleChannelChange()"><div class="channel-card"><img src="https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png"><span>Tiktok</span></div></label>
+              <label><input type="radio" name="channel" value="VTP" class="channel-opt" onchange="handleChannelChange()"><div class="channel-card"><img src="https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png"><span>Viettel</span></div></label>
+              <label><input type="radio" name="channel" value="Lazada" class="channel-opt" onchange="handleChannelChange()"><div class="channel-card"><img src="https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png"><span>Lazada</span></div></label>
+            </div>
+          </div>
+
+          <div id="shopSelectArea" style="margin-bottom:22px">
+            <label class="form-label">Chọn shop</label>
+            <div id="shopGrid" class="shop-grid"></div>
+          </div>
+
+          <div class="form-grid-2" style="margin-bottom:22px">
+            <div>
+              <label class="form-label">Mã vận đơn</label>
+              <div class="input-with-action">
+                <input type="text" class="input-field" id="maVanDon" placeholder="Quét hoặc nhập..." required>
+                <button type="button" class="input-action-btn" onclick="copyToClipboard(document.getElementById('maVanDon').value,this)" title="Copy"><span class="material-icons-round">content_copy</span></button>
+                <button type="button" class="input-action-btn" onclick="startScanner()" title="Quét"><span class="material-icons-round">qr_code_scanner</span></button>
+              </div>
+            </div>
+            <div>
+              <label class="form-label">Số lượng</label>
+              <input type="number" class="input-field" id="returnQty" value="1" min="1" style="text-align:center">
+            </div>
+          </div>
+
+          <div style="margin-bottom:22px">
+            <label class="form-label">Chi tiết sản phẩm</label>
+            <div id="productList"></div>
+            <button type="button" class="btn-text-action" onclick="addProductRow()"><span class="material-icons-round">add_circle_outline</span>Thêm sản phẩm</button>
+          </div>
+
+          <div style="margin-bottom:22px">
+            <label class="form-label">Tình trạng</label>
+            <select class="input-field" id="status" onchange="checkStatus()">
+              <option value="Tốt">✨ Hàng còn Tốt</option>
+              <option value="Bị bẩn">⚠️ Bị bẩn</option>
+              <option value="Bị tráo">❌ Bị tráo hàng</option>
+              <option value="Thiếu hàng">📦 Thiếu hàng</option>
+              <option value="Bảo hành">🛡️ Bảo hành</option>
+            </select>
+            <div id="missingSection" style="margin-top:12px">
+              <label class="form-label" style="color:var(--amber)">Danh sách đôi thiếu</label>
+              <div id="missingList"></div>
+              <button type="button" class="btn-text-action" style="color:var(--amber)" onclick="addMissingRow()"><span class="material-icons-round">playlist_add</span>Thêm đôi thiếu</button>
+            </div>
+            <div id="reportSection" style="margin-top:12px">
+              <input type="checkbox" id="isReported" style="width:18px;height:18px;accent-color:var(--red);flex-shrink:0">
+              <div style="margin-left:2px"><div style="font-size:13px;font-weight:700;color:var(--red)">Xác nhận báo cáo</div><div style="font-size:11px;color:var(--text3)">Đã gửi khiếu nại lên sàn chưa?</div></div>
+            </div>
+          </div>
+
+          <div style="margin-bottom:4px">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:7px">
+              <label class="form-label" style="margin:0">Hình ảnh sản phẩm</label>
+              <span id="imgCountBadge" style="display:none;font-size:11px;font-weight:700;color:var(--blue);background:rgba(37,99,235,.1);padding:2px 9px;border-radius:100px;font-family:'JetBrains Mono',monospace"></span>
+            </div>
+            <div class="upload-zone" id="uploadZone">
+              <div class="upload-actions">
+                <div class="upload-half" onclick="triggerCam()">
+                  <div class="upload-icon-wrap"><span class="material-icons-round">photo_camera</span></div>
+                  <span class="upload-label">Chụp ảnh</span>
+                  <span class="upload-sublabel">Camera trực tiếp</span>
+                </div>
+                <div class="upload-half" onclick="triggerFile()">
+                  <div class="upload-icon-wrap"><span class="material-icons-round">photo_library</span></div>
+                  <span class="upload-label">Thư viện</span>
+                  <span class="upload-sublabel">Chọn nhiều ảnh</span>
+                </div>
+              </div>
+              <div id="imagePreviewBox"></div>
+              <input type="file" id="imgInputCam" hidden accept="image/*" capture="environment" onchange="handleImageInput(this)">
+              <input type="file" id="imgInputFile" hidden multiple accept="image/*" onchange="handleImageInput(this)">
+            </div>
+          </div>
+
+          <button type="submit" class="btn-primary">Cập nhật đơn hàng</button>
+        </form>
+      </div>
+
+      <!-- HISTORY VIEW -->
+      <div id="historyView" style="display:none">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="section-title" style="margin:0">Lịch sử nhập</div>
+          <input type="date" id="historyDate" class="input-field" style="width:auto;padding:7px 12px;height:34px;font-size:13px" onchange="loadHistory()">
+        </div>
+        <div class="search-bar" style="margin-bottom:16px">
+          <div class="search-icon"><span class="material-icons-round">search</span></div>
+          <input type="text" id="searchInput" class="search-input" placeholder="Tìm kiếm mã vận đơn, sản phẩm..." onkeyup="handleSearch(event)">
+        </div>
+        <div id="historyList"></div>
+      </div>
+
+    </div><!-- /page-body -->
+  </div><!-- /main-content -->
+</div><!-- /app-shell -->
+
+<!-- MODALS -->
+<div id="changePassModal" class="overlay">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Đổi mật khẩu</h3><button class="modal-close" onclick="closeModal('changePassModal')"><span class="material-icons-round">close</span></button></div>
+    <div class="modal-body">
+      <div style="margin-bottom:14px"><label class="form-label">Mật khẩu cũ</label><input type="password" id="oldPass" class="input-field" placeholder="Nhập mật khẩu cũ"></div>
+      <div style="margin-bottom:20px"><label class="form-label">Mật khẩu mới</label><input type="password" id="newPass" class="input-field" placeholder="Nhập mật khẩu mới"></div>
+      <button onclick="changePassword()" class="btn-primary" style="margin-top:0">Xác nhận</button>
+    </div>
+  </div>
+</div>
+
+<div id="scannerModal" class="overlay">
+  <div class="modal" style="background:#000;border-color:rgba(255,255,255,.1);max-width:460px">
+    <div class="modal-head" style="padding:16px"><h3 style="color:white;font-size:15px;font-weight:800">Quét mã vận đơn</h3><button class="modal-close" onclick="stopScanner()" style="background:#1a1a18;border-color:rgba(255,255,255,.2);color:white"><span class="material-icons-round">close</span></button></div>
+    <div class="modal-body">
+      <div id="scanner-container"><div id="reader"></div></div>
+      <div style="text-align:center">
+        <label class="scan-upload-btn" style="margin-top:14px">
+          <span class="material-icons-round" style="font-size:17px">image_search</span>Dùng ảnh để đọc (OCR)
+          <input type="file" id="scanFileInput" hidden accept="image/*" onchange="scanFromFile(this)">
+        </label>
+        <div style="color:#5c5c58;font-size:11px;margin-top:10px">Đưa mã vào khung — hoặc tải ảnh để AI đọc chữ</div>
+        <div id="ocr-status"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="successModal" class="overlay">
+  <div class="modal" style="max-width:320px;text-align:center">
+    <div class="modal-body" style="padding:28px">
+      <div class="success-icon"><span class="material-icons-round">check</span></div>
+      <div style="font-size:18px;font-weight:800;color:var(--text)">Thành công!</div>
+      <div style="color:var(--text3);font-size:13px;margin-top:8px" id="successMsg">Thao tác thành công.</div>
+      <button onclick="closeModal('successModal')" class="btn-ok">OK</button>
+    </div>
+  </div>
+</div>
+
+<div id="detailModal" class="overlay">
+  <div class="modal">
+    <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Chi tiết đơn</h3><div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace" id="modalTime">--:--</div><button class="modal-close" onclick="closeModal('detailModal')"><span class="material-icons-round">close</span></button></div>
+    <div class="modal-body">
+      <div class="modal-detail-row"><div class="detail-label">Mã vận đơn</div><div class="detail-code"><span id="modalCode">---</span><button class="btn-copy-sm" onclick="copyToClipboard(document.getElementById('modalCode').innerText,this)"><span class="material-icons-round">content_copy</span></button></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="modal-detail-row"><div class="detail-label">Nhân viên</div><div class="detail-value" id="modalStaff">---</div></div>
+        <div class="modal-detail-row"><div class="detail-label">Kênh bán</div><div class="detail-value" style="display:flex;align-items:center;gap:6px"><img id="modalChannelIcon" style="width:20px;border-radius:4px"><span id="modalChannel">---</span></div></div>
+      </div>
+      <div class="modal-detail-row"><div class="detail-label">Sản phẩm</div><div class="detail-value" id="modalProduct" style="color:var(--blue)">---</div></div>
+      <div class="modal-detail-row"><div class="detail-label">Chi tiết</div><div class="detail-value">SL: <span id="modalQty" style="font-family:'JetBrains Mono',monospace;font-weight:800">---</span> · <span id="modalStatus">---</span></div></div>
+      <div class="modal-detail-row"><div class="detail-label">Gian hàng</div><div class="detail-value" style="display:flex;align-items:center;gap:8px"><img id="modalShopIcon" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border)"><span id="modalShop" style="font-weight:800">---</span></div></div>
+      <div class="modal-detail-row"><div class="detail-label">Báo cáo sàn</div><div class="detail-value" id="modalReport">---</div></div>
+      <div><div class="detail-label">Hình ảnh</div><div class="detail-imgs" id="modalImages"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="subDetailModal" class="overlay" style="z-index:2000">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Chi tiết đơn</h3><div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace" id="subModalTime">--:--</div><button class="modal-close" onclick="closeModal('subDetailModal')"><span class="material-icons-round">close</span></button></div>
+    <div class="modal-body">
+      <div class="modal-detail-row"><div class="detail-label">Mã vận đơn</div><div class="detail-code"><span id="subModalCode">---</span><button class="btn-copy-sm" onclick="copyToClipboard(document.getElementById('subModalCode').innerText,this)"><span class="material-icons-round">content_copy</span></button></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="modal-detail-row"><div class="detail-label">Nhân viên</div><div class="detail-value" id="subModalStaff">---</div></div>
+        <div class="modal-detail-row"><div class="detail-label">Kênh bán</div><div class="detail-value" style="display:flex;align-items:center;gap:6px"><img id="subModalChannelIcon" style="width:20px;border-radius:4px"><span id="subModalChannel">---</span></div></div>
+      </div>
+      <div class="modal-detail-row"><div class="detail-label">Sản phẩm</div><div class="detail-value" id="subModalProduct" style="color:var(--blue)">---</div></div>
+      <div class="modal-detail-row"><div class="detail-label">Chi tiết</div><div class="detail-value">SL: <span id="subModalQty" style="font-family:'JetBrains Mono',monospace;font-weight:800">---</span> · <span id="subModalStatus">---</span></div></div>
+      <div class="modal-detail-row"><div class="detail-label">Gian hàng</div><div class="detail-value" style="display:flex;align-items:center;gap:8px"><img id="subModalShopIcon" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border)"><span id="subModalShop" style="font-weight:800">---</span></div></div>
+      <div class="modal-detail-row"><div class="detail-label">Báo cáo sàn</div><div class="detail-value" id="subModalReport">---</div></div>
+      <div><div class="detail-label">Hình ảnh</div><div class="detail-imgs" id="subModalImages"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="channelDetailModal" class="overlay">
+  <div class="modal" style="max-width:560px;height:80vh;max-height:700px;display:flex;flex-direction:column">
+    <div class="modal-head"><h3 style="font-size:16px;font-weight:800" id="channelListTitle">Danh sách đơn</h3><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600" id="channelListSubtitle">...</div><button class="modal-close" onclick="closeModal('channelDetailModal')"><span class="material-icons-round">close</span></button></div>
+    <div class="modal-body" style="flex:1;overflow-y:auto;padding-top:0"><div id="channelListContainer"></div></div>
+  </div>
 </div>
 
 <script>
-    const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzNyibf___3pwV3OKW16ZyFeiDEbkUuEXWEBW8f3ae1Zzh1jLTZ5DGVG6-ELvK4rhhP5g/exec";
-    
-    // --- CẤU HÌNH ICON & DANH SÁCH SHOP ---
-    const CHANNEL_ICONS = {
-        'Tiktok': 'https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png',
-        'Shopee': 'https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png',
-        'VTP': 'https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png',
-        'Lazada': 'https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png',
-        'default': 'https://cdn-icons-png.flaticon.com/512/263/263142.png'
-    };
+const WEB_APP_URL="https://script.google.com/macros/s/AKfycbzNyibf___3pwV3OKW16ZyFeiDEbkUuEXWEBW8f3ae1Zzh1jLTZ5DGVG6-ELvK4rhhP5g/exec";
+const CHANNEL_ICONS={Tiktok:'https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png',Shopee:'https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png',VTP:'https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png',Lazada:'https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png',default:'https://cdn-icons-png.flaticon.com/512/263/263142.png'};
+const SHOP_LISTS={Shopee:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"],Tiktok:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"],Lazada:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"]};
+const SHOP_LOGOS={"XIXA - Giày sức khỏe":"https://i.ibb.co/gZVxsP2Q/Logo-Xixa-removebg-preview.png","HOBIBEAR - Official Store":"https://i.ibb.co/ymjgNn7L/Logo-Hobibear-01-removebg-preview.png","Apakowa Official Store":"https://i.ibb.co/hF254fyb/Avatar-Apakowa-01-removebg-preview.png","XIXA Official Store":"https://i.ibb.co/SD73ZRxz/Bear-2026-XIXA-01.jpg","FERRONI":"https://i.ibb.co/1YGgCLCD/z7440002345017-2a71c6f5adbb7fa5bced69038dac37ae.jpg",default:"https://cdn-icons-png.flaticon.com/512/126/126477.png"};
 
-    const SHOP_LISTS = {
-        "Shopee": ["XIXA - Giày sức khỏe", "HOBIBEAR - Official Store", "Apakowa Official Store", "XIXA Official Store", "FERRONI"],
-        "Tiktok": ["XIXA - Giày sức khỏe", "HOBIBEAR - Official Store", "Apakowa Official Store", "XIXA Official Store", "FERRONI"],
-        "Lazada": ["XIXA - Giày sức khỏe", "HOBIBEAR - Official Store", "Apakowa Official Store", "XIXA Official Store", "FERRONI"]
-    };
+let filesToUpload=[],historyDataCache=[],channelDataCache=[],reportChart=null;
+let currentUser="",userRole="staff",html5QrcodeScanner=null,progressInterval=null,monthlyChart=null;
 
-    const SHOP_LOGOS = {
-        "XIXA - Giày sức khỏe": "https://i.ibb.co/gZVxsP2Q/Logo-Xixa-removebg-preview.png",
-        "HOBIBEAR - Official Store": "https://i.ibb.co/ymjgNn7L/Logo-Hobibear-01-removebg-preview.png",
-        "Apakowa Official Store": "https://i.ibb.co/hF254fyb/Avatar-Apakowa-01-removebg-preview.png",
-        "XIXA Official Store": "https://i.ibb.co/SD73ZRxz/Bear-2026-XIXA-01.jpg",
-        "FERRONI": "https://i.ibb.co/1YGgCLCD/z7440002345017-2a71c6f5adbb7fa5bced69038dac37ae.jpg",
-        "default": "https://cdn-icons-png.flaticon.com/512/126/126477.png"
-    };
+// THEME
+function toggleTheme(){
+  if(!document.startViewTransition){updateTheme();return}
+  const btn=document.getElementById('themeIcon');
+  if(!btn){updateTheme();return}
+  const r=btn.getBoundingClientRect();
+  const x=r.left+r.width/2,y=r.top+r.height/2;
+  const end=Math.hypot(Math.max(x,innerWidth-x),Math.max(y,innerHeight-y));
+  const t=document.startViewTransition(()=>updateTheme());
+  t.ready.then(()=>document.documentElement.animate({clipPath:[`circle(0px at ${x}px ${y}px)`,`circle(${end}px at ${x}px ${y}px)`]},{duration:500,easing:'ease-in',pseudoElement:'::view-transition-new(root)'}));
+}
+function updateTheme(){
+  document.body.classList.toggle('dark');
+  const dark=document.body.classList.contains('dark');
+  document.getElementById('themeIcon').innerText=dark?'light_mode':'dark_mode';
+  localStorage.setItem('xixa_theme',dark?'dark':'light');
+  if(monthlyChart)loadMonthlyStats();
+  if(reportChart)loadReportData();
+}
+function initTheme(){
+  const s=localStorage.getItem('xixa_theme');
+  if(s==='dark'){document.body.classList.add('dark');document.getElementById('themeIcon').innerText='light_mode'}
+}
 
-    let filesToUpload = []; let historyDataCache = []; let channelDataCache = []; let reportChart = null;
-    let currentUser = ""; let userRole = "staff"; 
-    let html5QrcodeScanner = null;
-    let progressInterval = null;
-    let monthlyChart = null; 
-
-    // --- DARK MODE LOGIC WITH VIEW TRANSITION API ---
-    function toggleTheme() {
-        if (!document.startViewTransition) {
-            updateTheme();
-            return;
-        }
-
-        // --- NEW LOGIC: Target the Theme Icon (Day/Night Logo) ---
-        // Lấy vị trí của nút icon đổi theme thay vì logo app
-        const targetBtn = document.getElementById('themeIcon');
-        
-        // Safety check nếu không tìm thấy icon
-        if (!targetBtn) {
-            updateTheme();
-            return;
-        }
-
-        const rect = targetBtn.getBoundingClientRect();
-
-        // Tính tâm của nút bấm
-        const x = rect.left + rect.width / 2;
-        const y = rect.top + rect.height / 2;
-
-        // Tính khoảng cách đến góc xa nhất màn hình để phủ hết
-        const endRadius = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y));
-
-        const transition = document.startViewTransition(() => {
-            updateTheme();
-        });
-
-        transition.ready.then(() => {
-            // FIX: Luôn animate lớp "New" (lớp mới sinh ra) phủ lên lớp cũ
-            // Dù là chuyển sang Dark hay Light, hiệu ứng đều là "Lan tỏa" từ icon ra
-            document.documentElement.animate(
-                {
-                    clipPath: [
-                        `circle(0px at ${x}px ${y}px)`,
-                        `circle(${endRadius}px at ${x}px ${y}px)`
-                    ],
-                },
-                {
-                    duration: 500,
-                    easing: 'ease-in',
-                    pseudoElement: '::view-transition-new(root)', // Luôn nhắm vào lớp mới
-                }
-            );
-        });
+// NAV
+function switchView(view){
+  document.getElementById('formView').style.display='none';
+  document.getElementById('historyView').style.display='none';
+  document.getElementById('adminView').style.display='none';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  document.getElementById('nav-'+view)?.classList.add('active');
+  const titles={form:'Nhập đơn hoàn',history:'Lịch sử nhập',dashboard:'Dashboard'};
+  document.getElementById('pageTitleBar').innerText=titles[view]||'';
+  if(view==='form'){document.getElementById('formView').style.display='block'}
+  else if(view==='history'){
+    document.getElementById('historyView').style.display='block';
+    // chỉ load nếu list đang trống (tránh load lại khi switch qua switch lại)
+    if(!document.getElementById('historyList').querySelector('.history-group,.history-item')){
+      loadHistory();
     }
+  }
+  else if(view==='dashboard'){document.getElementById('adminView').style.display='block'}
+}
 
-    function updateTheme() {
-        const body = document.body;
-        const icon = document.getElementById('themeIcon');
-        body.classList.toggle('dark-mode');
-        
-        const isDark = body.classList.contains('dark-mode');
-        icon.innerText = isDark ? 'light_mode' : 'dark_mode';
-        localStorage.setItem('xixa_theme', isDark ? 'dark' : 'light');
-        
-        // Cập nhật lại biểu đồ nếu đang hiển thị
-        if(monthlyChart) loadMonthlyStats(); 
-        if(reportChart) loadReportData();
-    }
+// COPY
+function copyToClipboard(text,btn){
+  if(!text||text==='---')return;
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=btn.innerHTML;
+    btn.innerHTML='<span class="material-icons-round" style="font-size:15px">check</span>';
+    btn.style.color='var(--green)';
+    setTimeout(()=>{btn.innerHTML=orig;btn.style.color=''},1500);
+  });
+}
 
-    function initTheme() {
-        const savedTheme = localStorage.getItem('xixa_theme');
-        const icon = document.getElementById('themeIcon');
-        if (savedTheme === 'dark') {
-            document.body.classList.add('dark-mode');
-            icon.innerText = 'light_mode';
-        } else {
-            icon.innerText = 'dark_mode';
-        }
-    }
+// LOADING
+function showLoading(show,text="Đang xử lý...",startFake=false){
+  const el=document.getElementById('loading');
+  const fill=document.getElementById('progressFill');
+  const txt=document.getElementById('statusText');
+  const pct=document.getElementById('percentText');
+  if(show){
+    el.style.display='flex';txt.innerText=text;fill.style.width='0%';pct.innerText='0%';
+    if(startFake)simulateProgress();
+  }else{
+    clearInterval(progressInterval);fill.style.width='100%';pct.innerText='100%';
+    setTimeout(()=>{el.style.display='none'},200);
+  }
+}
+function updateProgress(p,t){
+  document.getElementById('progressFill').style.width=p+'%';
+  document.getElementById('percentText').innerText=Math.floor(p)+'%';
+  if(t)document.getElementById('statusText').innerText=t;
+}
+function simulateProgress(){let p=0;clearInterval(progressInterval);progressInterval=setInterval(()=>{if(p<90){p+=Math.random()*5;updateProgress(Math.min(p,90))}},300)}
+function togglePass(){const x=document.getElementById("loginPass");x.type=x.type==="password"?"text":"password"}
+function getTodayString(){const n=new Date();return new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().split('T')[0]}
 
-    // --- [V6.9] NEW UTILS: COPY CLIPBOARD ---
-    function copyToClipboard(text, btnElement) {
-        if(!text || text === '---') return;
-        navigator.clipboard.writeText(text).then(() => {
-            const originalHTML = btnElement.innerHTML;
-            btnElement.innerHTML = '<span class="material-icons-round" style="font-size: 18px;">check</span>';
-            btnElement.style.color = '#10b981';
-            
-            setTimeout(() => {
-                btnElement.innerHTML = originalHTML;
-                btnElement.style.color = '';
-            }, 1500);
-        }).catch(err => {
-            alert("Lỗi copy: " + err);
-        });
-    }
+// LOGIN
+document.getElementById('loginForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  const u=document.getElementById('loginUser').value;
+  const p=document.getElementById('loginPass').value;
+  showLoading(true,"Đang đăng nhập...",true);
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"login",user:u,pass:p})})
+  .then(r=>r.json()).then(res=>{
+    showLoading(false);
+    if(res.result==='success'){
+      currentUser=u;
+      userRole=u.toLowerCase()==='admin'?'admin':'staff';
+      document.getElementById('staffName').value=res.name;
+      document.getElementById('displayName').innerText=res.name;
+      document.getElementById('userAvatar').innerText=res.name.charAt(0).toUpperCase();
+      document.getElementById('loginScreen').style.display='none';
+      document.getElementById('mainApp').style.display='flex';
+      applyPermissions();
+      if(userRole==='admin'){
+        switchView('dashboard');
+        initMonthlyChart();
+        loadReportData();
+        document.getElementById('returnForm').style.display='none';
+      }else{
+        switchView('form');
+        document.getElementById('returnForm').style.display='block';
+        handleChannelChange();
+      }
+      loadHistory();
+    }else{alert(res.message)}
+  }).catch(()=>{showLoading(false);alert("Lỗi kết nối Server!")});
+});
 
-    // --- OTHER UTILS ---
-    function showLoading(show, text="Đang xử lý...", startFake=false) {
-        const el = document.getElementById('loading');
-        const fill = document.getElementById('progressFill');
-        const txt = document.getElementById('statusText');
-        const pct = document.getElementById('percentText');
-        
-        if (show) {
-            el.style.display = 'flex';
-            txt.innerText = text;
-            fill.style.width = '0%';
-            pct.innerText = '0%';
-            if(startFake) simulateProgress();
-        } else {
-            clearInterval(progressInterval);
-            fill.style.width = '100%';
-            pct.innerText = '100%';
-            setTimeout(() => { el.style.display = 'none'; }, 200);
-        }
-    }
+function applyPermissions(){
+  document.querySelectorAll('.admin-only').forEach(el=>{
+    if(userRole==='admin')el.style.display='flex';else el.style.display='none';
+  });
+}
+function logout(){
+  currentUser="";userRole="staff";
+  document.getElementById('mainApp').style.display='none';
+  document.getElementById('loginScreen').style.display='flex';
+  document.getElementById('loginForm').reset();
+  document.getElementById('historyList').innerHTML="";
+}
 
-    function updateProgress(percent, text) {
-        const fill = document.getElementById('progressFill');
-        const pct = document.getElementById('percentText');
-        const txt = document.getElementById('statusText');
-        fill.style.width = percent + '%';
-        pct.innerText = Math.floor(percent) + '%';
-        if(text) txt.innerText = text;
-    }
-
-    function simulateProgress() {
-        let p = 0; clearInterval(progressInterval);
-        progressInterval = setInterval(() => { if(p < 90) { p += Math.random() * 5; updateProgress(Math.min(p, 90)); } }, 300);
-    }
-
-    function togglePass() {
-        const x = document.getElementById("loginPass");
-        x.type = x.type === "password" ? "text" : "password";
-    }
-
-    function getTodayString() {
-        const now = new Date();
-        const offset = now.getTimezoneOffset() * 60000;
-        const localDate = new Date(now.getTime() - offset);
-        return localDate.toISOString().split('T')[0];
-    }
-
-    // --- LOGIN ---
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-        e.preventDefault();
-        const u = document.getElementById('loginUser').value;
-        const p = document.getElementById('loginPass').value;
-        showLoading(true, "Đang đăng nhập...", true);
-        
-        fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "login", user: u, pass: p }) })
-        .then(r => r.json()).then(res => {
-            showLoading(false);
-            if(res.result === 'success') {
-                currentUser = u;
-                if (u.toLowerCase() === 'admin') userRole = 'admin'; else userRole = 'staff'; 
-                
-                document.getElementById('staffName').value = res.name;
-                document.getElementById('displayName').innerText = res.name;
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('mainApp').style.display = 'block';
-                
-                applyPermissions(); 
-                
-                if (userRole === 'admin') {
-                    document.getElementById('returnForm').style.display = 'none'; 
-                    document.getElementById('adminDashboard').style.display = 'block'; 
-                    initMonthlyChart();
-                    loadReportData(); // Load report data immediately for admin
-                } else {
-                    document.getElementById('returnForm').style.display = 'block'; 
-                    document.getElementById('adminDashboard').style.display = 'none'; 
-                    handleChannelChange(); 
-                }
-                
-                loadHistory(); 
-            } else { alert(res.message); }
-        }).catch(() => { showLoading(false); alert("Lỗi kết nối Server!"); });
+// CHANNEL CHANGE
+function handleChannelChange(){
+  const ch=document.querySelector('input[name="channel"]:checked').value;
+  const area=document.getElementById('shopSelectArea');
+  const grid=document.getElementById('shopGrid');
+  grid.innerHTML='';
+  if(SHOP_LISTS[ch]){
+    area.style.display='block';
+    SHOP_LISTS[ch].forEach((s,i)=>{
+      const logo=SHOP_LOGOS[s]||SHOP_LOGOS.default;
+      grid.innerHTML+=`<label><input type="radio" name="shop" value="${s}" class="shop-opt" ${i===0?'checked':''}><div class="shop-card"><img src="${logo}"><span>${s}</span></div></label>`;
     });
+  }else{area.style.display='none'}
+}
 
-    function applyPermissions() {
-        const els = document.querySelectorAll('.admin-only');
-        els.forEach(el => {
-            if (userRole === 'admin') el.classList.add('visible');
-            else el.classList.remove('visible');
-        });
+// ADMIN DASHBOARD
+function initMonthlyChart(){
+  const d=new Date();
+  document.getElementById('monthSelect').value=d.toISOString().slice(0,7);
+  loadMonthlyStats();
+}
+
+function loadMonthlyStats(){
+  const m=document.getElementById('monthSelect').value;
+  if(!m)return;
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"report_daily_channel",month:m})})
+  .then(r=>r.json()).then(d=>{if(d.result==='success')renderMonthlyChart(d)});
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:m})})
+  .then(r=>r.json()).then(res=>{
+    if(res.result==='success'){
+      renderShopStats(res.data);
+      updateAdminMetrics(res.data);
     }
+  });
+}
 
-    // --- LOGOUT ---
-    function logout() {
-        currentUser = ""; userRole = "staff";
-        document.getElementById('mainApp').style.display = 'none';
-        document.getElementById('loginScreen').style.display = 'flex';
-        document.getElementById('loginForm').reset();
-        document.getElementById('historyList').innerHTML = ""; 
-        document.getElementById('returnForm').style.display = 'block'; 
-        document.getElementById('adminDashboard').style.display = 'none'; 
+function updateAdminMetrics(orders){
+  if(!orders||!orders.length){
+    ['m-total','m-good','m-error','m-other'].forEach(id=>document.getElementById(id).innerText='0');
+    return;
+  }
+  const total=orders.length;
+  const good=orders.filter(o=>o.status.includes('Tốt')).length;
+  const error=orders.filter(o=>o.status.includes('tráo')||o.status.includes('Thiếu')).length;
+  const other=total-good-error;
+  document.getElementById('m-total').innerText=total;
+  document.getElementById('m-good').innerText=good;
+  document.getElementById('m-error').innerText=error;
+  document.getElementById('m-other').innerText=other;
+  document.getElementById('m-good-pct').innerText=total?Math.round(good/total*100)+'% tổng đơn':'—';
+  document.getElementById('m-error-pct').innerText=total?Math.round(error/total*100)+'% tổng đơn':'—';
+  document.getElementById('m-other-pct').innerText=total?Math.round(other/total*100)+'% tổng đơn':'—';
+}
+
+function renderShopStats(orders){
+  const container=document.getElementById('shopStatsContainer');
+  if(!orders||!orders.length){container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">Không có dữ liệu tháng này</div>';return}
+  let stats={Shopee:{},Tiktok:{},Lazada:{},VTP:{},Khác:{}};
+  orders.forEach(o=>{
+    let ch=o.channel;
+    let shop=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ";
+    if(ch.toLowerCase().includes('shopee'))ch='Shopee';
+    else if(ch.toLowerCase().includes('tiktok'))ch='Tiktok';
+    else if(ch.toLowerCase().includes('lazada'))ch='Lazada';
+    else if(ch.toLowerCase().includes('viettel')||ch.toLowerCase().includes('vtp'))ch='VTP';
+    else ch='Khác';
+    if(!stats[ch][shop])stats[ch][shop]={total:0,good:0,dirty:0,error:0,warranty:0};
+    stats[ch][shop].total++;
+    if(o.status.includes('Tốt'))stats[ch][shop].good++;
+    else if(o.status.includes('bẩn'))stats[ch][shop].dirty++;
+    else if(o.status.includes('tráo')||o.status.includes('Thiếu'))stats[ch][shop].error++;
+    else if(o.status.includes('Bảo hành'))stats[ch][shop].warranty++;
+  });
+  let html='';
+  ['Shopee','Tiktok','Lazada','VTP','Khác'].forEach(ch=>{
+    const shops=stats[ch];
+    if(Object.keys(shops).length>0){
+      const icon=CHANNEL_ICONS[ch]||CHANNEL_ICONS.default;
+      const chTotal=Object.values(shops).reduce((a,s)=>a+s.total,0);
+      html+=`<div class="channel-shop-group">
+        <div class="channel-shop-header"><img src="${icon}" style="width:20px;height:20px;border-radius:4px"><span>${ch}</span><span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-weight:700">${chTotal} đơn</span></div>
+        <div class="shop-stat-list">`;
+      Object.entries(shops).forEach(([shopName,s])=>{
+        const logo=SHOP_LOGOS[shopName]||SHOP_LOGOS.default;
+        let pills='';
+        if(s.good>0)pills+=`<span class="spill spill-g" onclick="openShopStatusDetail('${shopName}','${ch}','good');event.stopPropagation()">${s.good}</span>`;
+        if(s.dirty>0)pills+=`<span class="spill spill-a" onclick="openShopStatusDetail('${shopName}','${ch}','dirty');event.stopPropagation()">${s.dirty}</span>`;
+        if(s.error>0)pills+=`<span class="spill spill-r" onclick="openShopStatusDetail('${shopName}','${ch}','error');event.stopPropagation()">${s.error}</span>`;
+        if(s.warranty>0)pills+=`<span class="spill spill-b" onclick="openShopStatusDetail('${shopName}','${ch}','warranty');event.stopPropagation()">${s.warranty}</span>`;
+        html+=`<div class="shop-stat-item" onclick="openShopDetailPopup('${shopName}','${ch}')">
+          <img src="${logo}">
+          <div class="shop-stat-name">${shopName}</div>
+          <div class="shop-pills">${pills}</div>
+          <div class="shop-stat-count">${s.total}</div>
+        </div>`;
+      });
+      html+='</div></div>';
     }
+  });
+  container.innerHTML=html;
+  window.currentMonthOrders=orders;
+}
 
-    // --- LOGIC XỬ LÝ CHỌN KÊNH & HIỂN THỊ SHOP (STAFF) ---
-    function handleChannelChange() {
-        const channel = document.querySelector('input[name="channel"]:checked').value;
-        const shopArea = document.getElementById('shopSelectArea');
-        const shopGrid = document.getElementById('shopGrid');
-        
-        shopGrid.innerHTML = '';
-        
-        if (SHOP_LISTS[channel]) {
-            shopArea.style.display = 'block';
-            let html = '';
-            SHOP_LISTS[channel].forEach((shopName, idx) => {
-                const logo = SHOP_LOGOS[shopName] || SHOP_LOGOS['default'];
-                const checked = idx === 0 ? 'checked' : ''; 
-                html += `
-                <label>
-                    <input type="radio" name="shop" value="${shopName}" class="shop-opt" ${checked}>
-                    <div class="shop-card">
-                        <img src="${logo}">
-                        <span>${shopName}</span>
-                    </div>
-                </label>`;
-            });
-            shopGrid.innerHTML = html;
-        } else {
-            shopArea.style.display = 'none';
-        }
+function openShopStatusDetail(shopName,channelContext,statusType){
+  if(!window.currentMonthOrders)return;
+  const m=document.getElementById('monthSelect').value;
+  const [year,month]=m.split('-');
+  const orders=window.currentMonthOrders.filter(o=>{
+    const currentShop=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ";
+    let ch=o.channel;
+    if(ch.toLowerCase().includes('shopee'))ch='Shopee';
+    else if(ch.toLowerCase().includes('tiktok'))ch='Tiktok';
+    else if(ch.toLowerCase().includes('lazada'))ch='Lazada';
+    else if(ch.toLowerCase().includes('viettel')||ch.toLowerCase().includes('vtp'))ch='VTP';
+    else ch='Khác';
+    let sm=false;
+    if(statusType==='good')sm=o.status.includes('Tốt');
+    else if(statusType==='dirty')sm=o.status.includes('bẩn');
+    else if(statusType==='error')sm=o.status.includes('tráo')||o.status.includes('Thiếu');
+    else if(statusType==='warranty')sm=o.status.includes('Bảo hành');
+    return currentShop.trim()===shopName.trim()&&ch===channelContext&&sm;
+  });
+  const labels={good:'Hàng tốt',dirty:'Hàng bẩn',error:'Lỗi / Thiếu',warranty:'Bảo hành'};
+  const logo=SHOP_LOGOS[shopName]||SHOP_LOGOS.default;
+  document.getElementById('channelListTitle').innerHTML=`<img src="${logo}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px"> ${shopName}`;
+  document.getElementById('channelListSubtitle').innerText=`${labels[statusType]} · Tháng ${month}/${year} · ${orders.length} đơn`;
+  openModal('channelDetailModal');
+  renderChannelList(orders);
+}
+function openShopDetailPopup(shopName,channelContext){
+  if(!window.currentMonthOrders)return;
+  const m=document.getElementById('monthSelect').value;
+  const [year,month]=m.split('-');
+  const orders=window.currentMonthOrders.filter(o=>{
+    const s=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ";
+    let ch=o.channel;
+    if(ch.toLowerCase().includes('shopee'))ch='Shopee';
+    else if(ch.toLowerCase().includes('tiktok'))ch='Tiktok';
+    else if(ch.toLowerCase().includes('lazada'))ch='Lazada';
+    else if(ch.toLowerCase().includes('viettel')||ch.toLowerCase().includes('vtp'))ch='VTP';
+    else ch='Khác';
+    return s.trim()===shopName.trim()&&ch===channelContext;
+  });
+  const logo=SHOP_LOGOS[shopName]||SHOP_LOGOS.default;
+  document.getElementById('channelListTitle').innerHTML=`<img src="${logo}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px"> ${shopName}`;
+  document.getElementById('channelListSubtitle').innerText=`Tất cả · Tháng ${month}/${year} · ${orders.length} đơn`;
+  openModal('channelDetailModal');
+  renderChannelList(orders);
+}
+
+function renderMonthlyChart(data){
+  const ctx=document.getElementById('monthlyChart').getContext('2d');
+  if(monthlyChart)monthlyChart.destroy();
+  if(!data||!data.datasets)return;
+  const totalShopee=data.datasets.shopee.reduce((a,b)=>a+b,0);
+  const totalTiktok=data.datasets.tiktok.reduce((a,b)=>a+b,0);
+  const totalVtp=data.datasets.vtp.reduce((a,b)=>a+b,0);
+  const totalLazada=(data.datasets.lazada||[]).reduce((a,b)=>a+b,0);
+  document.getElementById('sumShopee').innerText=totalShopee;
+  document.getElementById('sumTiktok').innerText=totalTiktok;
+  document.getElementById('sumVTP').innerText=totalVtp;
+  document.getElementById('sumLazada').innerText=totalLazada;
+  const isDark=document.body.classList.contains('dark');
+  const gc=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.04)';
+  const tc=isDark?'#a0a09a':'#5c5c58';
+  monthlyChart=new Chart(ctx,{
+    type:'bar',
+    data:{labels:data.labels,datasets:[
+      {label:'Shopee',data:data.datasets.shopee,backgroundColor:'#ea580c',borderRadius:3,barPercentage:.8,categoryPercentage:.9},
+      {label:'Tiktok',data:data.datasets.tiktok,backgroundColor:'#1a1a18',borderRadius:3,barPercentage:.8,categoryPercentage:.9},
+      {label:'Viettel',data:data.datasets.vtp,backgroundColor:'#dc2626',borderRadius:3,barPercentage:.8,categoryPercentage:.9},
+      {label:'Lazada',data:data.datasets.lazada||[],backgroundColor:'#2563eb',borderRadius:3,barPercentage:.8,categoryPercentage:.9}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      scales:{x:{stacked:true,grid:{display:false},ticks:{font:{weight:'700',size:11},color:tc}},
+              y:{stacked:true,beginAtZero:true,border:{dash:[4,4]},grid:{color:gc},ticks:{color:tc,font:{size:11}}}},
+      plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#1a1a18':'rgba(15,15,15,.9)',padding:12,cornerRadius:8,titleFont:{weight:'bold'},bodyFont:{family:'Plus Jakarta Sans'},displayColors:true}}
     }
+  });
+}
 
-    // --- ADMIN DASHBOARD LOGIC ---
-    function initMonthlyChart() {
-        const d = new Date();
-        const monthStr = d.toISOString().slice(0, 7); 
-        document.getElementById('monthSelect').value = monthStr;
-        loadMonthlyStats();
+function openChannelPopup(channel){
+  const mv=document.getElementById('monthSelect').value;
+  if(!mv)return alert("Vui lòng chọn tháng trước!");
+  const icon=CHANNEL_ICONS[channel]||CHANNEL_ICONS.default;
+  document.getElementById('channelListTitle').innerHTML=`<img src="${icon}" style="width:22px;vertical-align:middle;margin-right:8px"> ${channel}`;
+  document.getElementById('channelListContainer').innerHTML=`<div style='text-align:center;padding:30px;color:var(--text3)'>Đang tải...</div>`;
+  openModal('channelDetailModal');
+  showLoading(true,"Đang tải chi tiết...",true);
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:mv,channel:channel})})
+  .then(r=>r.json()).then(data=>{
+    showLoading(false);
+    if(data.result==='success'){
+      renderChannelList(data.data);
+      const [y,m]=mv.split('-');
+      document.getElementById('channelListSubtitle').innerText=`Tháng ${m}/${y} · Tổng: ${data.data.length} đơn`;
+    }else document.getElementById('channelListContainer').innerHTML="<div style='text-align:center;padding:20px;color:var(--red)'>Lỗi dữ liệu</div>";
+  }).catch(()=>showLoading(false));
+}
+
+function renderChannelList(data){
+  const container=document.getElementById('channelListContainer');
+  if(!data||!data.length){container.innerHTML="<div style='text-align:center;padding:24px;color:var(--text3);font-size:13px'>Không có đơn hàng nào.</div>";return}
+  channelDataCache=data;
+  let html="";
+  data.forEach((it,i)=>{
+    let pillClass='pill-green';
+    if(it.status.includes('bẩn'))pillClass='pill-amber';
+    if(it.status.includes('tráo')||it.status.includes('Thiếu'))pillClass='pill-red';
+    if(it.status.includes('Bảo hành'))pillClass='pill-sky';
+    html+=`<div class="channel-detail-item" onclick="openSubDetailModal(${i})">
+      <div style="flex:1;min-width:0;margin-right:10px">
+        <div class="history-code">${it.code}</div>
+        <div class="history-product">${it.product||"..."}</div>
+        <div class="history-shop">${it.shop||'Không rõ'}</div>
+      </div>
+      <div style="text-align:right;flex-shrink:0">
+        <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div>
+        <div class="history-time" style="margin-top:4px">${new Date(it.time).toLocaleDateString('vi')}</div>
+      </div>
+    </div>`;
+  });
+  container.innerHTML=html;
+}
+
+function openSubDetailModal(i){
+  const d=channelDataCache[i];
+  document.getElementById('subModalCode').innerText=d.code;
+  document.getElementById('subModalStaff').innerText=d.staff;
+  document.getElementById('subModalTime').innerText=new Date(d.time).toLocaleString('vi');
+  document.getElementById('subModalProduct').innerText=d.product;
+  document.getElementById('subModalQty').innerText=d.qty||1;
+  document.getElementById('subModalStatus').innerText=d.status;
+  document.getElementById('subModalReport').innerText=d.report;
+  document.getElementById('subModalShop').innerText=d.shop||"Không rõ";
+  document.getElementById('subModalShopIcon').src=SHOP_LOGOS[d.shop]||SHOP_LOGOS.default;
+  document.getElementById('subModalChannel').innerText=d.channel;
+  document.getElementById('subModalChannelIcon').src=CHANNEL_ICONS[d.channel]||CHANNEL_ICONS.default;
+  const b=document.getElementById('subModalImages');b.innerHTML='';
+  if(d.imageLinks)d.imageLinks.split('\n').forEach(u=>{if(u.trim())b.innerHTML+=`<img src="${u.trim()}" class="detail-img-thumb" onclick="window.open('${u.trim()}')">`});
+  else b.innerHTML='<span style="font-size:12px;color:var(--text3)">Không có ảnh</span>';
+  openModal('subDetailModal');
+}
+
+// SCANNER
+function startScanner(){
+  document.getElementById('scannerModal').classList.add('open');
+  if(html5QrcodeScanner){html5QrcodeScanner.clear().catch(()=>{})}
+  setTimeout(()=>{
+    html5QrcodeScanner=new Html5Qrcode("reader");
+    const config={fps:30,qrbox:{width:250,height:250},aspectRatio:1.0,experimentalFeatures:{useBarCodeDetectorIfSupported:true}};
+    html5QrcodeScanner.start({facingMode:"environment"},config,onScanSuccess,()=>{}).catch(()=>{alert("Không thể mở Camera. Vui lòng cấp quyền.")});
+  },300);
+}
+async function scanFromFile(input){
+  if(input.files.length===0)return;
+  const f=input.files[0];
+  if(html5QrcodeScanner){try{html5QrcodeScanner.stop().catch(()=>{})}catch(e){}}
+  const s=new Html5Qrcode("reader");
+  try{const t=await s.scanFile(f,false);onScanSuccess(t,null);s.clear()}catch(e){runOCR(f);s.clear()}
+  input.value='';
+}
+async function runOCR(imageFile){
+  showLoading(true,"AI đang khởi động...",false);
+  document.getElementById('ocr-status').innerText="Đang tối ưu ảnh...";
+  const processed=await preprocessImage(imageFile);
+  document.getElementById('ocr-status').innerText="Đang đọc văn bản...";
+  Tesseract.recognize(processed,'vie',{logger:m=>{if(m.status==='recognizing text')updateProgress(m.progress*100,"Nhận diện: "+Math.floor(m.progress*100)+"%")}})
+  .then(({data:{text}})=>{
+    showLoading(false);document.getElementById('ocr-status').innerText="";
+    const code=detectCarrierCode(text);
+    if(code){document.getElementById('maVanDon').value=code;stopScanner();alert("AI đọc được mã: "+code)}
+    else{alert("AI không tìm được mã. Vui lòng nhập tay.");startScanner()}
+  }).catch(()=>{showLoading(false);alert("Lỗi đọc ảnh")});
+}
+function detectCarrierCode(text){
+  const clean=text.replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g,"a").replace(/đ/g,"d").replace(/[^a-zA-Z0-9\s:]/g," ");
+  const kws=["Ma van don","Ma v4n don","Tracking","Waybill"];
+  for(const kw of kws){const idx=clean.toLowerCase().indexOf(kw.toLowerCase());if(idx!==-1){const s=clean.substring(idx+kw.length).trim();const m=s.match(/([A-Z0-9]{9,})/i);if(m)return m[0]}}
+  const codes=clean.match(/[A-Z0-9]{9,}/gi);
+  if(codes){const v=codes.filter(c=>c.length>=10&&!/(.).\1{4,}/.test(c));if(v.length>0)return v[0]}
+  return null;
+}
+function preprocessImage(imageFile){
+  return new Promise(resolve=>{
+    const r=new FileReader();r.onload=e=>{const img=new Image();img.onload=()=>{
+      const c=document.getElementById('processCanvas'),ctx=c.getContext('2d');
+      c.width=img.width;c.height=img.height;ctx.drawImage(img,0,0);
+      const d=ctx.getImageData(0,0,c.width,c.height);const data=d.data;
+      for(let i=0;i<data.length;i+=4){const avg=(data[i]+data[i+1]+data[i+2])/3;const col=avg<140?0:255;data[i]=data[i+1]=data[i+2]=col}
+      ctx.putImageData(d,0,0);resolve(c.toDataURL('image/jpeg'));
+    };img.src=e.target.result};r.readAsDataURL(imageFile);
+  });
+}
+function onScanSuccess(text){
+  const c=text.trim();
+  if(/(.)\1{5,}/.test(c)||/^[IN]+$/.test(c)||c.length<5)return;
+  document.getElementById('maVanDon').value=c;stopScanner();
+  if(navigator.vibrate)navigator.vibrate(200);
+  const inp=document.getElementById('maVanDon');inp.style.background='rgba(22,163,74,.1)';setTimeout(()=>inp.style.background='',1000);
+}
+function stopScanner(){
+  document.getElementById('scannerModal').classList.remove('open');
+  if(html5QrcodeScanner){try{if(html5QrcodeScanner.isScanning)html5QrcodeScanner.stop().then(()=>html5QrcodeScanner.clear()).catch(()=>{});else html5QrcodeScanner.clear().catch(()=>{})}catch(e){}}
+}
+
+// FORM
+function preloadImages(){
+  const urls=Object.values(CHANNEL_ICONS).concat(Object.values(SHOP_LOGOS));
+  urls.forEach(u=>{const i=new Image();i.src=u});
+}
+
+window.onload=function(){
+  preloadImages();
+  initTheme();
+  const t=getTodayString();
+  document.getElementById('displayDate').innerText=new Date().toLocaleDateString('vi-VN');
+  document.getElementById('displayDateBar').innerText=new Date().toLocaleDateString('vi-VN',{weekday:'short',day:'numeric',month:'short'});
+  document.getElementById('historyDate').value=t;
+  document.getElementById('reportStart').value=t;
+  document.getElementById('reportEnd').value=t;
+  addProductRow();addMissingRow();
+};
+function addProductRow(){
+  const d=document.createElement('div');d.className='product-row';
+  d.innerHTML=`<div style="flex:2"><input type="text" class="input-field p-name" placeholder="Tên sản phẩm..."></div><div style="flex:1;min-width:80px"><select class="input-field p-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`;
+  document.getElementById('productList').appendChild(d);
+}
+function addMissingRow(){
+  const d=document.createElement('div');d.className='missing-row';
+  d.innerHTML=`<div style="flex:2"><input type="text" class="input-field m-note" placeholder="Tên/Ghi chú..."></div><div style="flex:1;min-width:80px"><select class="input-field m-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`;
+  document.getElementById('missingList').appendChild(d);
+}
+function genSizes(){let o='';for(let i=10;i<=49;i++)o+=`<option value="${i}">${i}</option>`;return o}
+function checkStatus(){
+  const v=document.getElementById('status').value;
+  document.getElementById('missingSection').style.display=v==='Thiếu hàng'?'block':'none';
+  document.getElementById('reportSection').style.display=['Bị bẩn','Bị tráo','Thiếu hàng','Bảo hành'].includes(v)?'flex':'none';
+}
+function triggerCam(){document.getElementById('imgInputCam').click()}
+function triggerFile(){document.getElementById('imgInputFile').click()}
+function handleImageInput(input){if(input.files&&input.files.length>0){filesToUpload=filesToUpload.concat(Array.from(input.files));renderPreviews();input.value=''}}
+function renderPreviews(){
+  const box=document.getElementById('imagePreviewBox');
+  const badge=document.getElementById('imgCountBadge');
+  box.innerHTML='';
+  filesToUpload.forEach((file,i)=>{
+    const wrapper=document.createElement('div');
+    wrapper.className='img-wrapper';
+    wrapper.innerHTML=`<img src="${URL.createObjectURL(file)}" class="img-preview"><div class="btn-del-img" onclick="deleteImage(${i});event.stopPropagation()">✕</div>`;
+    box.appendChild(wrapper);
+  });
+  if(filesToUpload.length>0){
+    badge.style.display='inline-block';
+    badge.innerText=filesToUpload.length+' ảnh';
+    document.getElementById('uploadZone').style.borderColor='var(--blue)';
+  }else{
+    badge.style.display='none';
+    document.getElementById('uploadZone').style.borderColor='';
+  }
+}
+function deleteImage(i){filesToUpload.splice(i,1);renderPreviews()}
+function toggleGroup(h){h.parentElement.classList.toggle('collapsed')}
+
+// SUBMIT
+document.getElementById('returnForm').addEventListener('submit',async function(e){
+  e.preventDefault();showLoading(true,"Đang gửi dữ liệu...",true);
+  const images=await Promise.all(filesToUpload.map(f=>new Promise(r=>{const rd=new FileReader();rd.onload=()=>r({data:rd.result,mimeType:f.type,name:f.name});rd.readAsDataURL(f)})));
+  let status=document.getElementById('status').value;
+  if(status==='Thiếu hàng'){
+    const details=Array.from(document.querySelectorAll('.missing-row')).map(r=>`${r.querySelector('.m-note').value} (Size ${r.querySelector('.m-size').value})`).join(', ');
+    status=`Thiếu hàng - ${details}`;
+  }
+  let shopName='';
+  const selCh=document.querySelector('input[name="channel"]:checked').value;
+  if(SHOP_LISTS[selCh]){const ss=document.querySelector('input[name="shop"]:checked');if(ss)shopName=ss.value;else{showLoading(false);alert("Vui lòng chọn Shop!");return}}
+  const data={action:"add",staffName:document.getElementById('staffName').value,maVanDon:document.getElementById('maVanDon').value,channel:selCh,shopName:shopName,returnQty:document.getElementById('returnQty').value,status:status,isReported:document.getElementById('isReported').checked,products:Array.from(document.querySelectorAll('.product-row')).map(r=>({name:r.querySelector('.p-name').value,size:r.querySelector('.p-size').value})),images:images};
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify(data)}).then(r=>r.json()).then(res=>{
+    showLoading(false);
+    if(res.result==='success'){document.getElementById('successMsg').innerText="Lưu thành công.";openModal('successModal');resetForm();loadHistory()}
+    else alert("Lỗi: "+JSON.stringify(res));
+  }).catch(()=>{showLoading(false);alert("Lỗi kết nối!")});
+});
+
+function resetForm(){
+  document.getElementById('returnForm').reset();
+  document.getElementById('productList').innerHTML='';
+  document.getElementById('missingList').innerHTML='';
+  filesToUpload=[];renderPreviews();addProductRow();addMissingRow();checkStatus();
+  document.querySelector('input[name="channel"][value="Shopee"]').checked=true;
+  handleChannelChange();
+  document.getElementById('staffName').value=document.getElementById('displayName').innerText;
+}
+
+// HISTORY
+function skeletonHTML(){
+  let s='';
+  for(let i=0;i<3;i++){
+    s+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:12px">
+        <div class="skeleton-block" style="width:22px;height:22px;border-radius:6px"></div>
+        <div>
+          <div class="skeleton-block" style="width:${80+i*20}px;height:13px;margin-bottom:6px"></div>
+          <div class="skeleton-block" style="width:60px;height:10px"></div>
+        </div>
+      </div>
+      <div class="skeleton-block" style="width:48px;height:22px;border-radius:100px"></div>
+    </div>`;
+  }
+  return s;
+}
+
+function loadHistory(){
+  const date=document.getElementById('historyDate').value;
+  document.getElementById('historyList').innerHTML=skeletonHTML();
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get",date:date})})
+  .then(r=>r.json())
+  .then(d=>renderList(d))
+  .catch(()=>{document.getElementById('historyList').innerHTML="<div style='text-align:center;color:var(--red);margin-top:16px;font-size:13px'>Lỗi tải dữ liệu</div>"});
+}
+function executeSearch(){
+  const kw=document.getElementById('searchInput').value;
+  if(!kw)return loadHistory();
+  document.getElementById('historyList').innerHTML=skeletonHTML();
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"search",keyword:kw})})
+  .then(r=>r.json())
+  .then(d=>renderList(d))
+  .catch(()=>{document.getElementById('historyList').innerHTML="<div style='text-align:center;color:var(--red);margin-top:16px;font-size:13px'>Lỗi tìm kiếm</div>"});
+}
+function handleSearch(e){if(e.key==='Enter')executeSearch()}
+
+function renderList(data){
+  const list=document.getElementById('historyList');
+  if(!data||!data.length){list.innerHTML="<div style='text-align:center;color:var(--text3);margin-top:24px;font-size:13px'>Không có dữ liệu</div>";return}
+  historyDataCache=data;
+  const groups={Shopee:[],Tiktok:[],VTP:[],Lazada:[],Khác:[]};
+  data.forEach((item,i)=>{item.idx=i;if(groups[item.channel])groups[item.channel].push(item);else groups['Khác'].push(item)});
+  list.innerHTML='';
+  for(const [ch,items] of Object.entries(groups)){
+    if(items.length>0){
+      const icon=CHANNEL_ICONS[ch]||CHANNEL_ICONS.default;
+      let html=`<div class="history-group collapsed"><div class="history-group-header" onclick="toggleGroup(this)">
+        <div style="display:flex;align-items:center;gap:10px;font-weight:700;color:var(--text);font-size:13.5px"><img src="${icon}" style="width:22px;border-radius:4px"> ${ch}</div>
+        <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;background:var(--bg);border:1px solid var(--border);padding:3px 10px;border-radius:100px;color:var(--text2);font-weight:700">${items.length} đơn</span><span class="material-icons-round chevron" style="font-size:18px">expand_more</span></div>
+      </div><div class="group-body">`;
+      items.forEach(it=>{
+        let pillClass='pill-green';
+        if(it.status.includes('bẩn'))pillClass='pill-amber';
+        if(it.status.includes('tráo')||it.status.includes('Thiếu'))pillClass='pill-red';
+        if(it.status.includes('Bảo hành'))pillClass='pill-sky';
+        const clickAction=userRole==='admin'?`onclick="showDetail(${it.idx})"`:'';
+        const styleCursor=userRole==='admin'?'':'cursor:default;';
+        html+=`<div class="history-item" ${clickAction} style="${styleCursor}">
+          <div style="flex:1;min-width:0;margin-right:10px">
+            <div class="history-code">${it.code}</div>
+            <div class="history-product">${it.product||"..."}</div>
+            <div class="history-shop">${it.shop||''}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div>
+            <div class="history-time" style="margin-top:4px">${new Date(it.time).toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'})}</div>
+          </div>
+        </div>`;
+      });
+      html+=`</div></div>`;list.innerHTML+=html;
     }
+  }
+}
 
-    function loadMonthlyStats() {
-        const monthVal = document.getElementById('monthSelect').value;
-        if (!monthVal) return;
-        
-        // 1. Chart
-        fetch(WEB_APP_URL, { 
-            method: "POST", 
-            body: JSON.stringify({ action: "report_daily_channel", month: monthVal }) 
-        })
-        .then(r => r.json())
-        .then(data => {
-            if (data.result === 'success') {
-                renderMonthlyChart(data);
-            }
-        });
+function showDetail(i){
+  if(userRole!=='admin')return;
+  const d=historyDataCache[i];
+  document.getElementById('modalCode').innerText=d.code;
+  document.getElementById('modalStaff').innerText=d.staff;
+  document.getElementById('modalTime').innerText=new Date(d.time).toLocaleString('vi');
+  document.getElementById('modalProduct').innerText=d.product;
+  document.getElementById('modalQty').innerText=d.qty||1;
+  document.getElementById('modalStatus').innerText=d.status;
+  document.getElementById('modalReport').innerText=d.report;
+  document.getElementById('modalShop').innerText=d.shop||"---";
+  document.getElementById('modalShopIcon').src=SHOP_LOGOS[d.shop]||SHOP_LOGOS.default;
+  document.getElementById('modalChannel').innerText=d.channel;
+  document.getElementById('modalChannelIcon').src=CHANNEL_ICONS[d.channel]||CHANNEL_ICONS.default;
+  const b=document.getElementById('modalImages');b.innerHTML='';
+  if(d.imageLinks)d.imageLinks.split('\n').forEach(u=>{if(u.trim())b.innerHTML+=`<img src="${u.trim()}" class="detail-img-thumb" onclick="window.open('${u.trim()}')">`});
+  else b.innerHTML='<span style="font-size:12px;color:var(--text3)">Không có ảnh</span>';
+  openModal('detailModal');
+}
 
-        // 2. Shop Details (Aggregation)
-        fetch(WEB_APP_URL, { 
-            method: "POST", 
-            body: JSON.stringify({ action: "get_orders_by_month", month: monthVal }) 
-        })
-        .then(r => r.json())
-        .then(res => {
-            if(res.result === 'success') {
-                renderShopStats(res.data);
-            }
-        });
-    }
+function changePassword(){
+  const o=document.getElementById('oldPass').value,n=document.getElementById('newPass').value;
+  if(!o||!n)return alert("Nhập đủ thông tin!");
+  showLoading(true);
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"change_pass",user:currentUser,oldPass:o,newPass:n})})
+  .then(r=>r.json()).then(r=>{showLoading(false);if(r.result==='success'){closeModal('changePassModal');alert("Đổi pass thành công!")}else alert(r.message)});
+}
 
-    // [V7.0] UPDATED: Clickable colored pills for filtering
-    function renderShopStats(orders) {
-        const container = document.getElementById('shopStatsContainer');
-        if (!orders || orders.length === 0) {
-            container.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted)">Không có dữ liệu tháng này</div>';
-            return;
-        }
+function loadReportData(){
+  const s=document.getElementById('reportStart').value;
+  const e=document.getElementById('reportEnd').value;
+  ['rpGood','rpDirty','rpFraud','rpWarranty','rpTotal'].forEach(k=>document.getElementById(k).innerText='...');
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"report",startDate:s,endDate:e})})
+  .then(r=>r.json()).then(d=>{
+    setTimeout(()=>{
+      document.getElementById('rpGood').innerText=d.good;
+      document.getElementById('rpDirty').innerText=d.dirty;
+      document.getElementById('rpFraud').innerText=d.fraud+d.missing;
+      document.getElementById('rpWarranty').innerText=d.warranty;
+      document.getElementById('rpTotal').innerText=d.total;
+      if(reportChart)reportChart.destroy();
+      const isDark=document.body.classList.contains('dark');
+      const tc=isDark?'#a0a09a':'#5c5c58';
+      reportChart=new Chart(document.getElementById('reportChart'),{
+        type:'doughnut',
+        data:{labels:['Tốt','Bẩn','Lỗi','BH'],datasets:[{data:[d.good,d.dirty,d.fraud+d.missing,d.warranty],backgroundColor:['#16a34a','#d97706','#dc2626','#0ea5e9'],borderWidth:0,hoverOffset:8}]},
+        options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:16,font:{family:'Plus Jakarta Sans',weight:'700',size:11},color:tc,usePointStyle:true}}},layout:{padding:8}}
+      });
+    },100);
+  });
+}
 
-        // Structure: stats[channel][shop] = { total: 0, good: 0, dirty: 0, error: 0, warranty: 0 }
-        let stats = { "Shopee": {}, "Tiktok": {}, "Lazada": {}, "VTP": {}, "Khác": {} };
-        
-        orders.forEach(o => {
-            let ch = o.channel;
-            let shop = (o.shop && o.shop.trim() !== "") ? o.shop : "Không rõ";
-            
-            if(ch.toLowerCase().includes('shopee')) ch = 'Shopee';
-            else if(ch.toLowerCase().includes('tiktok')) ch = 'Tiktok';
-            else if(ch.toLowerCase().includes('lazada')) ch = 'Lazada';
-            else if(ch.toLowerCase().includes('viettel') || ch.toLowerCase().includes('vtp')) ch = 'VTP';
-            else ch = 'Khác';
-
-            if (!stats[ch][shop]) {
-                stats[ch][shop] = { total: 0, good: 0, dirty: 0, error: 0, warranty: 0 };
-            }
-            
-            stats[ch][shop].total++;
-
-            if(o.status.includes('Tốt')) stats[ch][shop].good++;
-            else if(o.status.includes('bẩn')) stats[ch][shop].dirty++;
-            else if(o.status.includes('tráo') || o.status.includes('Thiếu')) stats[ch][shop].error++;
-            else if(o.status.includes('Bảo hành')) stats[ch][shop].warranty++;
-        });
-
-        let html = '';
-        const orderOfChannels = ['Shopee', 'Tiktok', 'Lazada', 'VTP', 'Khác'];
-
-        orderOfChannels.forEach(ch => {
-            const shops = stats[ch];
-            if (Object.keys(shops).length > 0) {
-                const icon = CHANNEL_ICONS[ch] || CHANNEL_ICONS['default'];
-                html += `<div class="admin-shop-group">
-                    <div class="admin-shop-group-title"><img src="${icon}" style="width:16px"> ${ch}</div>
-                    <div class="admin-shop-list">`;
-                
-                Object.entries(shops).forEach(([shopName, s]) => {
-                    const logo = SHOP_LOGOS[shopName] || SHOP_LOGOS['default'];
-                    
-                    let pills = '';
-                    // [V7.2 FIX] FIXED ONCLICK HANDLER FOR PILLS
-                    if(s.good > 0) pills += `<span class="stat-dot good" onclick="openShopStatusDetail('${shopName}', '${ch}', 'good'); event.stopPropagation();" title="Xem đơn Tốt">${s.good}</span>`;
-                    if(s.dirty > 0) pills += `<span class="stat-dot dirty" onclick="openShopStatusDetail('${shopName}', '${ch}', 'dirty'); event.stopPropagation();" title="Xem đơn Bẩn">${s.dirty}</span>`;
-                    if(s.error > 0) pills += `<span class="stat-dot error" onclick="openShopStatusDetail('${shopName}', '${ch}', 'error'); event.stopPropagation();" title="Xem đơn Lỗi">${s.error}</span>`;
-                    if(s.warranty > 0) pills += `<span class="stat-dot warranty" onclick="openShopStatusDetail('${shopName}', '${ch}', 'warranty'); event.stopPropagation();" title="Xem đơn Bảo hành">${s.warranty}</span>`;
-
-                    html += `<div class="admin-shop-item" onclick="openShopDetailPopup('${shopName}', '${ch}')">
-                        <img src="${logo}">
-                        <div class="admin-shop-name">${shopName}</div>
-                        <div class="shop-stat-bar">${pills}</div>
-                        <div class="admin-shop-count">${s.total}</div>
-                    </div>`;
-                });
-                
-                html += `</div></div>`;
-            }
-        });
-        
-        container.innerHTML = html;
-        window.currentMonthOrders = orders;
-    }
-
-    // [V7.2 FIX] Filter and Show Specific Status (With trimming to avoid mismatch)
-    function openShopStatusDetail(shopName, channelContext, statusType) {
-        if (!window.currentMonthOrders) { alert("Chưa có dữ liệu!"); return; }
-        const monthInput = document.getElementById('monthSelect').value;
-        const [year, month] = monthInput.split('-');
-
-        const orders = window.currentMonthOrders.filter(o => {
-            const currentShop = (o.shop && o.shop.trim() !== "") ? o.shop : "Không rõ";
-            let currentChannel = o.channel;
-            
-            // Normalize channel
-            if(currentChannel.toLowerCase().includes('shopee')) currentChannel = 'Shopee';
-            else if(currentChannel.toLowerCase().includes('tiktok')) currentChannel = 'Tiktok';
-            else if(currentChannel.toLowerCase().includes('lazada')) currentChannel = 'Lazada';
-            else if(currentChannel.toLowerCase().includes('viettel') || currentChannel.toLowerCase().includes('vtp')) currentChannel = 'VTP';
-            else currentChannel = 'Khác';
-
-            // Filter logic
-            let statusMatch = false;
-            if (statusType === 'good') statusMatch = o.status.includes('Tốt');
-            else if (statusType === 'dirty') statusMatch = o.status.includes('bẩn');
-            else if (statusType === 'error') statusMatch = (o.status.includes('tráo') || o.status.includes('Thiếu'));
-            else if (statusType === 'warranty') statusMatch = o.status.includes('Bảo hành');
-
-            return currentShop.trim() === shopName.trim() && currentChannel === channelContext && statusMatch;
-        });
-
-        // Determine title for modal based on status type
-        let statusTitle = "CHI TIẾT";
-        if (statusType === 'good') statusTitle = "HÀNG TỐT";
-        else if (statusType === 'dirty') statusTitle = "HÀNG BẨN";
-        else if (statusType === 'error') statusTitle = "HÀNG LỖI/THIẾU";
-        else if (statusType === 'warranty') statusTitle = "HÀNG BẢO HÀNH";
-        
-        const logo = SHOP_LOGOS[shopName] || SHOP_LOGOS['default'];
-        document.getElementById('channelListTitle').innerHTML = `<img src="${logo}" style="width:28px; height:28px; border-radius:50%; vertical-align:middle; margin-right:8px; border:1px solid #ddd"> ${shopName.toUpperCase()}`;
-        document.getElementById('channelListSubtitle').innerText = `${statusTitle} - Tháng ${month}/${year} - Tổng: ${orders.length} đơn`;
-        openModal('channelDetailModal');
-        renderChannelList(orders); 
-    }
-
-    function openShopDetailPopup(shopName, channelContext) {
-        if (!window.currentMonthOrders) return;
-        const monthInput = document.getElementById('monthSelect').value;
-        const [year, month] = monthInput.split('-');
-
-        const orders = window.currentMonthOrders.filter(o => {
-            const currentShop = (o.shop && o.shop.trim() !== "") ? o.shop : "Không rõ";
-            let currentChannel = o.channel;
-            if(currentChannel.toLowerCase().includes('shopee')) currentChannel = 'Shopee';
-            else if(currentChannel.toLowerCase().includes('tiktok')) currentChannel = 'Tiktok';
-            else if(currentChannel.toLowerCase().includes('lazada')) currentChannel = 'Lazada';
-            else if(currentChannel.toLowerCase().includes('viettel') || currentChannel.toLowerCase().includes('vtp')) currentChannel = 'VTP';
-            else currentChannel = 'Khác';
-
-            return currentShop.trim() === shopName.trim() && currentChannel === channelContext;
-        });
-        
-        const logo = SHOP_LOGOS[shopName] || SHOP_LOGOS['default'];
-        document.getElementById('channelListTitle').innerHTML = `<img src="${logo}" style="width:28px; height:28px; border-radius:50%; vertical-align:middle; margin-right:8px; border:1px solid #ddd"> ${shopName.toUpperCase()}`;
-        document.getElementById('channelListSubtitle').innerText = `TẤT CẢ - Tháng ${month}/${year} - Tổng: ${orders.length} đơn`;
-        openModal('channelDetailModal');
-        renderChannelList(orders); 
-    }
-
-    function renderMonthlyChart(data) {
-        const ctx = document.getElementById('monthlyChart').getContext('2d');
-        if (monthlyChart) monthlyChart.destroy();
-        if (!data || !data.datasets) return;
-        
-        const totalShopee = data.datasets.shopee.reduce((a, b) => a + b, 0);
-        const totalTiktok = data.datasets.tiktok.reduce((a, b) => a + b, 0);
-        const totalVtp = data.datasets.vtp.reduce((a, b) => a + b, 0);
-        const totalLazada = (data.datasets.lazada || []).reduce((a, b) => a + b, 0);
-        document.getElementById('sumShopee').innerText = totalShopee;
-        document.getElementById('sumTiktok').innerText = totalTiktok;
-        document.getElementById('sumVTP').innerText = totalVtp;
-        document.getElementById('sumLazada').innerText = totalLazada;
-
-        const shopeeGrad = ctx.createLinearGradient(0, 0, 0, 400);
-        shopeeGrad.addColorStop(0, '#ff9a76'); shopeeGrad.addColorStop(0.5, '#ff512f'); shopeeGrad.addColorStop(1, '#dd2476');
-        const tiktokGrad = ctx.createLinearGradient(0, 0, 0, 400);
-        tiktokGrad.addColorStop(0, '#69c9d0'); tiktokGrad.addColorStop(0.5, '#010101'); tiktokGrad.addColorStop(1, '#000');
-        const vtpGrad = ctx.createLinearGradient(0, 0, 0, 400);
-        vtpGrad.addColorStop(0, '#ff758c'); vtpGrad.addColorStop(0.5, '#ff7eb3'); vtpGrad.addColorStop(1, '#ee0979');
-        const lazadaGrad = ctx.createLinearGradient(0, 0, 0, 400);
-        lazadaGrad.addColorStop(0, '#0f146d'); lazadaGrad.addColorStop(1, '#f53d2d');
-
-        // Check if dark mode for grid color
-        const isDark = document.body.classList.contains('dark-mode');
-        const gridColor = isDark ? '#334155' : '#f1f5f9';
-
-        monthlyChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data.labels,
-                datasets: [
-                    { label: 'Shopee', data: data.datasets.shopee, backgroundColor: shopeeGrad, borderRadius: 2, borderWidth: {top: 0, bottom: 2, left: 1, right: 1}, borderColor: 'rgba(0,0,0,0.1)', barPercentage: 0.8, categoryPercentage: 0.9 },
-                    { label: 'Tiktok', data: data.datasets.tiktok, backgroundColor: tiktokGrad, borderRadius: 2, borderWidth: {top: 0, bottom: 2, left: 1, right: 1}, borderColor: 'rgba(0,0,0,0.1)', barPercentage: 0.8, categoryPercentage: 0.9 },
-                    { label: 'Viettel', data: data.datasets.vtp, backgroundColor: vtpGrad, borderRadius: 2, borderWidth: {top: 0, bottom: 2, left: 1, right: 1}, borderColor: 'rgba(0,0,0,0.1)', barPercentage: 0.8, categoryPercentage: 0.9 },
-                    { label: 'Lazada', data: data.datasets.lazada || [], backgroundColor: lazadaGrad, borderRadius: 2, borderWidth: {top: 0, bottom: 2, left: 1, right: 1}, borderColor: 'rgba(0,0,0,0.1)', barPercentage: 0.8, categoryPercentage: 0.9 }
-                ]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                interaction: { mode: 'index', intersect: false },
-                scales: { 
-                    x: { 
-                        stacked: true, 
-                        grid: { display: false }, 
-                        ticks: { font: { weight: '700' }, color: isDark ? '#cbd5e1' : '#64748b' } 
-                    }, 
-                    y: { 
-                        stacked: true, 
-                        beginAtZero: true, 
-                        border: { dash: [5, 5] }, 
-                        grid: { color: gridColor },
-                        ticks: { color: isDark ? '#cbd5e1' : '#64748b' }
-                    } 
-                },
-                plugins: { 
-                    legend: { position: 'bottom', labels: { usePointStyle: true, padding: 20, font: { weight: '800' }, color: isDark ? '#cbd5e1' : '#64748b' } }, 
-                    tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', padding: 12, cornerRadius: 8, titleFont: { weight: 'bold' }, displayColors: true, usePointStyle: true } 
-                }
-            }
-        });
-    }
-
-    function openChannelPopup(channel) {
-        const monthVal = document.getElementById('monthSelect').value;
-        if (!monthVal) return alert("Vui lòng chọn tháng trước!");
-        
-        const titleEl = document.getElementById('channelListTitle');
-        const iconSrc = CHANNEL_ICONS[channel] || CHANNEL_ICONS['default'];
-        titleEl.innerHTML = `<img src="${iconSrc}" style="width:28px; vertical-align:middle; margin-right:8px;"> ${channel.toUpperCase()}`;
-        document.getElementById('channelListContainer').innerHTML = `<div style='text-align:center;padding:30px;color:var(--text-sub);'>Đang tải dữ liệu...</div>`;
-        openModal('channelDetailModal');
-
-        showLoading(true, "Đang tải chi tiết...", true);
-
-        fetch(WEB_APP_URL, { 
-            method: "POST", 
-            body: JSON.stringify({ action: "get_orders_by_month", month: monthVal, channel: channel }) 
-        })
-        .then(r => r.json())
-        .then(data => {
-            showLoading(false);
-            if (data.result === 'success') {
-                renderChannelList(data.data);
-                const [y, m] = monthVal.split('-');
-                document.getElementById('channelListSubtitle').innerText = `Tháng ${m}/${y} - Tổng: ${data.data.length} đơn`;
-            }
-            else document.getElementById('channelListContainer').innerHTML = "<div style='text-align:center;padding:20px;color:red;'>Lỗi dữ liệu</div>";
-        })
-        .catch(() => showLoading(false));
-    }
-
-    function renderChannelList(data) {
-        const container = document.getElementById('channelListContainer');
-        if (!data || data.length === 0) {
-            container.innerHTML = "<div style='text-align:center;padding:20px;color:var(--text-muted);'>Không có đơn hàng nào.</div>";
-            return;
-        }
-        channelDataCache = data; 
-        let html = "";
-        data.forEach((it, index) => {
-             let color = '#10b981'; 
-             if(it.status.includes('bẩn')) color = '#f59e0b'; 
-             if(it.status.includes('tráo')||it.status.includes('Thiếu')) color = '#ef4444'; 
-             if(it.status.includes('Bảo hành')) color = '#0ea5e9';
-             
-             html += `<div class="history-item" onclick="openSubDetailModal(${index})">
-                <div style="flex:1; min-width: 0; margin-right: 8px;">
-                    <div style="font-weight:700;font-size:14px;color:var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${it.code}</div>
-                    <div style="font-size:12px;color:var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${it.product||"..."}</div>
-                    <div style="font-size:10px;color:var(--text-muted);font-weight:700;margin-top:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${it.shop || 'Không rõ'}</div>
-                </div>
-                <div style="text-align:right; flex-shrink: 0;">
-                    <div style="font-size:11px;font-weight:700;color:${color};background:${color}15;padding:3px 8px;border-radius:6px;display:inline-block">${it.status.split('-')[0]}</div>
-                    <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${new Date(it.time).toLocaleDateString('vi')}</div>
-                </div>
-            </div>`;
-        });
-        container.innerHTML = html;
-    }
-
-    function openSubDetailModal(i) {
-        const d = channelDataCache[i];
-        document.getElementById('subModalCode').innerText = d.code;
-        document.getElementById('subModalStaff').innerText = d.staff;
-        document.getElementById('subModalTime').innerText = new Date(d.time).toLocaleString('vi');
-        document.getElementById('subModalProduct').innerText = d.product;
-        document.getElementById('subModalQty').innerText = d.qty || 1;
-        document.getElementById('subModalStatus').innerText = d.status;
-        document.getElementById('subModalReport').innerText = d.report;
-        document.getElementById('subModalShop').innerText = d.shop || "Không rõ"; 
-        
-        const shopLogo = SHOP_LOGOS[d.shop] || SHOP_LOGOS['default'];
-        document.getElementById('subModalShopIcon').src = shopLogo;
-
-        document.getElementById('subModalChannel').innerText = d.channel;
-        document.getElementById('subModalChannelIcon').src = CHANNEL_ICONS[d.channel] || CHANNEL_ICONS['default'];
-        
-        const b = document.getElementById('subModalImages'); b.innerHTML='';
-        if(d.imageLinks) d.imageLinks.split('\n').forEach(u=>{if(u.trim()) b.innerHTML+=`<img src="${u.trim()}" class="detail-img-thumb" onclick="window.open('${u.trim()}')">`});
-        else b.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Không có ảnh</span>';
-        
-        openModal('subDetailModal');
-    }
-
-    function startScanner() {
-        document.getElementById('scannerModal').classList.add('modal-open');
-        if (html5QrcodeScanner) { html5QrcodeScanner.clear().catch(err => {}); }
-        setTimeout(() => {
-            html5QrcodeScanner = new Html5Qrcode("reader");
-            const config = { fps: 30, qrbox: { width: 250, height: 250 }, aspectRatio: 1.0, formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE, Html5QrcodeSupportedFormats.CODE_128, Html5QrcodeSupportedFormats.EAN_13 ], experimentalFeatures: { useBarCodeDetectorIfSupported: true }, disableFlip: false };
-            html5QrcodeScanner.start({ facingMode: "environment" }, config, onScanSuccess, (errorMessage) => { }).catch(err => { alert("Không thể mở Camera. Vui lòng cấp quyền hoặc sử dụng ảnh."); });
-        }, 300);
-    }
-    
-    async function scanFromFile(input) { if (input.files.length === 0) return; const imageFile = input.files[0]; if (html5QrcodeScanner) { try { html5QrcodeScanner.stop().catch(e=>{}); } catch(e){} } const scanner = new Html5Qrcode("reader"); try { const decodedText = await scanner.scanFile(imageFile, false); onScanSuccess(decodedText, null); scanner.clear(); } catch (err) { runOCR(imageFile); scanner.clear(); } input.value = ''; }
-    async function runOCR(imageFile) { showLoading(true, "AI đang khởi động...", false); document.getElementById('ocr-status').innerText = "Đang tối ưu ảnh..."; const processedImg = await preprocessImage(imageFile); document.getElementById('ocr-status').innerText = "Đang đọc văn bản..."; Tesseract.recognize(processedImg, 'vie', { logger: m => { if(m.status === 'recognizing text') { updateProgress(m.progress * 100, "Đang nhận diện: " + Math.floor(m.progress * 100) + "%"); } } }).then(({ data: { text } }) => { showLoading(false); document.getElementById('ocr-status').innerText = ""; const code = detectCarrierCode(text); if(code) { document.getElementById('maVanDon').value = code; stopScanner(); alert("Đã tìm thấy Mã Vận Đơn bằng AI: " + code); const i = document.getElementById('maVanDon'); i.style.background = '#dcfce7'; setTimeout(()=>i.style.background = 'var(--bg-input)', 1000); } else { alert("AI đã đọc được chữ nhưng không tìm thấy dòng 'Mã vận đơn' hoặc mã số hợp lệ. Vui lòng nhập tay."); startScanner(); } }).catch(err => { showLoading(false); alert("Lỗi khi đọc ảnh: " + err); }); }
-    function detectCarrierCode(text) { const clean = text.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g,"a").replace(/đ/g,"d").replace(/[^a-zA-Z0-9\s:]/g, " "); const keywords = ["Ma van don", "Ma v4n don", "Tracking", "Waybill"]; for (const kw of keywords) { const idx = clean.toLowerCase().indexOf(kw.toLowerCase()); if (idx !== -1) { const suffix = clean.substring(idx + kw.length).trim(); const match = suffix.match(/([A-Z0-9]{9,})/i); if (match) return match[0]; } } const potentialCodes = clean.match(/[A-Z0-9]{9,}/gi); if(potentialCodes) { const validCodes = potentialCodes.filter(c => c.length >= 10 && !/(.)\1{4,}/.test(c)); if(validCodes.length > 0) return validCodes[0]; } return null; }
-    function preprocessImage(imageFile) { return new Promise((resolve) => { const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.getElementById('processCanvas'); const ctx = canvas.getContext('2d'); canvas.width = img.width; canvas.height = img.height; ctx.drawImage(img, 0, 0); const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height); const data = imgData.data; for (let i = 0; i < data.length; i += 4) { const avg = (data[i] + data[i + 1] + data[i + 2]) / 3; const color = avg < 140 ? 0 : 255; data[i] = color; data[i + 1] = color; data[i + 2] = color; } ctx.putImageData(imgData, 0, 0); resolve(canvas.toDataURL('image/jpeg')); }; img.src = e.target.result; }; reader.readAsDataURL(imageFile); }); }
-    function onScanSuccess(decodedText, decodedResult) { const clean = decodedText.trim(); if (/(.)\1{5,}/.test(clean)) return; if (/^[IN]+$/.test(clean)) return; if (clean.length < 5) return; document.getElementById('maVanDon').value = clean; stopScanner(); if(navigator.vibrate) navigator.vibrate(200); const i = document.getElementById('maVanDon'); i.style.background = '#dcfce7'; setTimeout(()=>i.style.background = 'var(--bg-input)', 1000); }
-    function stopScanner() { document.getElementById('scannerModal').classList.remove('modal-open'); if (html5QrcodeScanner) { try { if(html5QrcodeScanner.isScanning) html5QrcodeScanner.stop().then(() => html5QrcodeScanner.clear()).catch(()=>{}); else html5QrcodeScanner.clear().catch(()=>{}); } catch(e) { console.log(e); } } }
-
-    window.onload = function() {
-        initTheme(); 
-        const todayStr = getTodayString();
-        document.getElementById('displayDate').innerText = new Date().toLocaleDateString('vi-VN');
-        document.getElementById('historyDate').value = todayStr;
-        document.getElementById('reportStart').value = todayStr;
-        document.getElementById('reportEnd').value = todayStr;
-        addProductRow(); addMissingRow();
-    };
-
-    function addProductRow() { const div = document.createElement('div'); div.className = 'product-row'; div.innerHTML = `<div class="input-wrapper" style="flex:2"><input type="text" class="input-box p-name" placeholder="Tên sản phẩm..."></div><div class="input-wrapper" style="flex:1; min-width:80px"><select class="input-box p-size"><option value="" disabled selected>Size</option>${generateSizeOptions()}</select></div><button type="button" class="btn-icon-only" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`; document.getElementById('productList').appendChild(div); }
-    function addMissingRow() { const div = document.createElement('div'); div.className = 'missing-row'; div.innerHTML = `<div class="input-wrapper" style="flex:2"><input type="text" class="input-box m-note" placeholder="Tên/Ghi chú..."></div><div class="input-wrapper" style="flex:1; min-width:80px"><select class="input-box m-size"><option value="" disabled selected>Size</option>${generateSizeOptions()}</select></div><button type="button" class="btn-icon-only" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`; document.getElementById('missingList').appendChild(div); }
-    function generateSizeOptions() { let o=''; for(let i=10;i<=49;i++) o+=`<option value="${i}">${i}</option>`; return o; }
-
-    function checkStatus() {
-        const val = document.getElementById('status').value;
-        document.getElementById('missingSection').style.display = val === 'Thiếu hàng' ? 'block' : 'none';
-        document.getElementById('reportSection').style.display = (['Bị bẩn','Bị tráo','Thiếu hàng','Bảo hành'].includes(val)) ? 'flex' : 'none';
-    }
-
-    function triggerCam() { document.getElementById('imgInputCam').click(); }
-    function triggerFile() { document.getElementById('imgInputFile').click(); }
-
-    function handleImageInput(input) { if(input.files && input.files.length > 0) { filesToUpload = filesToUpload.concat(Array.from(input.files)); renderPreviews(); input.value = ''; } }
-    function renderPreviews() { const box = document.getElementById('imagePreviewBox'); box.innerHTML = ''; filesToUpload.forEach((file, index) => { box.innerHTML += `<div class="img-wrapper"><img src="${URL.createObjectURL(file)}" class="img-preview"><div class="btn-del-img" onclick="deleteImage(${index}); event.stopPropagation();">✕</div></div>`; }); }
-    function deleteImage(index) { filesToUpload.splice(index, 1); renderPreviews(); }
-    function toggleGroup(header) { header.parentElement.classList.toggle('collapsed'); }
-
-    // --- SUBMIT ---
-    document.getElementById('returnForm').addEventListener('submit', async function(e) {
-        e.preventDefault(); showLoading(true, "Đang gửi dữ liệu...", true);
-        const images = await Promise.all(filesToUpload.map(file => new Promise(r => { const reader = new FileReader(); reader.onload = () => r({ data: reader.result, mimeType: file.type, name: file.name }); reader.readAsDataURL(file); })));
-        let status = document.getElementById('status').value;
-        if (status === 'Thiếu hàng') { const details = Array.from(document.querySelectorAll('.missing-row')).map(r => `${r.querySelector('.m-note').value} (Size ${r.querySelector('.m-size').value})`).join(', '); status = `Thiếu hàng - ${details}`; }
-        let shopName = ''; const selectedChannel = document.querySelector('input[name="channel"]:checked').value;
-        if (SHOP_LISTS[selectedChannel]) { const selectedShop = document.querySelector('input[name="shop"]:checked'); if (selectedShop) shopName = selectedShop.value; else { showLoading(false); alert("Vui lòng chọn Shop!"); return; } }
-        const data = { action: "add", staffName: document.getElementById('staffName').value, maVanDon: document.getElementById('maVanDon').value, channel: selectedChannel, shopName: shopName, returnQty: document.getElementById('returnQty').value, status: status, isReported: document.getElementById('isReported').checked, products: Array.from(document.querySelectorAll('.product-row')).map(r => ({ name: r.querySelector('.p-name').value, size: r.querySelector('.p-size').value })), images: images };
-        fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify(data) }).then(r => r.json()).then(res => { showLoading(false); if(res.result === 'success') { document.getElementById('successMsg').innerText = "Lưu thành công."; openModal('successModal'); resetForm(); loadHistory(); } else alert("Lỗi: " + JSON.stringify(res)); }).catch(() => { showLoading(false); alert("Lỗi kết nối!"); });
-    });
-
-    function resetForm() { document.getElementById('returnForm').reset(); document.getElementById('productList').innerHTML = ''; document.getElementById('missingList').innerHTML = ''; filesToUpload = []; renderPreviews(); addProductRow(); addMissingRow(); checkStatus(); document.querySelector('input[name="channel"][value="Shopee"]').checked = true; handleChannelChange(); document.getElementById('staffName').value = document.getElementById('displayName').innerText; }
-
-    function loadHistory() { const date = document.getElementById('historyDate').value; document.getElementById('historyList').innerText = "Đang tải..."; showLoading(true, "Đang tải danh sách...", true); fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "get", date: date }) }).then(r => r.json()).then(d => { showLoading(false); renderList(d); }); }
-    function executeSearch() { const kw = document.getElementById('searchInput').value; if(!kw) return loadHistory(); document.getElementById('historyList').innerText = "Đang tìm..."; showLoading(true, "Đang tìm kiếm...", true); fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "search", keyword: kw }) }).then(r => r.json()).then(d => { showLoading(false); renderList(d); }); }
-    function handleSearch(e) { if(e.key === 'Enter') executeSearch(); }
-
-    function renderList(data) {
-        const list = document.getElementById('historyList');
-        if(!data || !data.length) { list.innerHTML = "<div style='text-align:center;color:var(--text-muted);margin-top:20px;font-size:13px;'>Không có dữ liệu</div>"; return; }
-        historyDataCache = data;
-        const groups = { 'Shopee': [], 'Tiktok': [], 'VTP': [], 'Lazada': [], 'Khác': [] };
-        data.forEach((item, index) => { item.idx = index; if (groups[item.channel]) groups[item.channel].push(item); else groups['Khác'].push(item); });
-        list.innerHTML = ''; 
-        for (const [ch, items] of Object.entries(groups)) {
-            if (items.length > 0) {
-                const icon = CHANNEL_ICONS[ch] || CHANNEL_ICONS['default'];
-                let html = `<div class="channel-group collapsed"><div class="channel-header" onclick="toggleGroup(this)"><div style="display:flex;align-items:center;gap:10px;font-weight:700;color:var(--text-main);"><img src="${icon}" style="width:24px;"> ${ch}</div><div style="display:flex;align-items:center;gap:10px;"><span style="font-size:12px;background:var(--bg-card);padding:4px 10px;border-radius:20px;color:var(--text-sub);">${items.length} đơn</span><span class="material-icons-round chevron">expand_more</span></div></div><div class="channel-items">`;
-                items.forEach(it => {
-                     let color = '#10b981'; if(it.status.includes('bẩn')) color = '#f59e0b'; if(it.status.includes('tráo')||it.status.includes('Thiếu')) color = '#ef4444'; if(it.status.includes('Bảo hành')) color = '#0ea5e9';
-                     const clickAction = (userRole === 'admin') ? `onclick="showDetail(${it.idx})"` : '';
-                     const styleCursor = (userRole === 'admin') ? '' : 'cursor: default;';
-                     
-                     html += `<div class="history-item" ${clickAction} style="${styleCursor}">
-                        <div style="flex:1; min-width: 0; margin-right: 8px;">
-                            <div style="font-weight:700;font-size:14px;color:var(--text-main); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${it.code}</div>
-                            <div style="font-size:12px;color:var(--text-sub); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${it.product||"..."}</div>
-                            <div style="font-size:10px;color:var(--text-muted);font-weight:700;margin-top:2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${it.shop || ''}</div>
-                        </div>
-                        <div style="text-align:right; flex-shrink: 0;">
-                            <div style="font-size:11px;font-weight:700;color:${color};background:${color}15;padding:3px 8px;border-radius:6px;display:inline-block">${it.status.split('-')[0]}</div>
-                            <div style="font-size:10px;color:var(--text-muted);margin-top:2px;">${new Date(it.time).toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'})}</div>
-                        </div>
-                    </div>`;
-                });
-                html += `</div></div>`; list.innerHTML += html;
-            }
-        }
-    }
-
-    function showDetail(i) {
-        if (userRole !== 'admin') return; 
-        const d = historyDataCache[i];
-        document.getElementById('modalCode').innerText = d.code;
-        document.getElementById('modalStaff').innerText = d.staff;
-        document.getElementById('modalTime').innerText = new Date(d.time).toLocaleString('vi');
-        document.getElementById('modalProduct').innerText = d.product;
-        document.getElementById('modalQty').innerText = d.qty || 1;
-        document.getElementById('modalStatus').innerText = d.status;
-        document.getElementById('modalReport').innerText = d.report;
-        document.getElementById('modalShop').innerText = d.shop || "---"; 
-
-        const shopLogo = SHOP_LOGOS[d.shop] || SHOP_LOGOS['default'];
-        document.getElementById('modalShopIcon').src = shopLogo;
-
-        document.getElementById('modalChannel').innerText = d.channel;
-        document.getElementById('modalChannelIcon').src = CHANNEL_ICONS[d.channel] || CHANNEL_ICONS['default'];
-        const b = document.getElementById('modalImages'); b.innerHTML='';
-        if(d.imageLinks) d.imageLinks.split('\n').forEach(u=>{if(u.trim()) b.innerHTML+=`<img src="${u.trim()}" class="detail-img-thumb" onclick="window.open('${u.trim()}')">`});
-        else b.innerHTML = '<span style="font-size:12px;color:var(--text-muted)">Không có ảnh</span>';
-        openModal('detailModal');
-    }
-
-    function changePassword() { const o = document.getElementById('oldPass').value, n = document.getElementById('newPass').value; if(!o || !n) return alert("Nhập đủ thông tin!"); showLoading(true); fetch(WEB_APP_URL, { method: "POST", body: JSON.stringify({ action: "change_pass", user: currentUser, oldPass: o, newPass: n }) }).then(r=>r.json()).then(r=>{ showLoading(false); if(r.result==='success') { closeModal('changePassModal'); alert("Đổi pass thành công!"); } else alert(r.message); }); }
-    
-    // REMOVED openReportModal function
-    
-    function loadReportData(callback) { 
-        const s = document.getElementById('reportStart').value;
-        const e = document.getElementById('reportEnd').value; 
-        ['rpGood','rpDirty','rpFraud','rpWarranty','rpTotal'].forEach(k=>document.getElementById(k).innerText='...'); 
-        
-        fetch(WEB_APP_URL, { 
-            method: "POST", 
-            body: JSON.stringify({ action: "report", startDate: s, endDate: e }) 
-        })
-        .then(r=>r.json())
-        .then(d=>{ 
-            setTimeout(()=>{ 
-                document.getElementById('rpGood').innerText = d.good; 
-                document.getElementById('rpDirty').innerText = d.dirty; 
-                document.getElementById('rpFraud').innerText = d.fraud+d.missing; 
-                document.getElementById('rpWarranty').innerText = d.warranty; 
-                document.getElementById('rpTotal').innerText = d.total; 
-                
-                if(reportChart) reportChart.destroy(); 
-                
-                // Cập nhật biểu đồ với Dark Mode aware colors
-                const isDark = document.body.classList.contains('dark-mode');
-                const textColor = isDark ? '#cbd5e1' : '#64748b';
-
-                reportChart = new Chart(document.getElementById('reportChart'), { 
-                    type:'doughnut', 
-                    data:{
-                        labels:['Tốt','Bẩn','Lỗi','BH'], 
-                        datasets:[{
-                            data:[d.good,d.dirty,d.fraud+d.missing,d.warranty], 
-                            backgroundColor:['#22c55e','#f59e0b','#ef4444','#0ea5e9'], 
-                            borderWidth:0,
-                            hoverOffset: 10
-                        }]
-                    }, 
-                    options:{
-                        responsive:true, 
-                        maintainAspectRatio:false, 
-                        plugins:{
-                            legend:{
-                                position:'bottom',
-                                labels: {
-                                    padding: 20,
-                                    font: { family: 'Manrope', weight: '700' },
-                                    color: textColor,
-                                    usePointStyle: true
-                                }
-                            }
-                        },
-                        layout: { padding: 10 }
-                    } 
-                }); 
-                if (callback) callback(); 
-            }, 100); 
-        }); 
-    }
-
-    function openModal(id) { document.getElementById(id).classList.add('modal-open'); }
-    function closeModal(id) { document.getElementById(id).classList.remove('modal-open'); }
+function openModal(id){document.getElementById(id).classList.add('open')}
+function closeModal(id){document.getElementById(id).classList.remove('open')}
 </script>
 </body>
 </html>
