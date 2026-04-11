@@ -282,8 +282,8 @@ select.input-field{cursor:pointer}
 .report-stat{background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:14px;text-align:center}
 .report-stat-val{font-size:24px;font-weight:800;font-family:'JetBrains Mono',monospace}
 .report-stat-lbl{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:4px}
-.report-layout{display:grid;grid-template-columns:1fr min(200px,30%);gap:16px;align-items:start}
-.report-chart-wrap{position:relative;height:200px}
+.report-layout{display:grid;grid-template-columns:1fr;gap:16px;align-items:start}
+.report-chart-wrap{position:relative;height:200px;max-width:300px;margin:0 auto}
 
 /* SPECIAL STATUS */
 #missingSection{background:rgba(217,119,6,.06);padding:14px;border-radius:var(--r);border:1px dashed var(--amber);margin-bottom:14px;display:none}
@@ -338,8 +338,7 @@ select.input-field{cursor:pointer}
 
 /* RESPONSIVE — medium: report chart stacks when not enough width */
 @media(max-width:1100px){
-  .report-layout{grid-template-columns:1fr}
-  .report-chart-wrap{height:180px;margin-top:16px}
+  /* report-layout already single column, nothing extra needed */
 }
 
 /* RESPONSIVE — tablet/mobile: sidebar hidden */
@@ -382,9 +381,9 @@ select.input-field{cursor:pointer}
   /* "span 4" sẽ không hoạt động với 2 cột, override thành span 2 */
   .report-stat[style*="span 4"]{grid-column:span 2 !important}
 
-  /* Report layout: chỉ hiện stats, ẩn biểu đồ tròn trên mobile nhỏ */
+  /* Report layout: hiện đầy đủ trên mobile */
   .report-layout{grid-template-columns:1fr}
-  .report-chart-wrap{display:none}
+  .report-chart-wrap{height:180px;max-width:220px}
 
   /* Shop stat list: 1 cột */
   .shop-stat-list{grid-template-columns:1fr}
@@ -490,10 +489,10 @@ select.input-field{cursor:pointer}
       <!-- ADMIN DASHBOARD VIEW -->
       <div id="adminView">
         <div class="metrics-row" id="adminMetrics">
-          <div class="metric"><div class="metric-label">Tổng tháng này</div><div class="metric-val" id="m-total">—</div><div class="metric-sub">đơn hoàn</div><div class="metric-badge badge-sky"><span class="material-icons-round">inbox</span></div></div>
-          <div class="metric"><div class="metric-label">Hàng tốt</div><div class="metric-val" id="m-good" style="color:var(--green)">—</div><div class="metric-sub" id="m-good-pct">—%</div><div class="metric-badge badge-green"><span class="material-icons-round">check_circle</span></div></div>
-          <div class="metric"><div class="metric-label">Lỗi / Thiếu</div><div class="metric-val" id="m-error" style="color:var(--red)">—</div><div class="metric-sub" id="m-error-pct">—%</div><div class="metric-badge badge-red"><span class="material-icons-round">error</span></div></div>
-          <div class="metric"><div class="metric-label">Bẩn + BH</div><div class="metric-val" id="m-other" style="color:var(--amber)">—</div><div class="metric-sub" id="m-other-pct">—%</div><div class="metric-badge badge-amber"><span class="material-icons-round">warning</span></div></div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('all')"><div class="metric-label">Tổng tháng này</div><div class="metric-val" id="m-total">—</div><div class="metric-sub">đơn hoàn</div><div class="metric-badge badge-sky"><span class="material-icons-round">inbox</span></div></div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('good')"><div class="metric-label">Hàng tốt</div><div class="metric-val" id="m-good" style="color:var(--green)">—</div><div class="metric-sub" id="m-good-pct">—%</div><div class="metric-badge badge-green"><span class="material-icons-round">check_circle</span></div></div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('error')"><div class="metric-label">Lỗi / Thiếu</div><div class="metric-val" id="m-error" style="color:var(--red)">—</div><div class="metric-sub" id="m-error-pct">—%</div><div class="metric-badge badge-red"><span class="material-icons-round">error</span></div></div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('other')"><div class="metric-label">Bẩn + BH</div><div class="metric-val" id="m-other" style="color:var(--amber)">—</div><div class="metric-sub" id="m-other-pct">—%</div><div class="metric-badge badge-amber"><span class="material-icons-round">warning</span></div></div>
         </div>
 
         <div class="chart-card" style="margin-bottom:22px">
@@ -1114,6 +1113,22 @@ function openChannelPopup(channel){
       document.getElementById('channelListSubtitle').innerText=`Tháng ${m}/${y} · Tổng: ${data.data.length} đơn`;
     }else document.getElementById('channelListContainer').innerHTML="<div style='text-align:center;padding:20px;color:var(--red)'>Lỗi dữ liệu</div>";
   }).catch(()=>showLoading(false));
+}
+
+function openMetricDetail(type){
+  if(!window.currentMonthOrders)return;
+  const mv=document.getElementById('monthSelect').value;
+  if(!mv)return;
+  const [year,month]=mv.split('-');
+  let filtered=window.currentMonthOrders;
+  const labels={all:'Tất cả đơn',good:'Hàng tốt',error:'Lỗi / Thiếu',other:'Bẩn + Bảo hành'};
+  if(type==='good')filtered=filtered.filter(o=>o.status.includes('Tốt'));
+  else if(type==='error')filtered=filtered.filter(o=>o.status.includes('tráo')||o.status.includes('Thiếu'));
+  else if(type==='other')filtered=filtered.filter(o=>o.status.includes('bẩn')||o.status.includes('Bảo hành'));
+  document.getElementById('channelListTitle').innerText=labels[type];
+  document.getElementById('channelListSubtitle').innerText=`Tháng ${month}/${year} · ${filtered.length} đơn`;
+  openModal('channelDetailModal');
+  renderChannelList(filtered);
 }
 
 function renderChannelList(data){
