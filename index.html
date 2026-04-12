@@ -83,12 +83,6 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
   .main-content{margin-left:0}
 }
 
-/* CARDS & SURFACES */
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow)}
-.card-header{padding:18px 20px 0;display:flex;justify-content:space-between;align-items:center}
-.card-title{font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px}
-.card-body{padding:18px 20px}
-
 /* METRIC CARDS */
 .metrics-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:22px}
 .metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:16px 18px;box-shadow:var(--shadow);position:relative;overflow:hidden}
@@ -127,7 +121,6 @@ label.form-label{font-size:11px;font-weight:700;color:var(--text2);text-transfor
 .input-action-btn .material-icons-round{font-size:17px}
 
 select.input-field{cursor:pointer}
-
 .form-grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 .form-grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
 
@@ -161,6 +154,15 @@ select.input-field{cursor:pointer}
 .btn-remove .material-icons-round{font-size:17px}
 .btn-text-action{background:none;border:none;color:var(--blue);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;padding:6px 0;display:inline-flex;align-items:center;gap:5px}
 .btn-text-action .material-icons-round{font-size:16px}
+
+/* AUTOCOMPLETE */
+.autocomplete-wrapper { position: relative; flex: 2; }
+.autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; max-height: 220px; overflow-y: auto; z-index: 999; box-shadow: var(--shadow-lg); display: none; margin-top: 4px; }
+.autocomplete-item { display: flex; align-items: center; gap: 10px; padding: 8px 12px; cursor: pointer; border-bottom: 1px dashed var(--border); transition: .15s; }
+.autocomplete-item:last-child { border-bottom: none; }
+.autocomplete-item:hover { background: rgba(37,99,235,.05); }
+.autocomplete-item img { width: 34px; height: 34px; border-radius: 6px; object-fit: cover; border: 1px solid var(--border); background: var(--surface2); flex-shrink: 0; }
+.autocomplete-item span { font-size: 13px; font-weight: 600; color: var(--text); line-height: 1.3; }
 
 /* SUBMIT */
 .btn-primary{width:100%;padding:15px;border:none;border-radius:var(--r-lg);background:var(--text);color:var(--bg);font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;cursor:pointer;transition:.15s;margin-top:24px}
@@ -201,7 +203,6 @@ select.input-field{cursor:pointer}
 .history-item:last-child{border-bottom:none}
 .history-item:hover{background:var(--bg)}
 .history-code{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.history-product{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .history-shop{font-size:10px;color:var(--text3);font-weight:600;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .history-time{font-size:10px;color:var(--text3);font-weight:600;font-family:'JetBrains Mono',monospace}
 
@@ -226,6 +227,14 @@ select.input-field{cursor:pointer}
 .btn-copy-sm{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
 .btn-copy-sm:hover{background:var(--bg);color:var(--text)}
 .btn-copy-sm .material-icons-round{font-size:15px}
+
+/* BACKGROUND TASKS (NEW) */
+.bg-task { pointer-events:auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; width: 240px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 8px; animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+@keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.bg-task-title { font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:6px; }
+.bg-task-progress { height: 4px; background: var(--surface2); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.bg-task-fill { height: 100%; background: var(--blue); width: 0%; transition: width 0.3s, background 0.3s; }
+.spinner-mini { width: 14px; height: 14px; border: 2px solid var(--border-strong); border-top-color: var(--blue); border-radius: 50%; animation: spin .6s linear infinite; }
 
 /* SCANNER */
 #scanner-container{width:100%;border-radius:var(--r-lg);overflow:hidden;background:black}
@@ -287,6 +296,26 @@ select.input-field{cursor:pointer}
 .spill-b{background:var(--sky)}
 .shop-stat-count{font-size:14px;font-weight:800;font-family:'JetBrains Mono',monospace;color:var(--blue);flex-shrink:0;margin-left:4px}
 
+/* TOP PRODUCT DASHBOARD (GRID 2 CỘT) */
+.top-product-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-top: 14px; }
+.top-product-item { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); }
+.top-product-info { display: flex; align-items: center; gap: 12px; }
+.top-product-info img { width: 40px; height: 40px; border-radius: 6px; object-fit: cover; background:var(--surface2); border:1px solid var(--border) }
+.top-product-name { font-size: 13.5px; font-weight: 700; color: var(--text); }
+.top-product-stats { text-align: right; }
+.top-product-qty { font-size: 16px; font-weight: 800; color: var(--blue); font-family: 'JetBrains Mono', monospace; }
+
+/* PRODUCT VIEW */
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 16px; margin-top: 16px; }
+.product-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r); padding: 12px; text-align: center; box-shadow: var(--shadow); transition: .2s; position: relative; cursor: pointer; }
+.product-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); border-color: var(--blue); }
+.product-card img { width: 100%; height: 120px; object-fit: cover; border-radius: 8px; margin-bottom: 10px; border: 1px solid var(--border); background: var(--surface2); }
+.product-card .p-name { font-size: 13px; font-weight: 700; color: var(--text); line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+/* EDIT BUTTON ON PRODUCT CARD */
+.btn-edit-product { position: absolute; top: 6px; right: 6px; background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(4px); border: 1px solid var(--border); border-radius: 8px; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center; cursor: pointer; color: var(--text2); transition: 0.15s; }
+.btn-edit-product:hover { background: var(--blue); color: white; border-color: var(--blue); transform: scale(1.05); }
+
 /* REPORT SECTION */
 .report-section{margin-top:24px;padding-top:22px;border-top:1px dashed var(--border)}
 .report-stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-top:14px}
@@ -347,12 +376,7 @@ select.input-field{cursor:pointer}
 .main-content{min-width:0;overflow-x:hidden}
 .page-body{min-width:0;box-sizing:border-box}
 
-/* RESPONSIVE — medium: report chart stacks when not enough width */
-@media(max-width:1100px){
-  /* report-layout already single column, nothing extra needed */
-}
-
-/* RESPONSIVE — tablet/mobile: sidebar hidden */
+/* RESPONSIVE */
 @media(max-width:860px){
   .sidebar{transform:translateX(-100%);transition:.28s cubic-bezier(.4,0,.2,1)}
   .sidebar.open{transform:translateX(0)}
@@ -365,39 +389,25 @@ select.input-field{cursor:pointer}
   .bnav-admin{display:none}
 }
 
-/* RESPONSIVE — mobile: fix dashboard layout */
 @media(max-width:600px){
   .page-body{padding:12px;padding-bottom:72px}
   .topbar{padding:0 14px}
   #displayDateBar{display:none}
-
-  /* Metrics: 2 cột cố định */
   .metrics-row{grid-template-columns:1fr 1fr !important;gap:10px}
   .metric{padding:14px}
   .metric-val{font-size:22px}
-
-  /* Channel summary (Shopee/Tiktok/Viettel/Lazada): 2×2 */
   .channel-summary-grid{grid-template-columns:1fr 1fr !important;gap:8px}
-
-  /* Form */
   .channel-grid{grid-template-columns:repeat(2,1fr)}
   .shop-grid{grid-template-columns:repeat(3,1fr)}
-
-  /* Report header: stack tiêu đề và date picker */
   .report-section-header{flex-direction:column !important;align-items:flex-start !important;gap:10px}
   .report-date-row{width:100%;justify-content:flex-start}
-
-  /* Report stats: 2×2 grid + tổng cộng full width */
   .report-stat-grid{grid-template-columns:1fr 1fr !important}
-  /* "span 4" sẽ không hoạt động với 2 cột, override thành span 2 */
   .report-stat[style*="span 4"]{grid-column:span 2 !important}
-
-  /* Report layout: hiện đầy đủ trên mobile */
   .report-layout{grid-template-columns:1fr}
   .report-chart-wrap{height:180px;max-width:220px}
-
-  /* Shop stat list: 1 cột */
   .shop-stat-list{grid-template-columns:1fr}
+  .product-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .top-product-list { grid-template-columns: 1fr; }
 }
 
 /* VIEW TRANSITION */
@@ -414,7 +424,6 @@ select.input-field{cursor:pointer}
 <body>
 <canvas id="processCanvas" style="display:none"></canvas>
 
-<!-- LOGIN -->
 <div id="loginScreen">
   <div class="login-card">
     <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" class="login-logo">
@@ -439,7 +448,6 @@ select.input-field{cursor:pointer}
   </div>
 </div>
 
-<!-- LOADING -->
 <div id="loading">
   <div class="spinner"></div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
@@ -447,9 +455,9 @@ select.input-field{cursor:pointer}
   <div id="ocr-status"></div>
 </div>
 
-<!-- MAIN APP -->
+<div id="bgTaskContainer" style="position:fixed;bottom:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none;"></div>
+
 <div class="app-shell" id="mainApp" style="display:none">
-  <!-- SIDEBAR -->
   <aside class="sidebar">
     <div class="sidebar-logo">
       <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" alt="XIXA">
@@ -465,6 +473,9 @@ select.input-field{cursor:pointer}
       </div>
       <div class="nav-item admin-only" id="nav-dashboard" onclick="switchView('dashboard')">
         <span class="material-icons-round">dashboard</span>Dashboard
+      </div>
+      <div class="nav-item admin-only" id="nav-product" onclick="switchView('product')">
+        <span class="material-icons-round">inventory_2</span>Sản phẩm
       </div>
     </div>
     <div class="sidebar-footer">
@@ -483,7 +494,6 @@ select.input-field{cursor:pointer}
     </div>
   </aside>
 
-  <!-- MAIN -->
   <div class="main-content">
     <div class="topbar">
       <div style="display:flex;align-items:center;gap:10px">
@@ -497,10 +507,7 @@ select.input-field{cursor:pointer}
 
     <div class="page-body">
 
-      <!-- ADMIN DASHBOARD VIEW -->
       <div id="adminView">
-
-        <!-- DASHBOARD LOADING OVERLAY -->
         <div id="dashLoading" style="display:none;position:fixed;inset:0;background:rgba(var(--bg-rgb,245,245,240),.85);backdrop-filter:blur(3px);z-index:200;flex-direction:column;align-items:center;justify-content:center;gap:18px">
           <div style="position:relative;width:64px;height:64px">
             <svg style="position:absolute;inset:0;width:100%;height:100%;transform:rotate(-90deg)" viewBox="0 0 64 64">
@@ -561,8 +568,7 @@ select.input-field{cursor:pointer}
           </div>
         </div>
 
-        <!-- SHOP STATS -->
-        <div class="shop-stat-section">
+        <div class="shop-stat-section" style="margin-bottom: 22px">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
             <div class="section-title" style="margin:0">Chi tiết theo shop</div>
             <div class="legend-dots">
@@ -575,7 +581,12 @@ select.input-field{cursor:pointer}
           <div id="shopStatsContainer"><div style="text-align:center;color:var(--text3);padding:20px;font-size:13px">Chọn tháng để xem dữ liệu</div></div>
         </div>
 
-        <!-- REPORT SECTION -->
+        <div class="chart-card" style="margin-bottom:22px">
+          <div class="section-title" style="margin:0">Top Sản Phẩm Hoàn Nhiều Nhất</div>
+          <div id="topProductsContainer" class="top-product-list"></div>
+          <button id="btnShowMoreProducts" class="btn-text-action" style="width:100%;justify-content:center;margin-top:10px;display:none;" onclick="toggleAllProducts()">Xem tất cả sản phẩm</button>
+        </div>
+
         <div class="report-section">
           <div class="report-section-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
             <div class="section-title" style="margin:0;white-space:nowrap">Báo cáo tổng hợp</div>
@@ -599,7 +610,21 @@ select.input-field{cursor:pointer}
         </div>
       </div>
 
-      <!-- FORM VIEW -->
+      <div id="productView" style="display:none;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+          <div class="section-title" style="margin:0">Danh sách sản phẩm</div>
+          <button class="btn-primary" style="width:auto;padding:8px 16px;margin:0" onclick="openModal('addProductModal')"><span style="display:flex;align-items:center;gap:6px;"><span class="material-icons-round" style="font-size:18px">add</span> Thêm</span></button>
+        </div>
+        
+        <div class="search-bar" style="margin-bottom:16px">
+          <div class="search-icon"><span class="material-icons-round">search</span></div>
+          <input type="text" id="searchProductInput" class="search-input" placeholder="Tìm kiếm sản phẩm..." oninput="renderProductGrid()">
+        </div>
+
+        <div id="productGrid" class="product-grid">
+          </div>
+      </div>
+
       <div id="formView">
         <form id="returnForm">
           <input type="hidden" id="staffName">
@@ -688,7 +713,6 @@ select.input-field{cursor:pointer}
         </form>
       </div>
 
-      <!-- HISTORY VIEW -->
       <div id="historyView" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <div class="section-title" style="margin:0">Lịch sử nhập</div>
@@ -701,14 +725,8 @@ select.input-field{cursor:pointer}
         <div id="historyList"></div>
       </div>
 
-    </div><!-- /page-body -->
-  </div><!-- /main-content -->
-</div><!-- /app-shell -->
+    </div></div></div><div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
 
-<!-- SIDEBAR OVERLAY -->
-<div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
-
-<!-- BOTTOM NAV (mobile only) -->
 <div class="bottom-nav" id="bottomNav">
   <div class="bottom-nav-inner">
     <button class="bnav-item active" id="bnav-form" onclick="switchView('form')">
@@ -719,6 +737,10 @@ select.input-field{cursor:pointer}
       <span class="material-icons-round">history</span>
       <span>Lịch sử</span>
     </button>
+    <button class="bnav-item bnav-admin admin-only" id="bnav-product" onclick="switchView('product')" style="display:none">
+      <span class="material-icons-round">inventory_2</span>
+      <span>Sản phẩm</span>
+    </button>
     <button class="bnav-item bnav-admin admin-only" id="bnav-dashboard" onclick="switchView('dashboard')" style="display:none">
       <span class="material-icons-round">dashboard</span>
       <span>Dashboard</span>
@@ -726,7 +748,45 @@ select.input-field{cursor:pointer}
   </div>
 </div>
 
-<!-- MODALS -->
+<div id="addProductModal" class="overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Thêm sản phẩm mới</h3><button class="modal-close" onclick="closeModal('addProductModal')"><span class="material-icons-round">close</span></button></div>
+    <div class="modal-body">
+      <form id="newProductForm">
+        <div style="margin-bottom:16px">
+          <label class="form-label">Tên sản phẩm</label>
+          <input type="text" id="newProductName" class="input-field" placeholder="Ví dụ: Giày Nam XIXA 01..." required>
+        </div>
+        <div style="margin-bottom:24px">
+          <label class="form-label">Ảnh sản phẩm</label>
+          <input type="file" id="newProductImage" accept="image/*" class="input-field" style="background:var(--surface)" required>
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top:0">Đăng sản phẩm</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div id="editProductModal" class="overlay">
+  <div class="modal" style="max-width:400px">
+    <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Sửa thông tin sản phẩm</h3><button class="modal-close" onclick="closeModal('editProductModal')"><span class="material-icons-round">close</span></button></div>
+    <div class="modal-body">
+      <form id="editProductForm">
+        <input type="hidden" id="editProductOldName">
+        <div style="margin-bottom:16px">
+          <label class="form-label">Tên sản phẩm mới</label>
+          <input type="text" id="editProductName" class="input-field" required>
+        </div>
+        <div style="margin-bottom:24px">
+          <label class="form-label">Ảnh thay thế (bỏ trống nếu giữ ảnh cũ)</label>
+          <input type="file" id="editProductImage" accept="image/*" class="input-field" style="background:var(--surface)">
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top:0">Lưu thay đổi</button>
+      </form>
+    </div>
+  </div>
+</div>
+
 <div id="changePassModal" class="overlay">
   <div class="modal" style="max-width:380px">
     <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Đổi mật khẩu</h3><button class="modal-close" onclick="closeModal('changePassModal')"><span class="material-icons-round">close</span></button></div>
@@ -815,8 +875,12 @@ const CHANNEL_ICONS={Tiktok:'https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163
 const SHOP_LISTS={Shopee:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"],Tiktok:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"],Lazada:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"]};
 const SHOP_LOGOS={"XIXA - Giày sức khỏe":"https://i.ibb.co/gZVxsP2Q/Logo-Xixa-removebg-preview.png","HOBIBEAR - Official Store":"https://i.ibb.co/ymjgNn7L/Logo-Hobibear-01-removebg-preview.png","Apakowa Official Store":"https://i.ibb.co/hF254fyb/Avatar-Apakowa-01-removebg-preview.png","XIXA Official Store":"https://i.ibb.co/SD73ZRxz/Bear-2026-XIXA-01.jpg","FERRONI":"https://i.ibb.co/1YGgCLCD/z7440002345017-2a71c6f5adbb7fa5bced69038dac37ae.jpg",default:"https://cdn-icons-png.flaticon.com/512/126/126477.png"};
 
-let filesToUpload=[],historyDataCache=[],channelDataCache=[],reportChart=null;
-let currentUser="",userRole="staff",html5QrcodeScanner=null,progressInterval=null,monthlyChart=null;
+let filesToUpload=[], historyDataCache=[], channelDataCache=[], reportChart=null;
+let currentUser="", userRole="staff", html5QrcodeScanner=null, progressInterval=null, monthlyChart=null;
+let allProducts = []; 
+let sortedProductStats = []; 
+let isShowingAllProducts = false;
+let bgTasks = {}; // Quản lý task chạy ngầm
 
 // THEME
 function toggleTheme(){
@@ -861,24 +925,29 @@ function switchView(view){
   document.getElementById('formView').style.display='none';
   document.getElementById('historyView').style.display='none';
   document.getElementById('adminView').style.display='none';
+  document.getElementById('productView').style.display='none';
+  
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   document.getElementById('nav-'+view)?.classList.add('active');
-  // Update bottom nav
+  
   document.querySelectorAll('.bnav-item').forEach(n=>n.classList.remove('active'));
   const bnavEl=document.getElementById('bnav-'+view);
   if(bnavEl)bnavEl.classList.add('active');
-  const titles={form:'Nhập đơn hoàn',history:'Lịch sử nhập',dashboard:'Dashboard'};
+  
+  const titles={form:'Nhập đơn hoàn',history:'Lịch sử nhập',dashboard:'Dashboard', product:'Sản phẩm'};
   document.getElementById('pageTitleBar').innerText=titles[view]||'';
+  
   if(view==='form'){document.getElementById('formView').style.display='block'}
   else if(view==='history'){
     document.getElementById('historyView').style.display='block';
-    // chỉ load nếu list đang trống (tránh load lại khi switch qua switch lại)
-    if(!document.getElementById('historyList').querySelector('.history-group,.history-item')){
-      loadHistory();
-    }
+    if(!document.getElementById('historyList').querySelector('.history-group,.history-item')) loadHistory();
   }
   else if(view==='dashboard'){document.getElementById('adminView').style.display='block'}
-  // Close sidebar on mobile after navigation
+  else if(view==='product'){
+    document.getElementById('productView').style.display='block';
+    if(allProducts.length === 0) loadProductsGlobal();
+    else renderProductGrid();
+  }
   closeSidebar();
 }
 
@@ -916,6 +985,217 @@ function simulateProgress(){let p=0;clearInterval(progressInterval);progressInte
 function togglePass(){const x=document.getElementById("loginPass");x.type=x.type==="password"?"text":"password"}
 function getTodayString(){const n=new Date();return new Date(n.getTime()-n.getTimezoneOffset()*60000).toISOString().split('T')[0]}
 
+// BACKGROUND TASKS LOGIC (CHẠY NGẦM)
+function addBgTask(id, title) {
+    const container = document.getElementById('bgTaskContainer');
+    const taskEl = document.createElement('div');
+    taskEl.className = 'bg-task';
+    taskEl.id = id;
+    taskEl.innerHTML = `
+        <div class="bg-task-title"><div class="spinner-mini" id="${id}_spinner"></div> ${title}</div>
+        <div class="bg-task-progress"><div class="bg-task-fill" id="${id}_fill"></div></div>
+    `;
+    container.appendChild(taskEl);
+
+    let p = 0;
+    bgTasks[id] = setInterval(() => {
+        if (p < 90) {
+            p += Math.random() * 8;
+            document.getElementById(`${id}_fill`).style.width = Math.min(p, 90) + '%';
+        }
+    }, 400);
+}
+
+function completeBgTask(id, msg, isSuccess) {
+    clearInterval(bgTasks[id]);
+    const taskEl = document.getElementById(id);
+    if (!taskEl) return;
+    
+    const fill = document.getElementById(`${id}_fill`);
+    fill.style.width = '100%';
+    fill.style.background = isSuccess ? 'var(--green)' : 'var(--red)';
+    
+    const spinner = document.getElementById(`${id}_spinner`);
+    if(spinner) {
+        spinner.className = 'material-icons-round';
+        spinner.innerText = isSuccess ? 'check_circle' : 'error';
+        spinner.style.border = 'none';
+        spinner.style.color = isSuccess ? 'var(--green)' : 'var(--red)';
+        spinner.style.fontSize = '18px';
+        spinner.style.animation = 'none';
+        spinner.style.width = 'auto';
+        spinner.style.height = 'auto';
+    }
+    
+    taskEl.querySelector('.bg-task-title').innerHTML = spinner.outerHTML + " " + msg;
+    
+    setTimeout(() => {
+        taskEl.style.opacity = '0';
+        taskEl.style.transform = 'translateX(100%)';
+        setTimeout(() => taskEl.remove(), 300);
+    }, 3500);
+}
+
+
+// TẢI SẢN PHẨM TOÀN CỤC
+function loadProductsGlobal() {
+   fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action:"get_products"})})
+   .then(r=>r.json()).then(res=>{
+       if(res.result==='success') {
+           allProducts = res.data;
+           if(document.getElementById('productView').style.display === 'block') renderProductGrid();
+       }
+   }).catch(e => console.log("Lỗi tải sản phẩm"));
+}
+
+function renderProductGrid() {
+   const grid = document.getElementById('productGrid');
+   const searchInput = document.getElementById('searchProductInput');
+   const keyword = searchInput ? searchInput.value.toLowerCase().trim() : '';
+   
+   let filteredData = allProducts;
+   if (keyword) {
+       filteredData = allProducts.filter(p => p.name.toLowerCase().includes(keyword));
+   }
+
+   if(filteredData.length === 0) {
+       grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text3); padding: 30px;">' + (keyword ? 'Không tìm thấy sản phẩm phù hợp' : 'Chưa có sản phẩm nào') + '</div>';
+       return;
+   }
+   
+   grid.innerHTML = filteredData.map(p => `
+     <div class="product-card" onclick="openProductOrders('${p.name}')">
+        <button type="button" class="btn-edit-product" title="Sửa thông tin" onclick="openEditProduct(event, '${p.name}')">
+            <span class="material-icons-round" style="font-size:16px">more_vert</span>
+        </button>
+        <img src="${p.image || 'https://cdn-icons-png.flaticon.com/512/1524/1524855.png'}" alt="Sản phẩm" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1524/1524855.png'">
+        <div class="p-name">${p.name}</div>
+     </div>
+   `).join('');
+}
+
+// XỬ LÝ MỞ MODAL XEM ĐƠN THEO SẢN PHẨM
+function openProductOrders(productName) {
+    document.getElementById('channelListTitle').innerHTML = `<span class="material-icons-round" style="vertical-align:middle;margin-right:8px;color:var(--blue)">inventory_2</span> ${productName}`;
+    document.getElementById('channelListContainer').innerHTML = `<div style='text-align:center;padding:30px;color:var(--text3)'>Đang tải lịch sử đơn...</div>`;
+    openModal('channelDetailModal');
+    
+    fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_product", productName: productName})})
+    .then(r=>r.json()).then(data=>{
+        if(data.result==='success'){
+            renderChannelList(data.data);
+            document.getElementById('channelListSubtitle').innerText = `Toàn thời gian · Tổng: ${data.data.length} đơn`;
+        }else document.getElementById('channelListContainer').innerHTML="<div style='text-align:center;padding:20px;color:var(--red)'>Lỗi dữ liệu</div>";
+    }).catch(()=>{document.getElementById('channelListContainer').innerHTML="<div style='text-align:center;padding:20px;color:var(--red)'>Lỗi kết nối</div>";});
+}
+
+// XỬ LÝ MỞ MODAL SỬA SẢN PHẨM
+function openEditProduct(event, name) {
+    event.stopPropagation();
+    document.getElementById('editProductOldName').value = name;
+    document.getElementById('editProductName').value = name;
+    document.getElementById('editProductImage').value = '';
+    openModal('editProductModal');
+}
+
+// XỬ LÝ SUBMIT SỬA SẢN PHẨM BẰNG BACKGROUND TASK
+document.getElementById('editProductForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const oldName = document.getElementById('editProductOldName').value;
+    const newName = document.getElementById('editProductName').value;
+    const fileInput = document.getElementById('editProductImage');
+
+    const payload = { action: 'edit_product', oldName: oldName, newName: newName };
+
+    const taskId = 'task_' + new Date().getTime();
+    addBgTask(taskId, `Đang sửa: ${newName}`);
+    
+    closeModal('editProductModal');
+
+    if(fileInput.files.length > 0) {
+        const f = fileInput.files[0];
+        const rd = new FileReader();
+        rd.onload = () => {
+            payload.image = { data: rd.result, mimeType: f.type };
+            sendEditProduct(payload, taskId, newName);
+        };
+        rd.readAsDataURL(f);
+    } else {
+        sendEditProduct(payload, taskId, newName);
+    }
+});
+
+function sendEditProduct(payload, taskId, name) {
+     fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify(payload)})
+     .then(r=>r.json()).then(res=>{
+         if(res.result==='success'){
+             completeBgTask(taskId, `Sửa thành công: ${name}`, true);
+             loadProductsGlobal(); // Tải lại
+         } else {
+             completeBgTask(taskId, `Lỗi: ${res.message}`, false);
+         }
+     }).catch(()=> { completeBgTask(taskId, "Lỗi kết nối", false); });
+}
+
+// XỬ LÝ THÊM SẢN PHẨM MỚI BẰNG BACKGROUND TASK
+document.getElementById('newProductForm').addEventListener('submit', function(e){
+  e.preventDefault();
+  const name = document.getElementById('newProductName').value;
+  const fileInput = document.getElementById('newProductImage');
+  if(!fileInput.files.length) return alert('Vui lòng chọn ảnh!');
+  
+  const f = fileInput.files[0];
+  const rd = new FileReader();
+  rd.onload = () => {
+     const payload = { action: 'add_product', name: name, image: { data: rd.result, mimeType: f.type } };
+     
+     const taskId = 'task_' + new Date().getTime();
+     addBgTask(taskId, `Đang thêm: ${name}`);
+     
+     closeModal('addProductModal');
+     document.getElementById('newProductForm').reset();
+
+     fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify(payload)})
+     .then(r=>r.json()).then(res=>{
+         if(res.result==='success'){
+             completeBgTask(taskId, `Đã thêm: ${name}`, true);
+             loadProductsGlobal(); // Tải lại danh sách
+         } else {
+             completeBgTask(taskId, `Lỗi: ${res.message}`, false);
+         }
+     }).catch(()=> { completeBgTask(taskId, "Lỗi kết nối", false); });
+  };
+  rd.readAsDataURL(f);
+});
+
+// TỐI ƯU HIỂN THỊ CHI TIẾT SẢN PHẨM (MAPPING ẢNH Ở MODAL)
+function formatProductDisplay(prodStr) {
+   if(!prodStr) return "---";
+   const parts = prodStr.split('|').map(p=>p.trim());
+   return parts.map(pt => {
+       let baseName = pt.replace(/\(.*\)/, '').trim();
+       let matchedProd = allProducts.find(p => p.name.toLowerCase() === baseName.toLowerCase());
+       let imgHtml = (matchedProd && matchedProd.image) 
+           ? `<img src="${matchedProd.image}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border)">` 
+           : `<div style="width:36px;height:36px;border-radius:6px;background:var(--surface2);border:1px dashed var(--border-strong);display:flex;align-items:center;justify-content:center"><span class="material-icons-round" style="font-size:16px;color:var(--text3)">inventory_2</span></div>`;
+       
+       return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">${imgHtml} <span style="font-weight:600;font-size:13px;color:var(--text)">${pt}</span></div>`;
+   }).join('');
+}
+
+// HIỂN THỊ ẢNH THU NHỎ Ở DANH SÁCH LỊCH SỬ/ĐƠN HÀNG
+function getMiniProductHtml(prodStr) {
+    if(!prodStr) return `<span style="color:var(--text3);font-size:12px">Không có sản phẩm</span>`;
+    const parts = prodStr.split('|').map(p=>p.trim());
+    return parts.map(pt => {
+        let baseName = pt.replace(/\(.*\)/, '').trim();
+        let match = allProducts.find(p => p.name.toLowerCase() === baseName.toLowerCase());
+        let imgUrl = (match && match.image) ? match.image : 'https://cdn-icons-png.flaticon.com/512/1524/1524855.png';
+        return `<div style="display:flex;align-items:center;gap:8px;"><img src="${imgUrl}" style="width:28px;height:28px;border-radius:4px;object-fit:cover;border:1px solid var(--border);background:var(--surface2);flex-shrink:0;"> <span style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pt}</span></div>`;
+    }).join('');
+}
+
+
 // LOGIN
 document.getElementById('loginForm').addEventListener('submit',function(e){
   e.preventDefault();
@@ -934,6 +1214,10 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
       document.getElementById('loginScreen').style.display='none';
       document.getElementById('mainApp').style.display='flex';
       applyPermissions();
+      
+      // Load all products on login
+      loadProductsGlobal();
+
       if(userRole==='admin'){
         switchView('dashboard');
         initMonthlyChart();
@@ -952,7 +1236,6 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
 function applyPermissions(){
   document.querySelectorAll('.admin-only').forEach(el=>{
     if(userRole==='admin'){
-      // bottom nav admin items use display:flex, sidebar uses flex too
       el.style.display='flex';
     }else{
       el.style.display='none';
@@ -989,7 +1272,6 @@ function initMonthlyChart(){
   loadMonthlyStats();
 }
 
-// DASHBOARD LOADING
 let dashLoadInterval=null;
 function showDashLoading(show,text="Đang tải dữ liệu..."){
   const el=document.getElementById('dashLoading');
@@ -1045,6 +1327,7 @@ function loadMonthlyStats(){
         updateAdminMetrics(currOrders,prevOrders,cutoffDay);
         renderShopStats(currOrders,prevOrders,cutoffDay);
         updateChannelCmp(currOrders,prevOrders,cutoffDay);
+        renderTopProducts(currOrders,prevOrders,cutoffDay); 
       }
     }
   };
@@ -1062,6 +1345,94 @@ function loadMonthlyStats(){
     checkDone();
   }).catch(checkDone);
 }
+
+// XỬ LÝ HIỂN THỊ TOP 10 SẢN PHẨM HOÀN
+function renderTopProducts(currOrders, prevOrdersRaw, cutoffDay) {
+   let stats = {};
+   let prevStats = {};
+   
+   // Đếm sản phẩm tháng hiện tại
+   currOrders.forEach(o => {
+       if(!o.product) return;
+       const parts = o.product.split('|').map(p=>p.trim());
+       parts.forEach(pt => {
+           let baseName = pt.replace(/\(.*\)/, '').trim();
+           if(!stats[baseName]) stats[baseName] = 0;
+           stats[baseName] += 1; 
+       });
+   });
+   
+   // Đếm sản phẩm tháng trước
+   if(prevOrdersRaw) {
+       prevOrdersRaw.filter(o => {
+           if(!o.time) return false;
+           const d = new Date(o.time);
+           return !isNaN(d) && d.getDate() <= cutoffDay;
+       }).forEach(o => {
+           if(!o.product) return;
+           const parts = o.product.split('|').map(p=>p.trim());
+           parts.forEach(pt => {
+               let baseName = pt.replace(/\(.*\)/, '').trim();
+               if(!prevStats[baseName]) prevStats[baseName] = 0;
+               prevStats[baseName] += 1;
+           });
+       });
+   }
+   
+   sortedProductStats = Object.keys(stats).map(name => {
+       return { name: name, curr: stats[name], prev: prevStats[name] || 0 };
+   }).sort((a,b) => b.curr - a.curr);
+   
+   isShowingAllProducts = false;
+   updateTopProductUI();
+}
+
+function updateTopProductUI() {
+   const container = document.getElementById('topProductsContainer');
+   const btn = document.getElementById('btnShowMoreProducts');
+   
+   if(sortedProductStats.length === 0) {
+       container.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:13px;padding:20px;">Không có dữ liệu sản phẩm</div>';
+       btn.style.display = 'none';
+       return;
+   }
+   
+   let limit = isShowingAllProducts ? sortedProductStats.length : 10;
+   let displayList = sortedProductStats.slice(0, limit);
+   
+   container.innerHTML = displayList.map(item => {
+       let match = allProducts.find(p => p.name.toLowerCase() === item.name.toLowerCase());
+       let img = (match && match.image) ? match.image : 'https://cdn-icons-png.flaticon.com/512/1524/1524855.png';
+       
+       let cmp = cmpText(item.curr, item.prev);
+       
+       return `
+       <div class="top-product-item">
+         <div class="top-product-info">
+           <img src="${img}">
+           <div class="top-product-name">${item.name}</div>
+         </div>
+         <div class="top-product-stats">
+           <div class="top-product-qty">${item.curr}</div>
+           <div class="shop-cmp ${cmp.cls}" style="font-size:10px">${cmp.text} T.trước</div>
+         </div>
+       </div>
+       `;
+   }).join('');
+   
+   if(sortedProductStats.length > 10) {
+       btn.style.display = 'flex';
+       btn.innerText = isShowingAllProducts ? 'Thu gọn danh sách' : 'Xem tất cả sản phẩm';
+   } else {
+       btn.style.display = 'none';
+   }
+}
+
+function toggleAllProducts() {
+    isShowingAllProducts = !isShowingAllProducts;
+    updateTopProductUI();
+}
+
 
 function makeCmp(curr,prev,elId,cutoffDay){
   const el=document.getElementById(elId);
@@ -1096,7 +1467,7 @@ function updateAdminMetrics(orders,prevOrdersRaw,cutoffDay){
   document.getElementById('m-error-pct').innerText=total?Math.round(error/total*100)+'% tổng đơn':'—';
   document.getElementById('m-other-pct').innerText=total?Math.round(other/total*100)+'% tổng đơn':'—';
 
-  // So sánh cùng kỳ: chỉ lấy đơn tháng trước có ngày <= cutoffDay
+  // So sánh cùng kỳ
   if(prevOrdersRaw){
     const p=prevOrdersRaw.filter(o=>{
       if(!o.time)return false;
@@ -1114,7 +1485,6 @@ function updateAdminMetrics(orders,prevOrdersRaw,cutoffDay){
   }
 }
 
-// Helper: tính delta text ngắn gọn cho channel/shop
 function cmpText(curr,prev){
   if(prev===0&&curr===0)return{text:'=',cls:'flat'};
   if(prev===0)return{text:'▲ mới',cls:'up'};
@@ -1134,7 +1504,6 @@ function updateChannelCmp(currOrders,prevOrders,cutoffDay){
     if(c.includes('viettel')||c.includes('vtp'))return'VTP';
     return null;
   };
-  // Tính số đơn tháng trước cùng kỳ (lọc theo cutoffDay)
   const prevFiltered=(prevOrders||[]).filter(o=>{
     if(!o.time)return false;
     const d=new Date(o.time);
@@ -1164,7 +1533,6 @@ function renderShopStats(orders,prevOrdersRaw,cutoffDay){
     return'Khác';
   };
 
-  // Build stats tháng này
   let stats={Shopee:{},Tiktok:{},Lazada:{},VTP:{},Khác:{}};
   orders.forEach(o=>{
     const ch=normCh(o);
@@ -1177,7 +1545,6 @@ function renderShopStats(orders,prevOrdersRaw,cutoffDay){
     else if(o.status.includes('Bảo hành'))stats[ch][shop].warranty++;
   });
 
-  // Build stats tháng trước (cùng kỳ)
   let prevStats={Shopee:{},Tiktok:{},Lazada:{},VTP:{},Khác:{}};
   if(prevOrdersRaw&&cutoffDay){
     prevOrdersRaw.filter(o=>{
@@ -1362,8 +1729,8 @@ function renderChannelList(data){
     html+=`<div class="channel-detail-item" onclick="openSubDetailModal(${i})">
       <div style="flex:1;min-width:0;margin-right:10px">
         <div class="history-code">${it.code}</div>
-        <div class="history-product">${it.product||"..."}</div>
-        <div class="history-shop">${it.shop||'Không rõ'}</div>
+        <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${getMiniProductHtml(it.product)}</div>
+        <div class="history-shop" style="margin-top:6px">${it.shop||'Không rõ'}</div>
       </div>
       <div style="text-align:right;flex-shrink:0">
         <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div>
@@ -1379,7 +1746,9 @@ function openSubDetailModal(i){
   document.getElementById('subModalCode').innerText=d.code;
   document.getElementById('subModalStaff').innerText=d.staff;
   document.getElementById('subModalTime').innerText=new Date(d.time).toLocaleString('vi');
-  document.getElementById('subModalProduct').innerText=d.product;
+  
+  document.getElementById('subModalProduct').innerHTML=formatProductDisplay(d.product);
+  
   document.getElementById('subModalQty').innerText=d.qty||1;
   document.getElementById('subModalStatus').innerText=d.status;
   document.getElementById('subModalReport').innerText=d.report;
@@ -1455,7 +1824,7 @@ function stopScanner(){
   if(html5QrcodeScanner){try{if(html5QrcodeScanner.isScanning)html5QrcodeScanner.stop().then(()=>html5QrcodeScanner.clear()).catch(()=>{});else html5QrcodeScanner.clear().catch(()=>{})}catch(e){}}
 }
 
-// FORM
+// FORM PRELOAD
 function preloadImages(){
   const urls=Object.values(CHANNEL_ICONS).concat(Object.values(SHOP_LOGOS));
   urls.forEach(u=>{const i=new Image();i.src=u});
@@ -1474,15 +1843,63 @@ window.onload=function(){
 };
 function addProductRow(){
   const d=document.createElement('div');d.className='product-row';
-  d.innerHTML=`<div style="flex:2"><input type="text" class="input-field p-name" placeholder="Tên sản phẩm..."></div><div style="flex:1;min-width:80px"><select class="input-field p-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`;
+  d.innerHTML=`<div class="autocomplete-wrapper"><input type="text" class="input-field p-name" placeholder="Chọn sản phẩm..." onfocus="showAutocomplete(this)" oninput="filterAutocomplete(this)" onblur="validateAutocomplete(this)" autocomplete="off"><div class="autocomplete-list"></div></div><div style="flex:1;min-width:80px"><select class="input-field p-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`;
   document.getElementById('productList').appendChild(d);
 }
 function addMissingRow(){
   const d=document.createElement('div');d.className='missing-row';
-  d.innerHTML=`<div style="flex:2"><input type="text" class="input-field m-note" placeholder="Tên/Ghi chú..."></div><div style="flex:1;min-width:80px"><select class="input-field m-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`;
+  d.innerHTML=`<div class="autocomplete-wrapper"><input type="text" class="input-field m-note" placeholder="Chọn sản phẩm thiếu..." onfocus="showAutocomplete(this)" oninput="filterAutocomplete(this)" onblur="validateAutocomplete(this)" autocomplete="off"><div class="autocomplete-list"></div></div><div style="flex:1;min-width:80px"><select class="input-field m-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`;
   document.getElementById('missingList').appendChild(d);
 }
-function genSizes(){let o='';for(let i=10;i<=49;i++)o+=`<option value="${i}">${i}</option>`;return o}
+function genSizes(){let o='';for(let i=1;i<=50;i++)o+=`<option value="${i}">${i}</option>`;return o}
+
+// AUTOCOMPLETE LOGIC
+function showAutocomplete(input) {
+  const list = input.nextElementSibling;
+  renderAutocompleteList(input, list, input.value);
+  list.style.display = 'block';
+}
+function filterAutocomplete(input) {
+  const list = input.nextElementSibling;
+  renderAutocompleteList(input, list, input.value);
+  list.style.display = 'block';
+}
+function renderAutocompleteList(input, listElement, filterText) {
+  if(!allProducts || allProducts.length === 0) {
+    listElement.innerHTML = `<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">Đang tải hoặc chưa có SP...</div>`;
+    return;
+  }
+  const keyword = filterText.toLowerCase().trim();
+  const filtered = allProducts.filter(p => p.name.toLowerCase().includes(keyword));
+  if(filtered.length === 0) {
+    listElement.innerHTML = `<div style="padding:12px;text-align:center;font-size:12px;color:var(--text3)">Không tìm thấy sản phẩm phù hợp</div>`;
+    return;
+  }
+  listElement.innerHTML = filtered.map(p => {
+    const safeName = p.name.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+    const imgUrl = p.image || 'https://cdn-icons-png.flaticon.com/512/1524/1524855.png';
+    return `<div class="autocomplete-item" onmousedown="selectAutocompleteItem('${safeName}', this.parentElement.previousElementSibling, event)">
+      <img src="${imgUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1524/1524855.png'">
+      <span>${p.name}</span>
+    </div>`;
+  }).join('');
+}
+function selectAutocompleteItem(name, input, event) {
+  event.preventDefault(); // Giữ focus không bị mất
+  input.value = name;
+  input.nextElementSibling.style.display = 'none';
+}
+function validateAutocomplete(input) {
+  setTimeout(() => {
+    input.nextElementSibling.style.display = 'none';
+    const val = input.value.trim();
+    if(val && (!allProducts || !allProducts.some(p => p.name.toLowerCase() === val.toLowerCase()))) {
+      alert("⚠️ CẢNH BÁO: Bạn chỉ được phép chọn sản phẩm có sẵn trong danh sách!");
+      input.value = '';
+    }
+  }, 150);
+}
+
 function checkStatus(){
   const v=document.getElementById('status').value;
   document.getElementById('missingSection').style.display=v==='Thiếu hàng'?'block':'none';
@@ -1513,7 +1930,7 @@ function renderPreviews(){
 function deleteImage(i){filesToUpload.splice(i,1);renderPreviews()}
 function toggleGroup(h){h.parentElement.classList.toggle('collapsed')}
 
-// SUBMIT
+// SUBMIT ĐƠN HÀNG HOÀN
 document.getElementById('returnForm').addEventListener('submit',async function(e){
   e.preventDefault();showLoading(true,"Đang gửi dữ liệu...",true);
   const images=await Promise.all(filesToUpload.map(f=>new Promise(r=>{const rd=new FileReader();rd.onload=()=>r({data:rd.result,mimeType:f.type,name:f.name});rd.readAsDataURL(f)})));
@@ -1525,6 +1942,17 @@ document.getElementById('returnForm').addEventListener('submit',async function(e
   let shopName='';
   const selCh=document.querySelector('input[name="channel"]:checked').value;
   if(SHOP_LISTS[selCh]){const ss=document.querySelector('input[name="shop"]:checked');if(ss)shopName=ss.value;else{showLoading(false);alert("Vui lòng chọn Shop!");return}}
+  
+  // Validate lại 1 lần nữa trước khi gửi
+  const pInputs = document.querySelectorAll('.p-name, .m-note');
+  for(let inp of pInputs) {
+    if(inp.value && (!allProducts || !allProducts.some(p => p.name.toLowerCase() === inp.value.trim().toLowerCase()))) {
+        showLoading(false);
+        alert("Lỗi: Có sản phẩm tự nhập không có trong hệ thống! Vui lòng chỉ chọn từ danh sách.");
+        return;
+    }
+  }
+
   const data={action:"add",staffName:document.getElementById('staffName').value,maVanDon:document.getElementById('maVanDon').value,channel:selCh,shopName:shopName,returnQty:document.getElementById('returnQty').value,status:status,isReported:document.getElementById('isReported').checked,products:Array.from(document.querySelectorAll('.product-row')).map(r=>({name:r.querySelector('.p-name').value,size:r.querySelector('.p-size').value})),images:images};
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify(data)}).then(r=>r.json()).then(res=>{
     showLoading(false);
@@ -1604,8 +2032,8 @@ function renderList(data){
         html+=`<div class="history-item" ${clickAction} style="${styleCursor}">
           <div style="flex:1;min-width:0;margin-right:10px">
             <div class="history-code">${it.code}</div>
-            <div class="history-product">${it.product||"..."}</div>
-            <div class="history-shop">${it.shop||''}</div>
+            <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${getMiniProductHtml(it.product)}</div>
+            <div class="history-shop" style="margin-top:6px">${it.shop||''}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
             <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div>
@@ -1624,7 +2052,10 @@ function showDetail(i){
   document.getElementById('modalCode').innerText=d.code;
   document.getElementById('modalStaff').innerText=d.staff;
   document.getElementById('modalTime').innerText=new Date(d.time).toLocaleString('vi');
-  document.getElementById('modalProduct').innerText=d.product;
+  
+  // Tích hợp hiện ảnh Sản phẩm
+  document.getElementById('modalProduct').innerHTML=formatProductDisplay(d.product);
+  
   document.getElementById('modalQty').innerText=d.qty||1;
   document.getElementById('modalStatus').innerText=d.status;
   document.getElementById('modalReport').innerText=d.report;
