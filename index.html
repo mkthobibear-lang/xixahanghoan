@@ -69,8 +69,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .user-name{font-weight:700;font-size:13px;color:var(--text)}
 .user-role{font-size:11px;color:var(--text3)}
 
-.main-content{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column}
-.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:50}
+.main-content{margin-left:220px;flex:1;min-height:100vh;display:flex;flex-direction:column;padding-top:56px}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:0 28px;height:56px;display:flex;align-items:center;justify-content:space-between;position:fixed;top:0;left:220px;right:0;z-index:80}
 .page-title{font-size:15px;font-weight:700;color:var(--text)}
 .topbar-actions{display:flex;align-items:center;gap:8px}
 .icon-btn{width:36px;height:36px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.15s}
@@ -79,8 +79,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .page-body{padding:24px 28px;flex:1}
 
 @media(max-width:860px){
-  .topbar{position:fixed;top:0;left:0;right:0;z-index:80}
-  .main-content{padding-top:56px}
+  .topbar{left:0}
+  .main-content{margin-left:0}
 }
 
 /* CARDS & SURFACES */
@@ -95,6 +95,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .metric-label{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px}
 .metric-val{font-size:28px;font-weight:800;letter-spacing:-1px;font-family:'JetBrains Mono',monospace;color:var(--text)}
 .metric-sub{font-size:11px;color:var(--text3);margin-top:4px;font-weight:500}
+.metric-cmp{font-size:11px;font-weight:700;margin-top:3px;min-height:14px}
+.metric-cmp.up{color:var(--red)}
+.metric-cmp.down{color:var(--green)}
+.metric-cmp.flat{color:var(--text3)}
 .metric-badge{position:absolute;top:14px;right:14px;width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center}
 .metric-badge .material-icons-round{font-size:16px}
 .badge-green{background:rgba(22,163,74,.12);color:var(--green)}
@@ -506,10 +510,34 @@ select.input-field{cursor:pointer}
         </div>
 
         <div class="metrics-row" id="adminMetrics">
-          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('all')"><div class="metric-label">Tổng tháng này</div><div class="metric-val" id="m-total">—</div><div class="metric-sub">đơn hoàn</div><div class="metric-badge badge-sky"><span class="material-icons-round">inbox</span></div></div>
-          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('good')"><div class="metric-label">Hàng tốt</div><div class="metric-val" id="m-good" style="color:var(--green)">—</div><div class="metric-sub" id="m-good-pct">—%</div><div class="metric-badge badge-green"><span class="material-icons-round">check_circle</span></div></div>
-          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('error')"><div class="metric-label">Lỗi / Thiếu</div><div class="metric-val" id="m-error" style="color:var(--red)">—</div><div class="metric-sub" id="m-error-pct">—%</div><div class="metric-badge badge-red"><span class="material-icons-round">error</span></div></div>
-          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('other')"><div class="metric-label">Bẩn + BH</div><div class="metric-val" id="m-other" style="color:var(--amber)">—</div><div class="metric-sub" id="m-other-pct">—%</div><div class="metric-badge badge-amber"><span class="material-icons-round">warning</span></div></div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('all')">
+            <div class="metric-label">Tổng tháng này</div>
+            <div class="metric-val" id="m-total">—</div>
+            <div class="metric-sub">đơn hoàn</div>
+            <div class="metric-cmp" id="m-total-cmp"></div>
+            <div class="metric-badge badge-sky"><span class="material-icons-round">inbox</span></div>
+          </div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('good')">
+            <div class="metric-label">Hàng tốt</div>
+            <div class="metric-val" id="m-good" style="color:var(--green)">—</div>
+            <div class="metric-sub" id="m-good-pct">—%</div>
+            <div class="metric-cmp" id="m-good-cmp"></div>
+            <div class="metric-badge badge-green"><span class="material-icons-round">check_circle</span></div>
+          </div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('error')">
+            <div class="metric-label">Lỗi / Thiếu</div>
+            <div class="metric-val" id="m-error" style="color:var(--red)">—</div>
+            <div class="metric-sub" id="m-error-pct">—%</div>
+            <div class="metric-cmp" id="m-error-cmp"></div>
+            <div class="metric-badge badge-red"><span class="material-icons-round">error</span></div>
+          </div>
+          <div class="metric" style="cursor:pointer" onclick="openMetricDetail('other')">
+            <div class="metric-label">Bẩn + BH</div>
+            <div class="metric-val" id="m-other" style="color:var(--amber)">—</div>
+            <div class="metric-sub" id="m-other-pct">—%</div>
+            <div class="metric-cmp" id="m-other-cmp"></div>
+            <div class="metric-badge badge-amber"><span class="material-icons-round">warning</span></div>
+          </div>
         </div>
 
         <div class="chart-card" style="margin-bottom:22px">
@@ -989,21 +1017,61 @@ function loadMonthlyStats(){
   const m=document.getElementById('monthSelect').value;
   if(!m)return;
   showDashLoading(true,"Đang tải tháng "+m.slice(5)+" / "+m.slice(0,4)+" ...");
+  const [yr,mo]=m.split('-').map(Number);
+  const prevMo=mo===1?12:mo-1;
+  const prevYr=mo===1?yr-1:yr;
+  const prevM=`${prevYr}-${String(prevMo).padStart(2,'0')}`;
+
+  // Xác định ngày cut-off: nếu đang xem tháng hiện tại → dùng ngày hôm nay
+  // Nếu xem tháng quá khứ → dùng ngày cuối tháng đó (so sánh toàn bộ)
+  const today=new Date();
+  const curYM=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+  const cutoffDay = (m===curYM) ? today.getDate() : new Date(yr,mo,0).getDate();
+
   let done=0;
-  const checkDone=()=>{done++;if(done>=2)showDashLoading(false)};
+  let prevOrders=null;
+  let currOrders=null;
+  const checkDone=()=>{
+    done++;
+    if(done>=3){
+      showDashLoading(false);
+      if(currOrders!==null)updateAdminMetrics(currOrders,prevOrders,cutoffDay);
+    }
+  };
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"report_daily_channel",month:m})})
   .then(r=>r.json()).then(d=>{if(d.result==='success')renderMonthlyChart(d);checkDone();})
   .catch(checkDone);
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:m})})
   .then(r=>r.json()).then(res=>{
-    if(res.result==='success'){renderShopStats(res.data);updateAdminMetrics(res.data);}
+    if(res.result==='success'){currOrders=res.data;renderShopStats(res.data);}
+    checkDone();
+  }).catch(checkDone);
+  fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:prevM})})
+  .then(r=>r.json()).then(res=>{
+    if(res.result==='success')prevOrders=res.data;
     checkDone();
   }).catch(checkDone);
 }
 
-function updateAdminMetrics(orders){
+function makeCmp(curr,prev,elId,cutoffDay){
+  const el=document.getElementById(elId);
+  if(!el)return;
+  const suffix=cutoffDay?` (${cutoffDay} ngày đầu T.trước)`:'';
+  if(prev===null||prev===undefined){el.innerText='';el.className='metric-cmp';return;}
+  if(prev===0&&curr===0){el.innerText='Không đổi'+suffix;el.className='metric-cmp flat';return;}
+  if(prev===0){el.innerText='▲ Mới có dữ liệu';el.className='metric-cmp up';return;}
+  const delta=Math.round((curr-prev)/prev*100);
+  if(delta===0){el.innerText='= Không đổi'+suffix;el.className='metric-cmp flat';}
+  else if(delta>0){el.innerText=`▲ +${delta}% so với ${cutoffDay} ngày đầu T.trước`;el.className='metric-cmp up';}
+  else{el.innerText=`▼ ${delta}% so với ${cutoffDay} ngày đầu T.trước`;el.className='metric-cmp down';}
+}
+
+function updateAdminMetrics(orders,prevOrdersRaw,cutoffDay){
   if(!orders||!orders.length){
     ['m-total','m-good','m-error','m-other'].forEach(id=>document.getElementById(id).innerText='0');
+    ['m-total-cmp','m-good-cmp','m-error-cmp','m-other-cmp'].forEach(id=>{
+      const el=document.getElementById(id);if(el){el.innerText='';el.className='metric-cmp';}
+    });
     return;
   }
   const total=orders.length;
@@ -1017,6 +1085,23 @@ function updateAdminMetrics(orders){
   document.getElementById('m-good-pct').innerText=total?Math.round(good/total*100)+'% tổng đơn':'—';
   document.getElementById('m-error-pct').innerText=total?Math.round(error/total*100)+'% tổng đơn':'—';
   document.getElementById('m-other-pct').innerText=total?Math.round(other/total*100)+'% tổng đơn':'—';
+
+  // So sánh cùng kỳ: chỉ lấy đơn tháng trước có ngày <= cutoffDay
+  if(prevOrdersRaw){
+    const p=prevOrdersRaw.filter(o=>{
+      if(!o.time)return false;
+      const d=new Date(o.time);
+      return !isNaN(d)&&d.getDate()<=cutoffDay;
+    });
+    const pTotal=p.length;
+    const pGood=p.filter(o=>o.status.includes('Tốt')).length;
+    const pError=p.filter(o=>o.status.includes('tráo')||o.status.includes('Thiếu')).length;
+    const pOther=pTotal-pGood-pError;
+    makeCmp(total,pTotal,'m-total-cmp',cutoffDay);
+    makeCmp(good,pGood,'m-good-cmp',cutoffDay);
+    makeCmp(error,pError,'m-error-cmp',cutoffDay);
+    makeCmp(other,pOther,'m-other-cmp',cutoffDay);
+  }
 }
 
 function renderShopStats(orders){
