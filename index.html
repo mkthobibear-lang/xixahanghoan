@@ -262,6 +262,13 @@ select.input-field{cursor:pointer}
 .channel-sum-card img{height:22px;object-fit:contain;margin-bottom:6px;opacity:.7}
 .channel-sum-num{font-size:22px;font-weight:800;font-family:'JetBrains Mono',monospace}
 .channel-sum-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px}
+.channel-cmp{font-size:10px;font-weight:700;margin-top:4px;min-height:13px}
+.channel-cmp.up{color:var(--red)}
+.channel-cmp.down{color:var(--green)}
+.channel-cmp.flat{color:var(--text3)}
+.shop-cmp{font-size:10px;font-weight:700;color:var(--text3);margin-top:1px}
+.shop-cmp.up{color:var(--red)}
+.shop-cmp.down{color:var(--green)}
 
 .shop-stat-section{margin-top:22px}
 .channel-shop-group{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:10px;overflow:hidden}
@@ -547,10 +554,10 @@ select.input-field{cursor:pointer}
           </div>
           <div style="position:relative;height:220px"><canvas id="monthlyChart" role="img" aria-label="Biểu đồ đơn hoàn theo ngày"></canvas></div>
           <div class="channel-summary-grid">
-            <div class="channel-sum-card" onclick="openChannelPopup('Shopee')"><img src="https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png"><div class="channel-sum-label">Shopee</div><div class="channel-sum-num" id="sumShopee" style="color:var(--orange)">0</div></div>
-            <div class="channel-sum-card" onclick="openChannelPopup('Tiktok')"><img src="https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png"><div class="channel-sum-label">Tiktok</div><div class="channel-sum-num" id="sumTiktok" style="color:var(--text)">0</div></div>
-            <div class="channel-sum-card" onclick="openChannelPopup('VTP')"><img src="https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png"><div class="channel-sum-label">Viettel</div><div class="channel-sum-num" id="sumVTP" style="color:var(--red)">0</div></div>
-            <div class="channel-sum-card" onclick="openChannelPopup('Lazada')"><img src="https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png"><div class="channel-sum-label">Lazada</div><div class="channel-sum-num" id="sumLazada" style="color:var(--blue)">0</div></div>
+            <div class="channel-sum-card" onclick="openChannelPopup('Shopee')"><img src="https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png"><div class="channel-sum-label">Shopee</div><div class="channel-sum-num" id="sumShopee" style="color:var(--orange)">0</div><div class="channel-cmp" id="cmpShopee"></div></div>
+            <div class="channel-sum-card" onclick="openChannelPopup('Tiktok')"><img src="https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png"><div class="channel-sum-label">Tiktok</div><div class="channel-sum-num" id="sumTiktok" style="color:var(--text)">0</div><div class="channel-cmp" id="cmpTiktok"></div></div>
+            <div class="channel-sum-card" onclick="openChannelPopup('VTP')"><img src="https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png"><div class="channel-sum-label">Viettel</div><div class="channel-sum-num" id="sumVTP" style="color:var(--red)">0</div><div class="channel-cmp" id="cmpVTP"></div></div>
+            <div class="channel-sum-card" onclick="openChannelPopup('Lazada')"><img src="https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png"><div class="channel-sum-label">Lazada</div><div class="channel-sum-num" id="sumLazada" style="color:var(--blue)">0</div><div class="channel-cmp" id="cmpLazada"></div></div>
           </div>
         </div>
 
@@ -1022,11 +1029,10 @@ function loadMonthlyStats(){
   const prevYr=mo===1?yr-1:yr;
   const prevM=`${prevYr}-${String(prevMo).padStart(2,'0')}`;
 
-  // Xác định ngày cut-off: nếu đang xem tháng hiện tại → dùng ngày hôm nay
-  // Nếu xem tháng quá khứ → dùng ngày cuối tháng đó (so sánh toàn bộ)
   const today=new Date();
   const curYM=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
-  const cutoffDay = (m===curYM) ? today.getDate() : new Date(yr,mo,0).getDate();
+  const cutoffDay=(m===curYM)?today.getDate():new Date(yr,mo,0).getDate();
+  window.currentCutoffDay=cutoffDay;
 
   let done=0;
   let prevOrders=null;
@@ -1035,7 +1041,11 @@ function loadMonthlyStats(){
     done++;
     if(done>=3){
       showDashLoading(false);
-      if(currOrders!==null)updateAdminMetrics(currOrders,prevOrders,cutoffDay);
+      if(currOrders!==null){
+        updateAdminMetrics(currOrders,prevOrders,cutoffDay);
+        renderShopStats(currOrders,prevOrders,cutoffDay);
+        updateChannelCmp(currOrders,prevOrders,cutoffDay);
+      }
     }
   };
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"report_daily_channel",month:m})})
@@ -1043,12 +1053,12 @@ function loadMonthlyStats(){
   .catch(checkDone);
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:m})})
   .then(r=>r.json()).then(res=>{
-    if(res.result==='success'){currOrders=res.data;renderShopStats(res.data);}
+    if(res.result==='success'){currOrders=res.data;window.currentMonthOrders=res.data;}
     checkDone();
   }).catch(checkDone);
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:prevM})})
   .then(r=>r.json()).then(res=>{
-    if(res.result==='success')prevOrders=res.data;
+    if(res.result==='success'){prevOrders=res.data;window.prevMonthOrders=res.data;}
     checkDone();
   }).catch(checkDone);
 }
@@ -1104,18 +1114,61 @@ function updateAdminMetrics(orders,prevOrdersRaw,cutoffDay){
   }
 }
 
-function renderShopStats(orders){
+// Helper: tính delta text ngắn gọn cho channel/shop
+function cmpText(curr,prev){
+  if(prev===0&&curr===0)return{text:'=',cls:'flat'};
+  if(prev===0)return{text:'▲ mới',cls:'up'};
+  const d=Math.round((curr-prev)/prev*100);
+  if(d===0)return{text:'= không đổi',cls:'flat'};
+  if(d>0)return{text:`▲ +${d}%`,cls:'up'};
+  return{text:`▼ ${d}%`,cls:'down'};
+}
+
+function updateChannelCmp(currOrders,prevOrders,cutoffDay){
+  const chMap={'Shopee':'cmpShopee','Tiktok':'cmpTiktok','VTP':'cmpVTP','Lazada':'cmpLazada'};
+  const normCh=o=>{
+    const c=o.channel.toLowerCase();
+    if(c.includes('shopee'))return'Shopee';
+    if(c.includes('tiktok'))return'Tiktok';
+    if(c.includes('lazada'))return'Lazada';
+    if(c.includes('viettel')||c.includes('vtp'))return'VTP';
+    return null;
+  };
+  // Tính số đơn tháng trước cùng kỳ (lọc theo cutoffDay)
+  const prevFiltered=(prevOrders||[]).filter(o=>{
+    if(!o.time)return false;
+    const d=new Date(o.time);
+    return !isNaN(d)&&d.getDate()<=cutoffDay;
+  });
+  Object.entries(chMap).forEach(([ch,elId])=>{
+    const el=document.getElementById(elId);
+    if(!el)return;
+    const curr=currOrders.filter(o=>normCh(o)===ch).length;
+    const prev=prevFiltered.filter(o=>normCh(o)===ch).length;
+    const {text,cls}=cmpText(curr,prev);
+    el.innerText=text+' T.trước';
+    el.className='channel-cmp '+cls;
+  });
+}
+
+function renderShopStats(orders,prevOrdersRaw,cutoffDay){
   const container=document.getElementById('shopStatsContainer');
   if(!orders||!orders.length){container.innerHTML='<div style="text-align:center;padding:20px;color:var(--text3);font-size:13px">Không có dữ liệu tháng này</div>';return}
+
+  const normCh=o=>{
+    const c=o.channel.toLowerCase();
+    if(c.includes('shopee'))return'Shopee';
+    if(c.includes('tiktok'))return'Tiktok';
+    if(c.includes('lazada'))return'Lazada';
+    if(c.includes('viettel')||c.includes('vtp'))return'VTP';
+    return'Khác';
+  };
+
+  // Build stats tháng này
   let stats={Shopee:{},Tiktok:{},Lazada:{},VTP:{},Khác:{}};
   orders.forEach(o=>{
-    let ch=o.channel;
-    let shop=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ";
-    if(ch.toLowerCase().includes('shopee'))ch='Shopee';
-    else if(ch.toLowerCase().includes('tiktok'))ch='Tiktok';
-    else if(ch.toLowerCase().includes('lazada'))ch='Lazada';
-    else if(ch.toLowerCase().includes('viettel')||ch.toLowerCase().includes('vtp'))ch='VTP';
-    else ch='Khác';
+    const ch=normCh(o);
+    const shop=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ";
     if(!stats[ch][shop])stats[ch][shop]={total:0,good:0,dirty:0,error:0,warranty:0};
     stats[ch][shop].total++;
     if(o.status.includes('Tốt'))stats[ch][shop].good++;
@@ -1123,17 +1176,44 @@ function renderShopStats(orders){
     else if(o.status.includes('tráo')||o.status.includes('Thiếu'))stats[ch][shop].error++;
     else if(o.status.includes('Bảo hành'))stats[ch][shop].warranty++;
   });
+
+  // Build stats tháng trước (cùng kỳ)
+  let prevStats={Shopee:{},Tiktok:{},Lazada:{},VTP:{},Khác:{}};
+  if(prevOrdersRaw&&cutoffDay){
+    prevOrdersRaw.filter(o=>{
+      if(!o.time)return false;
+      const d=new Date(o.time);
+      return !isNaN(d)&&d.getDate()<=cutoffDay;
+    }).forEach(o=>{
+      const ch=normCh(o);
+      const shop=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ";
+      if(!prevStats[ch][shop])prevStats[ch][shop]={total:0};
+      prevStats[ch][shop].total++;
+    });
+  }
+
   let html='';
   ['Shopee','Tiktok','Lazada','VTP','Khác'].forEach(ch=>{
     const shops=stats[ch];
     if(Object.keys(shops).length>0){
       const icon=CHANNEL_ICONS[ch]||CHANNEL_ICONS.default;
       const chTotal=Object.values(shops).reduce((a,s)=>a+s.total,0);
+      const chPrev=Object.values(prevStats[ch]||{}).reduce((a,s)=>a+s.total,0);
+      const chCmp=cmpText(chTotal,chPrev);
       html+=`<div class="channel-shop-group">
-        <div class="channel-shop-header"><img src="${icon}" style="width:20px;height:20px;border-radius:4px"><span>${ch}</span><span style="margin-left:auto;font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-weight:700">${chTotal} đơn</span></div>
+        <div class="channel-shop-header">
+          <img src="${icon}" style="width:20px;height:20px;border-radius:4px">
+          <span>${ch}</span>
+          <span style="margin-left:auto;display:flex;align-items:center;gap:8px">
+            <span class="shop-cmp ${chCmp.cls}" style="font-size:10px">${chCmp.text} T.trước</span>
+            <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-weight:700">${chTotal} đơn</span>
+          </span>
+        </div>
         <div class="shop-stat-list">`;
       Object.entries(shops).forEach(([shopName,s])=>{
         const logo=SHOP_LOGOS[shopName]||SHOP_LOGOS.default;
+        const pShop=(prevStats[ch]&&prevStats[ch][shopName])?prevStats[ch][shopName].total:0;
+        const shopCmp=cmpText(s.total,pShop);
         let pills='';
         if(s.good>0)pills+=`<span class="spill spill-g" onclick="openShopStatusDetail('${shopName}','${ch}','good');event.stopPropagation()">${s.good}</span>`;
         if(s.dirty>0)pills+=`<span class="spill spill-a" onclick="openShopStatusDetail('${shopName}','${ch}','dirty');event.stopPropagation()">${s.dirty}</span>`;
@@ -1141,7 +1221,10 @@ function renderShopStats(orders){
         if(s.warranty>0)pills+=`<span class="spill spill-b" onclick="openShopStatusDetail('${shopName}','${ch}','warranty');event.stopPropagation()">${s.warranty}</span>`;
         html+=`<div class="shop-stat-item" onclick="openShopDetailPopup('${shopName}','${ch}')">
           <img src="${logo}">
-          <div class="shop-stat-name">${shopName}</div>
+          <div style="flex:1;min-width:0;overflow:hidden">
+            <div class="shop-stat-name">${shopName}</div>
+            <div class="shop-cmp ${shopCmp.cls}">${shopCmp.text} T.trước</div>
+          </div>
           <div class="shop-pills">${pills}</div>
           <div class="shop-stat-count">${s.total}</div>
         </div>`;
