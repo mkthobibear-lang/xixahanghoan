@@ -35,9 +35,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:var(--bg);color:var(-
 .sidebar-logo{padding:24px 20px 16px;border-bottom:1px solid var(--border)}
 .sidebar-logo img{height:36px}
 .sidebar-logo .ver{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;margin-top:4px}
-.nav-section{padding:12px 10px;flex:1;overflow-y:auto}
-.nav-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1px;padding:8px 10px 4px;text-transform:uppercase}
-.nav-item{display:flex;align-items:center;gap:10px;padding:9px 10px;border-radius:8px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--text2);transition:.15s;margin-bottom:2px}
+.nav-section{padding:16px 12px;flex:1;overflow-y:auto}
+.nav-label{font-size:10px;font-weight:700;color:var(--text3);letter-spacing:1.2px;padding:0 8px 10px;text-transform:uppercase}
+.nav-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;font-size:13.5px;font-weight:600;color:var(--text2);transition:.15s;margin-bottom:3px}
 .nav-item:hover{background:var(--bg);color:var(--text)}
 .nav-item.active{background:var(--text);color:var(--bg)}
 .nav-item .material-icons-round{font-size:18px}
@@ -183,6 +183,51 @@ select.input-field{cursor:pointer}
 .detail-img-thumb{width:72px;height:72px;border-radius:10px;object-fit:cover;border:1px solid var(--border);cursor:pointer;transition:.15s}
 .detail-img-thumb:hover{transform:scale(1.05)}
 .btn-copy-sm{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+
+/* REDESIGNED DETAIL MODAL */
+.dm-header{background:var(--surface2);border-bottom:1px solid var(--border);padding:0}
+.dm-hero{padding:20px 20px 16px;position:relative}
+.dm-close-btn{position:absolute;top:16px;right:16px;width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:.15s}
+.dm-close-btn:hover{background:rgba(220,38,38,.08);color:var(--red);border-color:rgba(220,38,38,.2)}
+.dm-title-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.dm-title-icon{width:36px;height:36px;border-radius:10px;background:rgba(37,99,235,.1);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dm-title-icon .material-icons-round{font-size:20px}
+.dm-title-text{font-size:16px;font-weight:800;color:var(--text)}
+.dm-title-sub{font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace;font-weight:600;margin-top:1px}
+.dm-code-block{display:flex;align-items:center;justify-content:space-between;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px}
+.dm-code-val{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--text);letter-spacing:.5px}
+.dm-copy-btn{width:28px;height:28px;border-radius:6px;border:1px solid var(--border);background:transparent;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s;flex-shrink:0}
+.dm-copy-btn:hover{color:var(--blue);border-color:var(--blue);background:rgba(37,99,235,.06)}
+.dm-copy-btn .material-icons-round{font-size:15px}
+.dm-chips{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.dm-chip{display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;border:1px solid var(--border);background:var(--surface);font-size:12px;font-weight:700;color:var(--text2)}
+.dm-chip img{width:18px;height:18px;border-radius:3px;object-fit:contain}
+.dm-chip-status{font-size:12px;font-weight:800;padding:6px 14px;border-radius:100px}
+.dm-body{padding:16px 20px}
+.dm-section{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--border)}
+.dm-section:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
+.dm-section-label{font-size:9.5px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.dm-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.dm-field{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.dm-field-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.dm-field-val{font-size:13px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:6px}
+.dm-field-val img{width:18px;height:18px;border-radius:3px;object-fit:contain}
+.dm-shop-row{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px}
+.dm-shop-logo{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);object-fit:cover;flex-shrink:0}
+.dm-shop-name{font-size:13px;font-weight:800;color:var(--text)}
+.dm-shop-ch{font-size:11px;color:var(--text3);font-weight:600;margin-top:1px;display:flex;align-items:center;gap:4px}
+.dm-complaint-box{background:rgba(217,119,6,.06);border:1px solid rgba(217,119,6,.2);border-radius:10px;padding:12px 14px}
+.dm-complaint-top{display:flex;justify-content:space-between;align-items:center}
+.dm-complaint-label{font-size:9.5px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.dm-complaint-status{font-size:13px;font-weight:800}
+.dm-update-btn{display:flex;align-items:center;gap:4px;padding:5px 12px;border-radius:8px;border:1px solid var(--blue);background:rgba(37,99,235,.06);color:var(--blue);font-size:11px;font-weight:700;cursor:pointer;font-family:'Plus Jakarta Sans',sans-serif;transition:.15s}
+.dm-update-btn:hover{background:rgba(37,99,235,.12)}
+.dm-update-btn .material-icons-round{font-size:13px}
+.dm-proof-img{margin-top:10px;padding-top:10px;border-top:1px dashed var(--border)}
+.dm-proof-label{font-size:9px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.dm-img-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:8px;margin-top:8px}
+.dm-img-thumb{width:100%;aspect-ratio:1;border-radius:10px;object-fit:cover;border:1px solid var(--border);cursor:pointer;transition:.15s}
+.dm-img-thumb:hover{transform:scale(1.04);box-shadow:var(--shadow-lg)}
 
 .bg-task { pointer-events:auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; width: 240px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 8px; animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
@@ -345,6 +390,28 @@ select.input-field{cursor:pointer}
 
 @keyframes shimmer{0%{opacity:.5}50%{opacity:1}100%{opacity:.5}}
 .skeleton-block{border-radius:6px;background:var(--border);animation:shimmer 1.2s ease infinite}
+
+/* DIRTY ORDERS POPUP */
+#dirtyAlertOverlay{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(6px);z-index:5000;display:none;align-items:center;justify-content:center;padding:16px;animation:fadeIn .25s ease}
+#dirtyAlertOverlay.open{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#dirtyAlertBox{background:var(--surface);border-radius:var(--r-lg);border:2px solid var(--red);max-width:460px;width:100%;overflow:hidden;box-shadow:0 20px 60px rgba(220,38,38,.25),var(--shadow-lg);animation:popIn .3s cubic-bezier(0.175,0.885,0.32,1.275)}
+@keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}
+#dirtyAlertBox .da-head{background:rgba(220,38,38,.08);border-bottom:1px solid rgba(220,38,38,.15);padding:18px 20px;display:flex;align-items:center;gap:12px}
+#dirtyAlertBox .da-icon{width:40px;height:40px;border-radius:50%;background:rgba(220,38,38,.12);color:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0;animation:pulse 1.5s infinite}
+#dirtyAlertBox .da-title{font-size:15px;font-weight:800;color:var(--red)}
+#dirtyAlertBox .da-sub{font-size:11px;font-weight:600;color:var(--text3);margin-top:2px}
+#dirtyAlertBox .da-body{padding:16px 20px;max-height:320px;overflow-y:auto}
+#dirtyAlertBox .da-item{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;border-radius:var(--r);border:1px solid var(--border);margin-bottom:8px;background:var(--surface2);cursor:pointer;transition:.15s}
+#dirtyAlertBox .da-item:hover{border-color:var(--red);background:rgba(220,38,38,.04)}
+#dirtyAlertBox .da-item:last-child{margin-bottom:0}
+#dirtyAlertBox .da-code{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--text)}
+#dirtyAlertBox .da-info{font-size:11px;color:var(--text3);font-weight:600;margin-top:2px}
+#dirtyAlertBox .da-foot{padding:14px 20px;border-top:1px solid var(--border);display:flex;gap:10px;justify-content:flex-end}
+#dirtyAlertBox .da-btn-dismiss{padding:9px 18px;border-radius:var(--r);border:1px solid var(--border);background:transparent;color:var(--text2);font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
+#dirtyAlertBox .da-btn-dismiss:hover{background:var(--bg)}
+#dirtyAlertBox .da-btn-go{padding:9px 18px;border-radius:var(--r);border:none;background:var(--red);color:white;font-family:'Plus Jakarta Sans',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:.15s}
+#dirtyAlertBox .da-btn-go:hover{opacity:.85}
 </style>
 </head>
 <body>
@@ -352,7 +419,7 @@ select.input-field{cursor:pointer}
 
 <div id="loginScreen">
   <div class="login-card">
-    <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" class="login-logo">
+    <img src="https://i.ibb.co/cKKgz9X6/ch-29-7-x-15-5-cm.png" class="login-logo">
     <div class="login-title">Chào mừng trở lại</div>
     <div class="login-sub">Đăng nhập để quản lý kho hàng hoàn</div>
     <form id="loginForm">
@@ -386,19 +453,19 @@ select.input-field{cursor:pointer}
 <div class="app-shell" id="mainApp" style="display:none">
   <aside class="sidebar">
     <div class="sidebar-logo">
-      <img src="https://i.ibb.co/pj7B9K4t/Logo-Xixa-removebg-preview.png" alt="XIXA">
+      <img src="https://i.ibb.co/cKKgz9X6/ch-29-7-x-15-5-cm.png" alt="XIXA">
       <div class="ver">Kho Hàng Hoàn · v8</div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Menu</div>
-      <div class="nav-item active" id="nav-form" onclick="switchView('form')">
+      <div class="nav-item staff-only" id="nav-form" onclick="switchView('form')">
         <span class="material-icons-round">add_box</span>Nhập đơn hoàn
-      </div>
-      <div class="nav-item" id="nav-history" onclick="switchView('history')">
-        <span class="material-icons-round">history</span>Lịch sử nhập
       </div>
       <div class="nav-item admin-only" id="nav-dashboard" onclick="switchView('dashboard')">
         <span class="material-icons-round">dashboard</span>Dashboard
+      </div>
+      <div class="nav-item" id="nav-history" onclick="switchView('history')">
+        <span class="material-icons-round">history</span>Lịch sử nhập
       </div>
       <div class="nav-item admin-only" id="nav-product" onclick="switchView('product')">
         <span class="material-icons-round">inventory_2</span>Sản phẩm
@@ -533,7 +600,7 @@ select.input-field{cursor:pointer}
               <div class="report-stat"><div class="report-stat-val" style="color:var(--amber)" id="rpDirty">0</div><div class="report-stat-lbl">Bẩn</div></div>
               <div class="report-stat"><div class="report-stat-val" style="color:var(--red)" id="rpFraud">0</div><div class="report-stat-lbl">Lỗi/Thiếu</div></div>
               <div class="report-stat"><div class="report-stat-val" style="color:var(--sky)" id="rpWarranty">0</div><div class="report-stat-lbl">Bảo hành</div></div>
-              <div class="report-stat" style="grid-column:span 4;background:var(--text);border-color:var(--text)"><div class="report-stat-val" style="color:var(--bg)" id="rpTotal">0</div><div class="report-stat-lbl" style="color:rgba(255,255,255,.5)">Tổng cộng</div></div>
+              <div class="report-stat" style="grid-column:span 4;background:var(--text);border-color:var(--text)"><div class="report-stat-val" style="color:var(--bg)" id="rpTotal">0</div><div class="report-stat-lbl" style="color:var(--bg);opacity:0.6">Tổng cộng</div></div>
             </div>
             <div class="report-chart-wrap"><canvas id="reportChart"></canvas></div>
           </div>
@@ -660,17 +727,17 @@ select.input-field{cursor:pointer}
 
 <div class="bottom-nav" id="bottomNav">
   <div class="bottom-nav-inner">
-    <button class="bnav-item active" id="bnav-form" onclick="switchView('form')">
+    <button class="bnav-item staff-only" id="bnav-form" onclick="switchView('form')">
       <span class="material-icons-round">add_box</span><span>Nhập đơn</span>
+    </button>
+    <button class="bnav-item bnav-admin admin-only" id="bnav-dashboard" onclick="switchView('dashboard')" style="display:none">
+      <span class="material-icons-round">dashboard</span><span>Dashboard</span>
     </button>
     <button class="bnav-item" id="bnav-history" onclick="switchView('history')">
       <span class="material-icons-round">history</span><span>Lịch sử</span>
     </button>
     <button class="bnav-item bnav-admin admin-only" id="bnav-product" onclick="switchView('product')" style="display:none">
       <span class="material-icons-round">inventory_2</span><span>Sản phẩm</span>
-    </button>
-    <button class="bnav-item bnav-admin admin-only" id="bnav-dashboard" onclick="switchView('dashboard')" style="display:none">
-      <span class="material-icons-round">dashboard</span><span>Dashboard</span>
     </button>
   </div>
 </div>
@@ -747,63 +814,189 @@ select.input-field{cursor:pointer}
 </div>
 
 <div id="detailModal" class="overlay">
-  <div class="modal">
-    <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Chi tiết đơn</h3><div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace" id="modalTime">--:--</div><button class="modal-close" onclick="closeModal('detailModal')"><span class="material-icons-round">close</span></button></div>
-    <div class="modal-body">
-      <div class="modal-detail-row"><div class="detail-label">Mã vận đơn</div><div class="detail-code"><span id="modalCode">---</span><button class="btn-copy-sm" onclick="copyToClipboard(document.getElementById('modalCode').innerText,this)"><span class="material-icons-round">content_copy</span></button></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="modal-detail-row"><div class="detail-label">Nhân viên</div><div class="detail-value" id="modalStaff">---</div></div>
-        <div class="modal-detail-row"><div class="detail-label">Kênh bán</div><div class="detail-value" style="display:flex;align-items:center;gap:6px"><img id="modalChannelIcon" style="width:20px;border-radius:4px"><span id="modalChannel">---</span></div></div>
+  <div class="modal" style="max-width:480px;padding:0;overflow:hidden">
+    <!-- HERO HEADER -->
+    <div class="dm-header">
+      <div class="dm-hero">
+        <button class="dm-close-btn" onclick="closeModal('detailModal')"><span class="material-icons-round" style="font-size:16px">close</span></button>
+        <div class="dm-title-row">
+          <div class="dm-title-icon"><span class="material-icons-round">receipt_long</span></div>
+          <div>
+            <div class="dm-title-text">Chi tiết đơn hoàn</div>
+            <div class="dm-title-sub" id="modalTime">--:--</div>
+          </div>
+        </div>
+        <div class="dm-code-block">
+          <span class="dm-code-val" id="modalCode">---</span>
+          <button class="dm-copy-btn" onclick="copyToClipboard(document.getElementById('modalCode').innerText,this)"><span class="material-icons-round">content_copy</span></button>
+        </div>
+        <div class="dm-chips">
+          <div class="dm-chip" id="modalChannelChip">
+            <img id="modalChannelIcon" src="">
+            <span id="modalChannel">---</span>
+          </div>
+          <div class="dm-chip-status pill" id="modalStatusChip">---</div>
+        </div>
       </div>
-      <div class="modal-detail-row"><div class="detail-label">Sản phẩm</div><div class="detail-value" id="modalProduct" style="color:var(--blue)">---</div></div>
-      <div class="modal-detail-row"><div class="detail-label">Chi tiết</div><div class="detail-value">SL: <span id="modalQty" style="font-family:'JetBrains Mono',monospace;font-weight:800">---</span> · <span id="modalStatus">---</span></div></div>
-      
-      <div class="modal-detail-row" id="modalComplaintContainer" style="display:none; background:var(--surface2); padding:10px; border-radius:8px">
-          <div class="detail-label" style="color:var(--amber)">Trạng thái Khiếu nại/Bảo hành</div>
-          <div class="detail-value" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px">
-             <span id="modalComplaintStatus" style="font-weight:800; font-size:13px">---</span>
-             <button class="btn-copy-sm admin-only" style="width:auto; padding:0 10px; border-color:var(--blue); color:var(--blue)" onclick="openUpdateComplaintModal()"><span class="material-icons-round" style="font-size:14px; margin-right:4px">edit</span> Cập nhật</button>
+    </div>
+
+    <!-- BODY -->
+    <div class="dm-body" style="overflow-y:auto;max-height:60vh">
+
+      <!-- Nhân viên & Kênh -->
+      <div class="dm-section">
+        <div class="dm-section-label">Thông tin cơ bản</div>
+        <div class="dm-row-2">
+          <div class="dm-field">
+            <div class="dm-field-label">Nhân viên</div>
+            <div class="dm-field-val" id="modalStaff">---</div>
           </div>
-          <div id="modalComplaintImageContainer" style="margin-top:12px; display:none; padding-top:10px; border-top:1px dashed var(--border)">
-             <div class="detail-label">Ảnh kết quả</div>
-             <img id="modalComplaintImage" class="detail-img-thumb" style="margin-top:4px" onclick="window.open(this.src)">
+          <div class="dm-field">
+            <div class="dm-field-label">Số lượng</div>
+            <div class="dm-field-val"><span style="font-family:'JetBrains Mono',monospace;font-size:15px" id="modalQty">---</span></div>
           </div>
+        </div>
       </div>
 
-      <div class="modal-detail-row"><div class="detail-label">Gian hàng</div><div class="detail-value" style="display:flex;align-items:center;gap:8px"><img id="modalShopIcon" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border)"><span id="modalShop" style="font-weight:800">---</span></div></div>
-      <div class="modal-detail-row"><div class="detail-label">Báo cáo sàn</div><div class="detail-value" id="modalReport">---</div></div>
-      <div><div class="detail-label">Hình ảnh đính kèm</div><div class="detail-imgs" id="modalImages"></div></div>
+      <!-- Sản phẩm -->
+      <div class="dm-section">
+        <div class="dm-section-label">Sản phẩm</div>
+        <div id="modalProduct" style="color:var(--text)">---</div>
+      </div>
+
+      <!-- Gian hàng -->
+      <div class="dm-section">
+        <div class="dm-section-label">Gian hàng</div>
+        <div class="dm-shop-row">
+          <img class="dm-shop-logo" id="modalShopIcon" src="">
+          <div>
+            <div class="dm-shop-name" id="modalShop">---</div>
+            <div class="dm-shop-ch">
+              <img id="modalShopChannelIcon" style="width:14px;border-radius:2px">
+              <span id="modalShopChannel" style="font-size:11px;color:var(--text3);font-weight:600">---</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Báo cáo sàn -->
+      <div class="dm-section" id="modalReportSection">
+        <div class="dm-section-label">Báo cáo sàn</div>
+        <div class="dm-field-val" style="font-size:13px" id="modalReport">---</div>
+      </div>
+
+      <!-- Khiếu nại / Bảo hành -->
+      <div class="dm-section" id="modalComplaintContainer" style="display:none">
+        <div class="dm-complaint-box">
+          <div class="dm-complaint-label">Trạng thái Khiếu nại / Bảo hành</div>
+          <div class="dm-complaint-top">
+            <div class="dm-complaint-status" id="modalComplaintStatus">---</div>
+            <button class="dm-update-btn admin-only" onclick="openUpdateComplaintModal()">
+              <span class="material-icons-round">edit</span>Cập nhật
+            </button>
+          </div>
+          <div class="dm-proof-img" id="modalComplaintImageContainer" style="display:none">
+            <div class="dm-proof-label">Ảnh kết quả / Bằng chứng</div>
+            <img id="modalComplaintImage" class="dm-img-thumb" style="width:80px;height:80px;margin-top:4px" onclick="window.open(this.src)">
+          </div>
+        </div>
+      </div>
+
+      <!-- Hình ảnh đính kèm -->
+      <div class="dm-section">
+        <div class="dm-section-label">Hình ảnh đính kèm</div>
+        <div class="dm-img-grid" id="modalImages"></div>
+      </div>
+
     </div>
   </div>
 </div>
 
 <div id="subDetailModal" class="overlay" style="z-index:2000">
-  <div class="modal" style="max-width:420px">
-    <div class="modal-head"><h3 style="font-size:16px;font-weight:800">Chi tiết đơn</h3><div style="font-size:11px;color:var(--text3);margin-top:4px;font-family:'JetBrains Mono',monospace" id="subModalTime">--:--</div><button class="modal-close" onclick="closeModal('subDetailModal')"><span class="material-icons-round">close</span></button></div>
-    <div class="modal-body">
-      <div class="modal-detail-row"><div class="detail-label">Mã vận đơn</div><div class="detail-code"><span id="subModalCode">---</span><button class="btn-copy-sm" onclick="copyToClipboard(document.getElementById('subModalCode').innerText,this)"><span class="material-icons-round">content_copy</span></button></div></div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div class="modal-detail-row"><div class="detail-label">Nhân viên</div><div class="detail-value" id="subModalStaff">---</div></div>
-        <div class="modal-detail-row"><div class="detail-label">Kênh bán</div><div class="detail-value" style="display:flex;align-items:center;gap:6px"><img id="subModalChannelIcon" style="width:20px;border-radius:4px"><span id="subModalChannel">---</span></div></div>
+  <div class="modal" style="max-width:480px;padding:0;overflow:hidden">
+    <div class="dm-header">
+      <div class="dm-hero">
+        <button class="dm-close-btn" onclick="closeModal('subDetailModal')"><span class="material-icons-round" style="font-size:16px">close</span></button>
+        <div class="dm-title-row">
+          <div class="dm-title-icon"><span class="material-icons-round">receipt_long</span></div>
+          <div>
+            <div class="dm-title-text">Chi tiết đơn hoàn</div>
+            <div class="dm-title-sub" id="subModalTime">--:--</div>
+          </div>
+        </div>
+        <div class="dm-code-block">
+          <span class="dm-code-val" id="subModalCode">---</span>
+          <button class="dm-copy-btn" onclick="copyToClipboard(document.getElementById('subModalCode').innerText,this)"><span class="material-icons-round">content_copy</span></button>
+        </div>
+        <div class="dm-chips">
+          <div class="dm-chip" id="subModalChannelChip">
+            <img id="subModalChannelIcon" src="">
+            <span id="subModalChannel">---</span>
+          </div>
+          <div class="dm-chip-status pill" id="subModalStatusChip">---</div>
+        </div>
       </div>
-      <div class="modal-detail-row"><div class="detail-label">Sản phẩm</div><div class="detail-value" id="subModalProduct" style="color:var(--blue)">---</div></div>
-      <div class="modal-detail-row"><div class="detail-label">Chi tiết</div><div class="detail-value">SL: <span id="subModalQty" style="font-family:'JetBrains Mono',monospace;font-weight:800">---</span> · <span id="subModalStatus">---</span></div></div>
-      
-      <div class="modal-detail-row" id="subModalComplaintContainer" style="display:none; background:var(--surface2); padding:10px; border-radius:8px">
-          <div class="detail-label" style="color:var(--amber)">Trạng thái Khiếu nại/Bảo hành</div>
-          <div class="detail-value" style="display:flex; justify-content:space-between; align-items:center; margin-top:4px">
-             <span id="subModalComplaintStatus" style="font-weight:800; font-size:13px">---</span>
-             <button class="btn-copy-sm admin-only" style="width:auto; padding:0 10px; border-color:var(--blue); color:var(--blue)" onclick="openUpdateComplaintModal()"><span class="material-icons-round" style="font-size:14px; margin-right:4px">edit</span> Cập nhật</button>
+    </div>
+
+    <div class="dm-body" style="overflow-y:auto;max-height:60vh">
+      <div class="dm-section">
+        <div class="dm-section-label">Thông tin cơ bản</div>
+        <div class="dm-row-2">
+          <div class="dm-field">
+            <div class="dm-field-label">Nhân viên</div>
+            <div class="dm-field-val" id="subModalStaff">---</div>
           </div>
-          <div id="subModalComplaintImageContainer" style="margin-top:12px; display:none; padding-top:10px; border-top:1px dashed var(--border)">
-             <div class="detail-label">Ảnh kết quả</div>
-             <img id="subModalComplaintImage" class="detail-img-thumb" style="margin-top:4px" onclick="window.open(this.src)">
+          <div class="dm-field">
+            <div class="dm-field-label">Số lượng</div>
+            <div class="dm-field-val"><span style="font-family:'JetBrains Mono',monospace;font-size:15px" id="subModalQty">---</span></div>
           </div>
+        </div>
       </div>
 
-      <div class="modal-detail-row"><div class="detail-label">Gian hàng</div><div class="detail-value" style="display:flex;align-items:center;gap:8px"><img id="subModalShopIcon" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border)"><span id="subModalShop" style="font-weight:800">---</span></div></div>
-      <div class="modal-detail-row"><div class="detail-label">Báo cáo sàn</div><div class="detail-value" id="subModalReport">---</div></div>
-      <div><div class="detail-label">Hình ảnh đính kèm</div><div class="detail-imgs" id="subModalImages"></div></div>
+      <div class="dm-section">
+        <div class="dm-section-label">Sản phẩm</div>
+        <div id="subModalProduct" style="color:var(--text)">---</div>
+      </div>
+
+      <div class="dm-section">
+        <div class="dm-section-label">Gian hàng</div>
+        <div class="dm-shop-row">
+          <img class="dm-shop-logo" id="subModalShopIcon" src="">
+          <div>
+            <div class="dm-shop-name" id="subModalShop">---</div>
+            <div class="dm-shop-ch">
+              <img id="subModalShopChannelIcon" style="width:14px;border-radius:2px">
+              <span id="subModalShopChannel" style="font-size:11px;color:var(--text3);font-weight:600">---</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="dm-section" id="subModalReportSection">
+        <div class="dm-section-label">Báo cáo sàn</div>
+        <div class="dm-field-val" style="font-size:13px" id="subModalReport">---</div>
+      </div>
+
+      <div class="dm-section" id="subModalComplaintContainer" style="display:none">
+        <div class="dm-complaint-box">
+          <div class="dm-complaint-label">Trạng thái Khiếu nại / Bảo hành</div>
+          <div class="dm-complaint-top">
+            <div class="dm-complaint-status" id="subModalComplaintStatus">---</div>
+            <button class="dm-update-btn admin-only" onclick="openUpdateComplaintModal()">
+              <span class="material-icons-round">edit</span>Cập nhật
+            </button>
+          </div>
+          <div class="dm-proof-img" id="subModalComplaintImageContainer" style="display:none">
+            <div class="dm-proof-label">Ảnh kết quả / Bằng chứng</div>
+            <img id="subModalComplaintImage" class="dm-img-thumb" style="width:80px;height:80px;margin-top:4px" onclick="window.open(this.src)">
+          </div>
+        </div>
+      </div>
+
+      <div class="dm-section">
+        <div class="dm-section-label">Hình ảnh đính kèm</div>
+        <div class="dm-img-grid" id="subModalImages"></div>
+      </div>
     </div>
   </div>
 </div>
@@ -812,6 +1005,24 @@ select.input-field{cursor:pointer}
   <div class="modal" style="max-width:560px;height:80vh;max-height:700px;display:flex;flex-direction:column">
     <div class="modal-head"><h3 style="font-size:16px;font-weight:800" id="channelListTitle">Danh sách đơn</h3><div style="font-size:12px;color:var(--text3);margin-top:4px;font-weight:600" id="channelListSubtitle">...</div><button class="modal-close" onclick="closeModal('channelDetailModal')"><span class="material-icons-round">close</span></button></div>
     <div class="modal-body" style="flex:1;overflow-y:auto;padding-top:0"><div id="channelListContainer"></div></div>
+  </div>
+</div>
+
+<!-- DIRTY ORDERS ALERT POPUP (Admin only) -->
+<div id="dirtyAlertOverlay">
+  <div id="dirtyAlertBox">
+    <div class="da-head">
+      <div class="da-icon"><span class="material-icons-round">warning</span></div>
+      <div>
+        <div class="da-title">⚠️ Đơn chưa xử lý cần cập nhật!</div>
+        <div class="da-sub" id="dirtyAlertSub">Có đơn bị bẩn/tráo chưa được xử lý</div>
+      </div>
+    </div>
+    <div class="da-body" id="dirtyAlertList"></div>
+    <div class="da-foot">
+      <button class="da-btn-dismiss" onclick="closeDirtyAlert()">Bỏ qua</button>
+      <button class="da-btn-go" onclick="goToNotifications()">Xem & Cập nhật →</button>
+    </div>
   </div>
 </div>
 
@@ -891,8 +1102,55 @@ function loadPendingComplaints() {
           } else {
               notiDot.classList.remove('active');
           }
+          // Show dirty alert popup for admin on first login if there are unprocessed orders
+          if(userRole === 'admin' && window._showDirtyAlertOnLoad) {
+              window._showDirtyAlertOnLoad = false;
+              showDirtyAlertIfNeeded();
+          }
       }
   }).catch(e => console.log("Lỗi tải thông báo"));
+}
+
+function showDirtyAlertIfNeeded() {
+  // Only show for orders with status "Chưa xử lý" (not "Đang xử lý" or "xử lý xong")
+  const unprocessed = pendingComplaintsCache.filter(it => {
+      const cs = (it.complaintStatus || '').trim();
+      return cs === 'Chưa xử lý' || cs === '';
+  });
+  if (unprocessed.length === 0) return;
+  
+  document.getElementById('dirtyAlertSub').innerText = `Có ${unprocessed.length} đơn bị bẩn/tráo/lỗi chưa được xử lý`;
+  let html = '';
+  unprocessed.forEach(it => {
+      let pillClass = 'pill-red';
+      if(it.status && it.status.includes('bẩn')) pillClass = 'pill-amber';
+      html += `<div class="da-item" onclick="closeDirtyAlertAndOpenDetail('${it.code}')">
+        <div>
+          <div class="da-code">${it.code}</div>
+          <div class="da-info">${it.status} · ${it.shop || 'Không rõ shop'} · ${new Date(it.time).toLocaleDateString('vi')}</div>
+        </div>
+        <span class="pill ${pillClass}" style="font-size:10px;flex-shrink:0">${it.status.split('-')[0]}</span>
+      </div>`;
+  });
+  document.getElementById('dirtyAlertList').innerHTML = html;
+  document.getElementById('dirtyAlertOverlay').classList.add('open');
+}
+
+function closeDirtyAlert() {
+  document.getElementById('dirtyAlertOverlay').classList.remove('open');
+}
+
+function goToNotifications() {
+  closeDirtyAlert();
+  openNotificationModal();
+}
+
+function closeDirtyAlertAndOpenDetail(code) {
+  closeDirtyAlert();
+  const d = pendingComplaintsCache.find(x => x.code === code);
+  if(!d) return;
+  historyDataCache = [d];
+  showDetail(0, true);
 }
 
 function openNotificationModal() {
@@ -1037,8 +1295,15 @@ function formatProductDisplay(prodStr) { if(!prodStr) return "---"; const parts 
 function getMiniProductHtml(prodStr) { if(!prodStr) return `<span style="color:var(--text3);font-size:12px">Không có sản phẩm</span>`; const parts = prodStr.split('|').map(p=>p.trim()); return parts.map(pt => { let baseName = pt.replace(/\(.*\)/, '').trim(); let match = allProducts.find(p => p.name.toLowerCase() === baseName.toLowerCase()); let imgUrl = (match && match.image) ? match.image : 'https://cdn-icons-png.flaticon.com/512/1524/1524855.png'; return `<div style="display:flex;align-items:center;gap:8px;"><img src="${imgUrl}" style="width:28px;height:28px;border-radius:4px;object-fit:cover;border:1px solid var(--border);background:var(--surface2);flex-shrink:0;"> <span style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pt}</span></div>`; }).join(''); }
 
 // LOGIN
-document.getElementById('loginForm').addEventListener('submit',function(e){ e.preventDefault(); const u=document.getElementById('loginUser').value; const p=document.getElementById('loginPass').value; showLoading(true,"Đang đăng nhập...",true); fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"login",user:u,pass:p})}) .then(r=>r.json()).then(res=>{ showLoading(false); if(res.result==='success'){ currentUser=u; userRole=u.toLowerCase()==='admin'?'admin':'staff'; document.getElementById('staffName').value=res.name; document.getElementById('displayName').innerText=res.name; document.getElementById('userAvatar').innerText=res.name.charAt(0).toUpperCase(); document.getElementById('loginScreen').style.display='none'; document.getElementById('mainApp').style.display='flex'; applyPermissions(); loadProductsGlobal(); loadPendingComplaints(); if(userRole==='admin'){ switchView('dashboard'); initMonthlyChart(); loadReportData(); document.getElementById('returnForm').style.display='none'; }else{ switchView('form'); document.getElementById('returnForm').style.display='block'; handleChannelChange(); } loadHistory(); }else{alert(res.message)} }).catch(()=>{showLoading(false);alert("Lỗi kết nối Server!")}); });
-function applyPermissions(){ document.querySelectorAll('.admin-only').forEach(el=>{ if(userRole==='admin'){ el.style.display='flex'; }else{ el.style.display='none'; } }); }
+document.getElementById('loginForm').addEventListener('submit',function(e){ e.preventDefault(); const u=document.getElementById('loginUser').value; const p=document.getElementById('loginPass').value; showLoading(true,"Đang đăng nhập...",true); fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"login",user:u,pass:p})}) .then(r=>r.json()).then(res=>{ showLoading(false); if(res.result==='success'){ currentUser=u; userRole=u.toLowerCase()==='admin'?'admin':'staff'; document.getElementById('staffName').value=res.name; document.getElementById('displayName').innerText=res.name; document.getElementById('userAvatar').innerText=res.name.charAt(0).toUpperCase(); document.getElementById('loginScreen').style.display='none'; document.getElementById('mainApp').style.display='flex'; applyPermissions(); loadProductsGlobal(); if(userRole==='admin') window._showDirtyAlertOnLoad = true; loadPendingComplaints(); if(userRole==='admin'){ switchView('dashboard'); initMonthlyChart(); loadReportData(); document.getElementById('returnForm').style.display='none'; }else{ switchView('form'); document.getElementById('returnForm').style.display='block'; handleChannelChange(); } loadHistory(); }else{alert(res.message)} }).catch(()=>{showLoading(false);alert("Lỗi kết nối Server!")}); });
+function applyPermissions(){ 
+  document.querySelectorAll('.admin-only').forEach(el=>{ 
+    if(userRole==='admin'){ el.style.display='flex'; }else{ el.style.display='none'; } 
+  }); 
+  document.querySelectorAll('.staff-only').forEach(el=>{ 
+    if(userRole==='staff'){ el.style.display='flex'; }else{ el.style.display='none'; } 
+  }); 
+}
 function logout(){ currentUser="";userRole="staff"; document.getElementById('mainApp').style.display='none'; document.getElementById('loginScreen').style.display='flex'; document.getElementById('loginForm').reset(); document.getElementById('historyList').innerHTML=""; pendingComplaintsCache=[]; document.getElementById('notiDot').classList.remove('active');}
 
 // CHANNEL CHANGE
@@ -1105,24 +1370,52 @@ function openMetricDetail(type){ if(!window.currentMonthOrders)return; const mv=
 function renderChannelList(data){ const container=document.getElementById('channelListContainer'); if(!data||!data.length){container.innerHTML="<div style='text-align:center;padding:24px;color:var(--text3);font-size:13px'>Không có đơn hàng nào.</div>";return} channelDataCache=data; let html=""; data.forEach((it,i)=>{ let pillClass='pill-green'; if(it.status.includes('bẩn'))pillClass='pill-amber'; if(it.status.includes('tráo')||it.status.includes('Thiếu'))pillClass='pill-red'; if(it.status.includes('Bảo hành'))pillClass='pill-sky'; html+=`<div class="channel-detail-item" onclick="openSubDetailModal(${i})"> <div style="flex:1;min-width:0;margin-right:10px"> <div class="history-code">${it.code}</div> <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${getMiniProductHtml(it.product)}</div> <div class="history-shop" style="margin-top:6px">${it.shop||'Không rõ'}</div> </div> <div style="text-align:right;flex-shrink:0"> <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div> <div class="history-time" style="margin-top:4px">${new Date(it.time).toLocaleDateString('vi')}</div> </div> </div>`; }); container.innerHTML=html; }
 
 // --- TÍCH HỢP HIỂN THỊ KHIẾU NẠI Ở MODAL DETAIL ---
-function populateDetailModal(d, prefix) {
-  document.getElementById(prefix+'Code').innerText=d.code;
-  document.getElementById(prefix+'Staff').innerText=d.staff;
-  document.getElementById(prefix+'Time').innerText=new Date(d.time).toLocaleString('vi');
-  document.getElementById(prefix+'Product').innerHTML=formatProductDisplay(d.product);
-  document.getElementById(prefix+'Qty').innerText=d.qty||1;
-  document.getElementById(prefix+'Status').innerText=d.status;
-  document.getElementById(prefix+'Report').innerText=d.report;
-  document.getElementById(prefix+'Shop').innerText=d.shop||"---";
-  document.getElementById(prefix+'ShopIcon').src=SHOP_LOGOS[d.shop]||SHOP_LOGOS.default;
-  document.getElementById(prefix+'Channel').innerText=d.channel;
-  document.getElementById(prefix+'ChannelIcon').src=CHANNEL_ICONS[d.channel]||CHANNEL_ICONS.default;
-  
-  const b=document.getElementById(prefix+'Images');b.innerHTML='';
-  if(d.imageLinks)d.imageLinks.split('\n').forEach(u=>{if(u.trim())b.innerHTML+=`<img src="${u.trim()}" class="detail-img-thumb" onclick="window.open('${u.trim()}')">`});
-  else b.innerHTML='<span style="font-size:12px;color:var(--text3)">Không có ảnh</span>';
+function getStatusPillClass(status) {
+  if(!status) return 'pill-green';
+  if(status.includes('bẩn')) return 'pill-amber';
+  if(status.includes('tráo') || status.includes('Thiếu')) return 'pill-red';
+  if(status.includes('Bảo hành')) return 'pill-sky';
+  return 'pill-green';
+}
 
-  // LOGIC TRẠNG THÁI KHIẾU NẠI
+function populateDetailModal(d, prefix) {
+  document.getElementById(prefix+'Code').innerText = d.code;
+  document.getElementById(prefix+'Staff').innerText = d.staff;
+  document.getElementById(prefix+'Time').innerText = new Date(d.time).toLocaleString('vi');
+  document.getElementById(prefix+'Product').innerHTML = formatProductDisplay(d.product);
+  document.getElementById(prefix+'Qty').innerText = d.qty || 1;
+  document.getElementById(prefix+'Report').innerText = d.report || '—';
+  document.getElementById(prefix+'Shop').innerText = d.shop || "---";
+  document.getElementById(prefix+'ShopIcon').src = SHOP_LOGOS[d.shop] || SHOP_LOGOS.default;
+  document.getElementById(prefix+'Channel').innerText = d.channel;
+  document.getElementById(prefix+'ChannelIcon').src = CHANNEL_ICONS[d.channel] || CHANNEL_ICONS.default;
+
+  // Shop channel icon (small icon in shop row)
+  const shopChIcon = document.getElementById(prefix+'ShopChannelIcon');
+  const shopChSpan = document.getElementById(prefix+'ShopChannel');
+  if(shopChIcon) shopChIcon.src = CHANNEL_ICONS[d.channel] || CHANNEL_ICONS.default;
+  if(shopChSpan) shopChSpan.innerText = d.channel;
+
+  // Status chip in header
+  const statusChip = document.getElementById(prefix+'StatusChip');
+  if(statusChip) {
+    const pillCls = getStatusPillClass(d.status);
+    statusChip.className = 'dm-chip-status pill ' + pillCls;
+    statusChip.innerText = (d.status || '---').split('-')[0].trim();
+  }
+
+  // Images
+  const b = document.getElementById(prefix+'Images');
+  b.innerHTML = '';
+  if(d.imageLinks) {
+    d.imageLinks.split('\n').forEach(u => {
+      if(u.trim()) b.innerHTML += `<img src="${u.trim()}" class="dm-img-thumb" onclick="window.open('${u.trim()}')">`;
+    });
+  } else {
+    b.innerHTML = '<span style="font-size:12px;color:var(--text3)">Không có ảnh</span>';
+  }
+
+  // Complaint container
   const complaintContainer = document.getElementById(prefix+'ComplaintContainer');
   if (d.status && !d.status.toLowerCase().includes('tốt')) {
       complaintContainer.style.display = 'block';
@@ -1141,7 +1434,7 @@ function populateDetailModal(d, prefix) {
       complaintContainer.style.display = 'none';
   }
 
-  // LƯU BIẾN TẠM ĐỂ NÚT CẬP NHẬT DÙNG LẠI
+  // Save temp vars for update button
   window.currentViewCode = d.code;
   window.currentViewComplaintStatus = d.complaintStatus || "Chưa xử lý";
 }
