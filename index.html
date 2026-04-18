@@ -967,7 +967,14 @@ document.getElementById('complaintForm').addEventListener('submit', function(e) 
       return;
   }
 
-  const payload = { action: 'update_complaint', code: code, newStatus: newStatus };
+  // FIX: Gửi thêm các tên biến dự phòng (maVanDon, status) để khớp với mọi chuẩn của Backend
+  const payload = { 
+      action: 'update_complaint', 
+      code: code, 
+      maVanDon: code, 
+      newStatus: newStatus,
+      status: newStatus
+  };
   const taskId = 'task_' + new Date().getTime();
   addBgTask(taskId, `Cập nhật KN: ${code}`);
   closeModal('updateComplaintModal');
@@ -976,7 +983,19 @@ document.getElementById('complaintForm').addEventListener('submit', function(e) 
       const f = fileInput.files[0];
       const rd = new FileReader();
       rd.onload = () => {
-          payload.image = { data: rd.result, mimeType: f.type };
+          // FIX: Tách bỏ tiền tố (data:image/png;base64,...) phòng trường hợp hàm tạo file của Apps Script bị lỗi
+          const base64String = rd.result.includes(',') ? rd.result.split(',')[1] : rd.result;
+          
+          const imgObj = { 
+              data: rd.result, 
+              base64: base64String, // Chuỗi sạch để Apps Script dễ tạo file
+              mimeType: f.type, 
+              name: f.name 
+          };
+          
+          payload.image = imgObj;
+          payload.images = [imgObj]; // Đề phòng Backend đang dùng vòng lặp array giống hàm Nhập Đơn mới
+          
           sendUpdateComplaint(payload, taskId);
       };
       rd.readAsDataURL(f);
