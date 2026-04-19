@@ -293,6 +293,46 @@ select.input-field{cursor:pointer}
 .top-prod-lbl{font-size:9px;font-weight:600;color:var(--text3);margin-top:2px}
 
 
+/* ====== SLA BADGE ====== */
+.sla-badge{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:100px;font-size:10px;font-weight:800;font-family:'JetBrains Mono',monospace}
+.sla-ok{background:rgba(22,163,74,.1);color:var(--green)}
+.sla-warn{background:rgba(217,119,6,.12);color:var(--amber)}
+.sla-danger{background:rgba(220,38,38,.12);color:var(--red);animation:pulse 1.5s infinite}
+
+/* ====== BULK ACTIONS ====== */
+.bulk-bar{display:none;position:sticky;top:0;z-index:50;background:var(--blue);border-radius:var(--r);padding:10px 14px;margin-bottom:10px;align-items:center;justify-content:space-between;gap:10px;animation:fadeUp .2s ease}
+.bulk-bar.active{display:flex}
+.bulk-bar-info{font-size:13px;font-weight:700;color:white}
+.bulk-bar-actions{display:flex;gap:8px}
+.bulk-btn{padding:6px 14px;border-radius:8px;border:1.5px solid rgba(255,255,255,.4);background:rgba(255,255,255,.1);color:white;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.15s}
+.bulk-btn:hover{background:rgba(255,255,255,.2)}
+.bulk-btn-red{border-color:rgba(255,255,255,.4);background:rgba(220,38,38,.3)}
+.history-item-check{width:18px;height:18px;border-radius:5px;border:2px solid var(--border-strong);background:var(--surface);flex-shrink:0;cursor:pointer;display:none;align-items:center;justify-content:center;transition:.15s;margin-right:4px}
+.history-item-check.visible{display:flex}
+.history-item-check.checked{background:var(--blue);border-color:var(--blue)}
+.history-item-check.checked::after{content:'✓';color:white;font-size:11px;font-weight:800}
+.bulk-mode .history-item{cursor:pointer}
+.history-item.selected{background:rgba(37,99,235,.05);border-left:3px solid var(--blue)}
+
+/* ====== COMMENT SYSTEM ====== */
+.comment-section{margin-top:12px;padding-top:12px;border-top:1px dashed var(--border)}
+.comment-list{display:flex;flex-direction:column;gap:8px;margin-bottom:10px;max-height:180px;overflow-y:auto}
+.comment-item{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:8px 12px}
+.comment-author{font-size:10px;font-weight:800;color:var(--blue);margin-bottom:2px}
+.comment-time{font-size:9px;color:var(--text3);font-weight:600;margin-left:6px}
+.comment-text{font-size:12px;color:var(--text);font-weight:500;line-height:1.5}
+.comment-input-row{display:flex;gap:8px;align-items:flex-end}
+.comment-input{flex:1;padding:8px 12px;border:1px solid var(--border-strong);border-radius:var(--r);background:var(--surface2);color:var(--text);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;resize:none;outline:none;transition:.15s;min-height:36px;max-height:80px}
+.comment-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(37,99,235,.08)}
+.comment-send-btn{width:36px;height:36px;border-radius:10px;border:none;background:var(--blue);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.15s}
+.comment-send-btn:hover{opacity:.85}
+.comment-send-btn .material-icons-round{font-size:18px}
+.comment-empty{font-size:12px;color:var(--text3);font-style:italic;padding:8px 0}
+
+/* ====== EXPORT BUTTON ====== */
+.btn-export{display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--r);border:1px solid var(--green);background:rgba(22,163,74,.08);color:var(--green);font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:.15s;white-space:nowrap}
+.btn-export:hover{background:rgba(22,163,74,.15)}
+
 .bg-task { pointer-events:auto; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; width: 240px; box-shadow: var(--shadow-lg); display: flex; flex-direction: column; gap: 8px; animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 .bg-task-title { font-size: 12px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display:flex; align-items:center; gap:6px; }
@@ -688,6 +728,7 @@ select.input-field{cursor:pointer}
               <span style="color:var(--text3);font-size:12px;font-weight:700">—</span>
               <input type="date" id="reportEnd" class="input-field" style="padding:7px 10px;width:auto;font-size:12px;height:34px">
               <button onclick="loadReportData()" class="icon-btn"><span class="material-icons-round">refresh</span></button>
+              <button onclick="exportReportExcel()" class="btn-export"><span class="material-icons-round" style="font-size:16px">download</span>Xuất Excel</button>
             </div>
           </div>
           <!-- Stat cards row -->
@@ -826,7 +867,19 @@ select.input-field{cursor:pointer}
       <div id="historyView" style="display:none">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
           <div class="section-title" style="margin:0">Lịch sử nhập</div>
-          <input type="date" id="historyDate" class="input-field" style="width:auto;padding:7px 12px;height:34px;font-size:13px" onchange="loadHistory()">
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="bulkToggleBtn" class="admin-only icon-btn" onclick="toggleBulkMode()" title="Chọn nhiều" style="display:none"><span class="material-icons-round">checklist</span></button>
+            <input type="date" id="historyDate" class="input-field" style="width:auto;padding:7px 12px;height:34px;font-size:13px" onchange="loadHistory()">
+          </div>
+        </div>
+        <!-- Bulk action bar -->
+        <div class="bulk-bar" id="bulkBar">
+          <div class="bulk-bar-info"><span id="bulkCount">0</span> đơn đã chọn</div>
+          <div class="bulk-bar-actions">
+            <button class="bulk-btn" onclick="bulkExport()"><span class="material-icons-round" style="font-size:14px;vertical-align:middle">download</span> Xuất</button>
+            <button class="bulk-btn" onclick="bulkUpdateStatus()"><span class="material-icons-round" style="font-size:14px;vertical-align:middle">edit</span> Cập nhật KN</button>
+            <button class="bulk-btn" onclick="toggleBulkMode()">Hủy</button>
+          </div>
         </div>
         <div class="search-bar" style="margin-bottom:16px">
           <div class="search-icon"><span class="material-icons-round">search</span></div>
@@ -1002,7 +1055,10 @@ select.input-field{cursor:pointer}
       <!-- Khiếu nại / Bảo hành -->
       <div class="dm-section" id="modalComplaintContainer" style="display:none">
         <div class="dm-complaint-box">
-          <div class="dm-complaint-label">Trạng thái Khiếu nại / Bảo hành</div>
+          <div class="dm-complaint-label" style="display:flex;align-items:center;justify-content:space-between">
+            <span>Trạng thái Khiếu nại / Bảo hành</span>
+            <span id="modalSlaBadge" class="sla-badge" style="display:none"></span>
+          </div>
           <div class="dm-complaint-top">
             <div class="dm-complaint-status" id="modalComplaintStatus">---</div>
             <button class="dm-update-btn admin-only" onclick="openUpdateComplaintModal()">
@@ -1020,6 +1076,19 @@ select.input-field{cursor:pointer}
       <div class="dm-section">
         <div class="dm-section-label">Hình ảnh đính kèm</div>
         <div class="dm-img-grid" id="modalImages"></div>
+      </div>
+
+      <!-- Ghi chú nội bộ -->
+      <div class="dm-section" style="border-bottom:none;padding-bottom:0">
+        <div class="dm-section-label" style="display:flex;align-items:center;justify-content:space-between">
+          <span>Ghi chú nội bộ</span>
+          <span id="modalCommentCount" style="font-size:9px;background:var(--bg);border:1px solid var(--border);padding:1px 7px;border-radius:100px;color:var(--text3)">0</span>
+        </div>
+        <div class="comment-list" id="modalCommentList"><div class="comment-empty">Chưa có ghi chú nào</div></div>
+        <div class="comment-input-row">
+          <textarea class="comment-input" id="modalCommentInput" placeholder="Nhập ghi chú..." rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();submitComment('modal')}"></textarea>
+          <button class="comment-send-btn" onclick="submitComment('modal')"><span class="material-icons-round">send</span></button>
+        </div>
       </div>
 
     </div>
@@ -1640,6 +1709,20 @@ function populateDetailModal(d, prefix) {
 
   window.currentViewCode = d.code;
   window.currentViewComplaintStatus = d.complaintStatus || "Chưa xử lý";
+
+  // SLA badge
+  if(prefix === 'modal') {
+    const showSla = d.status && !d.status.toLowerCase().includes('tốt');
+    if(showSla) {
+      const days = getSLADays(d.time, d.complaintStatus);
+      renderSlaBadge('modalSlaBadge', days);
+    } else {
+      const b = document.getElementById('modalSlaBadge');
+      if(b) b.style.display = 'none';
+    }
+    // Load comments
+    loadComments('modal', d.code);
+  }
 }
 
 function showDetail(i, isFromNotification = false) {
@@ -1708,6 +1791,7 @@ function renderCsDropdown() {
       <div class="cs-item-date">${dateStr}</div>
     </div>`;
   }).join('');
+  setTimeout(addSlaToDropdown, 20);
 }
 
 function switchCsTab(tab, btn) {
@@ -1845,11 +1929,266 @@ function skeletonHTML(){ let s=''; for(let i=0;i<3;i++){ s+=`<div style="backgro
 function loadHistory(){ const date=document.getElementById('historyDate').value; document.getElementById('historyList').innerHTML=skeletonHTML(); fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get",date:date})}) .then(r=>r.json()) .then(d=>renderList(d)) .catch(()=>{document.getElementById('historyList').innerHTML="<div style='text-align:center;color:var(--red);margin-top:16px;font-size:13px'>Lỗi tải dữ liệu</div>"}); }
 function executeSearch(){ const kw=document.getElementById('searchInput').value; if(!kw)return loadHistory(); document.getElementById('historyList').innerHTML=skeletonHTML(); fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"search",keyword:kw})}) .then(r=>r.json()) .then(d=>renderList(d)) .catch(()=>{document.getElementById('historyList').innerHTML="<div style='text-align:center;color:var(--red);margin-top:16px;font-size:13px'>Lỗi tìm kiếm</div>"}); }
 function handleSearch(e){if(e.key==='Enter')executeSearch()}
-function renderList(data){ const list=document.getElementById('historyList'); if(!data||!data.length){list.innerHTML="<div style='text-align:center;color:var(--text3);margin-top:24px;font-size:13px'>Không có dữ liệu</div>";return} historyDataCache=data; const groups={Shopee:[],Tiktok:[],VTP:[],Lazada:[],Khác:[]}; data.forEach((item,i)=>{item.idx=i;if(groups[item.channel])groups[item.channel].push(item);else groups['Khác'].push(item)}); list.innerHTML=''; for(const [ch,items] of Object.entries(groups)){ if(items.length>0){ const icon=CHANNEL_ICONS[ch]||CHANNEL_ICONS.default; let html=`<div class="history-group collapsed"><div class="history-group-header" onclick="toggleGroup(this)"> <div style="display:flex;align-items:center;gap:10px;font-weight:700;color:var(--text);font-size:13.5px"><img src="${icon}" style="width:22px;border-radius:4px"> ${ch}</div> <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;background:var(--bg);border:1px solid var(--border);padding:3px 10px;border-radius:100px;color:var(--text2);font-weight:700">${items.length} đơn</span><span class="material-icons-round chevron" style="font-size:18px">expand_more</span></div> </div><div class="group-body">`; items.forEach(it=>{ let pillClass='pill-green'; if(it.status.includes('bẩn'))pillClass='pill-amber'; if(it.status.includes('tráo')||it.status.includes('Thiếu'))pillClass='pill-red'; if(it.status.includes('Bảo hành'))pillClass='pill-sky'; const clickAction=userRole==='admin'?`onclick="showDetail(${it.idx})"`:''; const styleCursor=userRole==='admin'?'':'cursor:default;'; html+=`<div class="history-item" ${clickAction} style="${styleCursor}"> <div style="flex:1;min-width:0;margin-right:10px"> <div class="history-code">${it.code}</div> <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${getMiniProductHtml(it.product)}</div> <div class="history-shop" style="margin-top:6px">${it.shop||''}</div> </div> <div style="text-align:right;flex-shrink:0"> <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div> <div class="history-time" style="margin-top:4px">${new Date(it.time).toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'})}</div> </div> </div>`; }); html+=`</div></div>`;list.innerHTML+=html; } } }
+function renderList(data){ const list=document.getElementById('historyList'); if(!data||!data.length){list.innerHTML="<div style='text-align:center;color:var(--text3);margin-top:24px;font-size:13px'>Không có dữ liệu</div>";return} historyDataCache=data; const groups={Shopee:[],Tiktok:[],VTP:[],Lazada:[],Khác:[]}; data.forEach((item,i)=>{item.idx=i;if(groups[item.channel])groups[item.channel].push(item);else groups['Khác'].push(item)}); list.innerHTML=''; for(const [ch,items] of Object.entries(groups)){ if(items.length>0){ const icon=CHANNEL_ICONS[ch]||CHANNEL_ICONS.default; let html=`<div class="history-group collapsed"><div class="history-group-header" onclick="toggleGroup(this)"> <div style="display:flex;align-items:center;gap:10px;font-weight:700;color:var(--text);font-size:13.5px"><img src="${icon}" style="width:22px;border-radius:4px"> ${ch}</div> <div style="display:flex;align-items:center;gap:10px"><span style="font-size:11px;background:var(--bg);border:1px solid var(--border);padding:3px 10px;border-radius:100px;color:var(--text2);font-weight:700">${items.length} đơn</span><span class="material-icons-round chevron" style="font-size:18px">expand_more</span></div> </div><div class="group-body">`; items.forEach(it=>{ let pillClass='pill-green'; if(it.status.includes('bẩn'))pillClass='pill-amber'; if(it.status.includes('tráo')||it.status.includes('Thiếu'))pillClass='pill-red'; if(it.status.includes('Bảo hành'))pillClass='pill-sky'; const clickAction=userRole==='admin'?`onclick="showDetail(${it.idx})"`:''; const styleCursor=userRole==='admin'?'':'cursor:default;'; html+=`<div class="history-item" ${clickAction} style="${styleCursor}"> <div style="flex:1;min-width:0;margin-right:10px"> <div class="history-code">${it.code}</div> <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${getMiniProductHtml(it.product)}</div> <div class="history-shop" style="margin-top:6px">${it.shop||''}</div> </div> <div style="text-align:right;flex-shrink:0"> <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div> <div class="history-time" style="margin-top:4px">${new Date(it.time).toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'})}</div> </div> </div>`; }); html+=`</div></div>`;list.innerHTML+=html; } } setTimeout(addBulkCheckboxes, 50); }
 function changePassword(){ const o=document.getElementById('oldPass').value,n=document.getElementById('newPass').value; if(!o||!n)return alert("Nhập đủ thông tin!"); showLoading(true); fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"change_pass",user:currentUser,oldPass:o,newPass:n})}) .then(r=>r.json()).then(r=>{showLoading(false);if(r.result==='success'){closeModal('changePassModal');alert("Đổi pass thành công!")}else alert(r.message)}); }
 function loadReportData(){ const s=document.getElementById('reportStart').value; const e=document.getElementById('reportEnd').value; ['rpGood','rpDirty','rpFraud','rpWarranty','rpTotal'].forEach(k=>document.getElementById(k).innerText='...'); reportOrdersCache=[]; fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"report",startDate:s,endDate:e})}) .then(r=>r.json()).then(d=>{ setTimeout(()=>{ document.getElementById('rpGood').innerText=d.good||0; document.getElementById('rpDirty').innerText=d.dirty||0; document.getElementById('rpFraud').innerText=(d.fraud||0)+(d.missing||0); document.getElementById('rpWarranty').innerText=d.warranty||0; document.getElementById('rpTotal').innerText=d.total||0; if(d.orders && Array.isArray(d.orders)) reportOrdersCache=d.orders; if(reportChart)reportChart.destroy(); const isDark=document.body.classList.contains('dark'); const tc=isDark?'#a0a09a':'#5c5c58'; reportChart=new Chart(document.getElementById('reportChart'),{ type:'doughnut', data:{labels:['Tốt','Bẩn','Lỗi','BH'],datasets:[{data:[d.good||0,d.dirty||0,(d.fraud||0)+(d.missing||0),d.warranty||0],backgroundColor:['#16a34a','#d97706','#dc2626','#0ea5e9'],borderWidth:0,hoverOffset:8}]}, options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{position:'bottom',labels:{padding:16,font:{family:'Plus Jakarta Sans',weight:'700',size:11},color:tc,usePointStyle:true}}},layout:{padding:8}} }); },100); }); }
 function openModal(id){document.getElementById(id).classList.add('open')}
 function closeModal(id){document.getElementById(id).classList.remove('open')}
+
+// ================================================================
+// 1. EXPORT EXCEL - Báo cáo tổng hợp
+// ================================================================
+function exportReportExcel() {
+  const s = document.getElementById('reportStart').value;
+  const e = document.getElementById('reportEnd').value;
+  const good = document.getElementById('rpGood').innerText;
+  const dirty = document.getElementById('rpDirty').innerText;
+  const fraud = document.getElementById('rpFraud').innerText;
+  const warranty = document.getElementById('rpWarranty').innerText;
+  const total = document.getElementById('rpTotal').innerText;
+  if(total === '0' || total === '...') { alert('Vui lòng tải báo cáo trước khi xuất!'); return; }
+
+  // Build CSV content
+  let csv = '\uFEFF'; // BOM for Excel UTF-8
+  csv += `Báo cáo tổng hợp XIXA Kho Hàng Hoàn\n`;
+  csv += `Từ ngày,${s}\nĐến ngày,${e}\n\n`;
+  csv += `Loại,Số lượng\n`;
+  csv += `Hàng tốt,${good}\n`;
+  csv += `Hàng bẩn,${dirty}\n`;
+  csv += `Lỗi/Thiếu,${fraud}\n`;
+  csv += `Bảo hành,${warranty}\n`;
+  csv += `TỔNG CỘNG,${total}\n\n`;
+
+  // Add detail rows if available
+  if(reportOrdersCache.length > 0) {
+    csv += `\nCHI TIẾT ĐƠN HÀNG\n`;
+    csv += `Mã vận đơn,Nhân viên,Kênh,Shop,Sản phẩm,Tình trạng,Thời gian\n`;
+    reportOrdersCache.forEach(o => {
+      const prod = (o.product||'').replace(/,/g,' ');
+      const t = new Date(o.time).toLocaleString('vi');
+      csv += `${o.code},${o.staff||''},${o.channel||''},${o.shop||''},${prod},${o.status||''},${t}\n`;
+    });
+  }
+
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `BaoCao_XIXA_${s}_${e}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ================================================================
+// 2. SLA INDICATOR - Số ngày chưa xử lý
+// ================================================================
+function getSLADays(orderTime, complaintStatus) {
+  if(!orderTime) return null;
+  const done = ['Đã khiếu nại thành công','Đã bảo hành','Chưa thành công'];
+  if(done.includes((complaintStatus||'').trim())) return null; // đã xong
+  const days = Math.floor((Date.now() - new Date(orderTime).getTime()) / 86400000);
+  return days;
+}
+
+function renderSlaBadge(elementId, days) {
+  const el = document.getElementById(elementId);
+  if(!el || days === null) { if(el) el.style.display='none'; return; }
+  el.style.display = 'inline-flex';
+  if(days <= 2) {
+    el.className = 'sla-badge sla-ok';
+    el.innerHTML = `<span class="material-icons-round" style="font-size:10px">schedule</span> ${days} ngày`;
+  } else if(days <= 5) {
+    el.className = 'sla-badge sla-warn';
+    el.innerHTML = `<span class="material-icons-round" style="font-size:10px">warning</span> ${days} ngày`;
+  } else {
+    el.className = 'sla-badge sla-danger';
+    el.innerHTML = `<span class="material-icons-round" style="font-size:10px">error</span> ${days} ngày!`;
+  }
+}
+
+// SLA + Comment hooks called from populateDetailModal directly (see function below)
+// SLA badge in cs-dropdown items
+function addSlaToDropdown() {
+  const panel = document.getElementById('csPanel');
+  if(!panel) return;
+  const list = csCurrentTab === 'pending' ? pendingComplaintsCache.filter(it=>{const s=(it.complaintStatus||'').trim();return s===''||s==='Chưa xử lý';})
+             : csCurrentTab === 'processing' ? pendingComplaintsCache.filter(it=>{const s=(it.complaintStatus||'').trim();return s==='Đang xử lý'||s==='Khiếu nại lần 2';})
+             : [];
+  if(!list.length) return;
+  panel.querySelectorAll('.cs-item').forEach((el, i) => {
+    if(!list[i]) return;
+    const days = getSLADays(list[i].time, list[i].complaintStatus);
+    if(days !== null && days >= 3) {
+      const dateEl = el.querySelector('.cs-item-date');
+      if(dateEl && !dateEl.querySelector('.sla-badge')) {
+        const cls = days > 5 ? 'sla-danger' : 'sla-warn';
+        dateEl.innerHTML += ` <span class="sla-badge ${cls}" style="font-size:9px;padding:1px 5px">${days}ng</span>`;
+      }
+    }
+  });
+}
+
+// ================================================================
+// 3. BULK ACTIONS
+// ================================================================
+let bulkMode = false;
+let bulkSelected = new Set();
+
+function toggleBulkMode() {
+  bulkMode = !bulkMode;
+  bulkSelected.clear();
+  const bar = document.getElementById('bulkBar');
+  const list = document.getElementById('historyList');
+  if(bulkMode) {
+    bar.classList.add('active');
+    list.classList.add('bulk-mode');
+    document.querySelectorAll('.history-item-check').forEach(c => c.classList.add('visible'));
+    document.getElementById('bulkCount').innerText = '0';
+  } else {
+    bar.classList.remove('active');
+    list.classList.remove('bulk-mode');
+    document.querySelectorAll('.history-item-check').forEach(c => { c.classList.remove('visible','checked'); });
+    document.querySelectorAll('.history-item.selected').forEach(el => el.classList.remove('selected'));
+  }
+}
+
+function toggleBulkItem(el, code, checkEl) {
+  if(!bulkMode) return;
+  if(bulkSelected.has(code)) {
+    bulkSelected.delete(code);
+    el.classList.remove('selected');
+    checkEl.classList.remove('checked');
+  } else {
+    bulkSelected.add(code);
+    el.classList.add('selected');
+    checkEl.classList.add('checked');
+  }
+  document.getElementById('bulkCount').innerText = bulkSelected.size;
+}
+
+function bulkExport() {
+  if(!bulkSelected.size) { alert('Chưa chọn đơn nào!'); return; }
+  const selected = historyDataCache.filter(it => bulkSelected.has(it.code));
+  let csv = '\uFEFF';
+  csv += `Mã vận đơn,Nhân viên,Kênh,Shop,Sản phẩm,Tình trạng,Thời gian\n`;
+  selected.forEach(o => {
+    const prod = (o.product||'').replace(/,/g,' ');
+    const t = new Date(o.time).toLocaleString('vi');
+    csv += `${o.code},${o.staff||''},${o.channel||''},${o.shop||''},${prod},${o.status||''},${t}\n`;
+  });
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `DonHoan_ChonLoc.csv`; a.click();
+  URL.revokeObjectURL(url);
+  toggleBulkMode();
+}
+
+function bulkUpdateStatus() {
+  if(!bulkSelected.size) { alert('Chưa chọn đơn nào!'); return; }
+  const codes = Array.from(bulkSelected);
+  const status = prompt(`Cập nhật trạng thái KN cho ${codes.length} đơn:\n(Nhập: Đang xử lý / Đã khiếu nại thành công / Chưa thành công / Đã bảo hành)`);
+  if(!status) return;
+  const valid = ['Chưa xử lý','Đang xử lý','Đã khiếu nại thành công','Chưa thành công','Khiếu nại lần 2','Đã bảo hành'];
+  if(!valid.includes(status.trim())) { alert('Trạng thái không hợp lệ!'); return; }
+  showLoading(true, `Đang cập nhật ${codes.length} đơn...`, true);
+  const taskId = 'bulk_' + Date.now();
+  addBgTask(taskId, `Cập nhật ${codes.length} đơn...`);
+  closeModal('detailModal'); toggleBulkMode();
+  fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action:'bulk_update_complaint', codes, newStatus: status.trim()})})
+    .then(r=>r.json()).then(res=>{
+      showLoading(false);
+      completeBgTask(taskId, res.result==='success' ? `Đã cập nhật ${codes.length} đơn` : `Lỗi: ${res.message}`, res.result==='success');
+      if(res.result==='success') { loadHistory(); loadPendingComplaints(); if(userRole==='admin') loadMonthlyStats(true); }
+    }).catch(()=>{ showLoading(false); completeBgTask(taskId, 'Lỗi kết nối', false); });
+}
+
+// Add checkboxes to history items after renderList runs
+function addBulkCheckboxes() {
+  if(userRole !== 'admin') return;
+  const btn = document.getElementById('bulkToggleBtn');
+  if(btn) btn.style.display = historyDataCache.length ? 'flex' : 'none';
+  document.querySelectorAll('.history-item').forEach((el) => {
+    if(el.querySelector('.history-item-check')) return; // already added
+    const code = el.querySelector('.history-code')?.innerText?.trim();
+    if(!code) return;
+    const check = document.createElement('div');
+    check.className = 'history-item-check' + (bulkMode ? ' visible' : '');
+    if(bulkSelected.has(code)) check.classList.add('checked');
+    el.insertBefore(check, el.firstChild);
+    el.addEventListener('click', function(e) {
+      if(bulkMode) { e.stopPropagation(); toggleBulkItem(el, code, check); }
+    }, true);
+  });
+}
+
+// ================================================================
+// 4. COMMENT SYSTEM - Ghi chú nội bộ
+// ================================================================
+let commentsCache = {}; // { code: [{author, text, time}] }
+
+function loadComments(prefix, code) {
+  const listEl = document.getElementById(prefix + 'CommentList');
+  const countEl = document.getElementById(prefix + 'CommentCount');
+  if(!listEl) return;
+
+  if(commentsCache[code]) {
+    renderComments(prefix, code);
+    return;
+  }
+  listEl.innerHTML = '<div class="comment-empty">Đang tải...</div>';
+  fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action:'get_comments', code})})
+    .then(r=>r.json()).then(res=>{
+      commentsCache[code] = (res.result==='success' && res.data) ? res.data : [];
+      renderComments(prefix, code);
+    }).catch(()=>{
+      // If backend doesn't support yet, show empty state
+      commentsCache[code] = [];
+      renderComments(prefix, code);
+    });
+}
+
+function renderComments(prefix, code) {
+  const listEl = document.getElementById(prefix + 'CommentList');
+  const countEl = document.getElementById(prefix + 'CommentCount');
+  const comments = commentsCache[code] || [];
+  if(countEl) countEl.innerText = comments.length;
+  if(!comments.length) {
+    listEl.innerHTML = '<div class="comment-empty">Chưa có ghi chú nào. Nhấn Enter để thêm.</div>';
+    return;
+  }
+  listEl.innerHTML = comments.map(c => `
+    <div class="comment-item">
+      <div><span class="comment-author">${c.author||'Ẩn danh'}</span><span class="comment-time">${new Date(c.time).toLocaleString('vi')}</span></div>
+      <div class="comment-text">${c.text.replace(/\n/g,'<br>')}</div>
+    </div>`).join('');
+  // Scroll to bottom
+  listEl.scrollTop = listEl.scrollHeight;
+}
+
+function submitComment(prefix) {
+  const input = document.getElementById(prefix + 'CommentInput');
+  const text = (input.value || '').trim();
+  if(!text) return;
+  const code = window.currentViewCode;
+  if(!code) return;
+  const author = document.getElementById('displayName').innerText || currentUser;
+  const comment = {author, text, time: new Date().toISOString()};
+
+  input.value = '';
+  input.style.height = 'auto';
+
+  // Optimistic update
+  if(!commentsCache[code]) commentsCache[code] = [];
+  commentsCache[code].push(comment);
+  renderComments(prefix, code);
+
+  // Send to backend
+  fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action:'add_comment', code, author, text, time: comment.time})})
+    .then(r=>r.json()).then(res=>{
+      if(res.result !== 'success') console.log('Comment save issue:', res);
+    }).catch(()=>{ /* silently fail, already shown in UI */ });
+}
 </script>
 </body>
 </html>
