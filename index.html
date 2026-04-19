@@ -271,8 +271,8 @@ select.input-field{cursor:pointer}
 .report-bottom-row{display:grid;grid-template-columns:1fr 160px;gap:12px;align-items:stretch}
 .report-total-bar{background:#1a1a18;border-radius:var(--r);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;transition:.15s;min-height:120px}
 .report-total-bar:hover{opacity:.85;transform:translateY(-1px)}
-.report-total-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45)}
-.report-total-val{font-size:40px;font-weight:800;font-family:'JetBrains Mono',monospace;letter-spacing:-2px;margin-top:6px;color:#ffffff}
+.report-total-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.5px;color:rgba(255,255,255,.45);text-align:center}
+.report-total-val{font-size:40px;font-weight:800;font-family:'JetBrains Mono',monospace;letter-spacing:-2px;margin-top:6px;color:#ffffff;text-align:center}
 .report-chart-v2{position:relative;width:160px;height:160px;flex-shrink:0}
 
 /* TOP PRODUCTS REDESIGN */
@@ -315,9 +315,9 @@ select.input-field{cursor:pointer}
 
 #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px}
 .login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px 32px;box-shadow:var(--shadow-lg)}
-.login-logo{height:44px;margin-bottom:28px}
-.login-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px}
-.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-weight:500}
+.login-logo{height:44px;margin-bottom:20px;display:block;margin-left:auto;margin-right:auto}
+.login-title{font-size:22px;font-weight:800;color:var(--text);margin-bottom:4px;text-align:center}
+.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-weight:500;text-align:center}
 .password-toggle{cursor:pointer;padding:0 12px;color:var(--text3);display:flex;align-items:center}
 
 #adminView{display:none;animation:fadeUp .3s ease}
@@ -712,11 +712,11 @@ select.input-field{cursor:pointer}
           <!-- Total bar + Chart side by side -->
           <div class="report-bottom-row">
             <div class="report-total-bar" onclick="filterReportOrders('all')">
-              <div>
+              <div style="flex:1;text-align:center">
                 <div class="report-total-label">Tổng cộng</div>
                 <div class="report-total-val" id="rpTotal">0</div>
               </div>
-              <span class="material-icons-round" style="font-size:32px;opacity:.3">arrow_forward_ios</span>
+              <span class="material-icons-round" style="font-size:32px;opacity:.25;flex-shrink:0">arrow_forward_ios</span>
             </div>
             <div class="report-chart-v2"><canvas id="reportChart"></canvas></div>
           </div>
@@ -1117,7 +1117,7 @@ select.input-field{cursor:pointer}
     <div class="da-head">
       <div class="da-icon"><span class="material-icons-round">warning</span></div>
       <div>
-        <div class="da-title">Đơn chưa xử lý cần cập nhật!</div>
+        <div class="da-title">⚠️ Đơn chưa xử lý cần cập nhật!</div>
         <div class="da-sub" id="dirtyAlertSub">Có đơn bị bẩn/tráo chưa được xử lý</div>
       </div>
     </div>
@@ -1690,12 +1690,19 @@ function renderCsDropdown() {
     if(cs==='Đã khiếu nại thành công'||cs==='Đã bảo hành') dotColor='var(--green)';
     if(cs==='Chưa thành công') dotColor='var(--red)';
     const dateStr = new Date(it.time).toLocaleDateString('vi');
+    // Color the status part in the sub line
+    const statusRaw = (it.status||'').split('-')[0].trim();
+    let statusColor = 'var(--text3)';
+    if(it.status && it.status.toLowerCase().includes('bẩn')) statusColor = 'var(--amber)';
+    else if(it.status && (it.status.toLowerCase().includes('tráo') || it.status.toLowerCase().includes('thiếu'))) statusColor = 'var(--red)';
+    else if(it.status && it.status.toLowerCase().includes('bảo hành')) statusColor = 'var(--sky)';
+    else if(it.status && it.status.toLowerCase().includes('tốt')) statusColor = 'var(--green)';
     return `<div class="cs-item" onclick="csOpenOrder('${it.code}')">
       <div class="cs-item-left">
         <div class="cs-item-dot" style="background:${dotColor}"></div>
         <div>
           <div class="cs-item-code">${it.code}</div>
-          <div class="cs-item-sub">${it.status} · ${it.shop||'—'}</div>
+          <div class="cs-item-sub"><span style="color:${statusColor};font-weight:700">${statusRaw}</span> · ${it.shop||'—'}</div>
         </div>
       </div>
       <div class="cs-item-date">${dateStr}</div>
