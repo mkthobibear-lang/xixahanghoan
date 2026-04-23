@@ -668,6 +668,9 @@ select.input-field{cursor:pointer}
   z-index:50;
   overflow:hidden;
 }
+#formView > form#returnForm{
+  display:flex;flex-direction:column;flex:1;overflow:hidden;min-height:0;
+}
 
 /* Progress bar */
 .fv-progress{
@@ -717,6 +720,7 @@ select.input-field{cursor:pointer}
 .wizard-step.active{display:flex}
 .fv-body{
   flex:1;overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
   padding:28px 28px 12px;
   max-width:860px;margin:0 auto;width:100%;box-sizing:border-box;
   scroll-behavior:smooth;
@@ -977,9 +981,52 @@ select.input-field{cursor:pointer}
 .wizard-step.entering{animation:slideStepIn .28s ease both}
 
 @media(max-width:860px){
-  .fv-body{padding:16px 16px 12px}
+  /* MOBILE: bỏ fixed layout phức tạp, dùng scroll tự nhiên */
+  #formView{
+    position:static;
+    display:block;
+    overflow:visible;
+    height:auto;
+  }
+  #formView > form#returnForm{
+    display:block;
+    overflow:visible;
+    height:auto;
+  }
+  .wizard-step{
+    display:none;
+    flex-direction:unset;
+    overflow:visible;
+    height:auto;
+  }
+  .wizard-step.active{
+    display:block;
+  }
+  .fv-body{
+    overflow-y:visible;
+    overflow-x:visible;
+    height:auto;
+    padding:16px 16px 12px;
+    max-width:100%;
+    -webkit-overflow-scrolling:unset;
+  }
   .fv-steps{padding:0 16px}
-  .fv-action-bar{padding:10px 16px;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px))}
+  /* Sticky progress bar khi cuộn */
+  .fv-progress{
+    position:sticky;
+    top:0;
+    z-index:10;
+  }
+  /* Action bar sticky ở dưới, trên bottom nav */
+  .fv-action-bar{
+    position:sticky;
+    bottom:calc(58px + env(safe-area-inset-bottom,0px));
+    z-index:10;
+    padding:10px 16px;
+    padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));
+  }
+  /* Thêm khoảng trống cuối trang để không bị bottom nav che */
+  .fv-body{padding-bottom:80px}
 }
 @media(max-width:600px){
   .ch-strip{grid-template-columns:repeat(2,1fr)}
@@ -987,6 +1034,12 @@ select.input-field{cursor:pointer}
   .status-grid{grid-template-columns:repeat(3,1fr)}
   .fv-step-label{display:none}
   .fv-btn-next,.fv-btn-back{font-size:13px;padding:13px}
+  /* Fix qty stepper full width on mobile */
+  .fv-qty-row{display:flex;width:100%}
+  .fv-qty-btn{flex-shrink:0;width:56px;height:56px}
+  .fv-qty-val{flex:1;font-size:20px}
+  /* Fix code input padding trên mobile */
+  .fv-code-input{font-size:15px;padding:14px 100px 14px 14px}
 }
 /* ================================================================
    DASHBOARD REDESIGN v13
