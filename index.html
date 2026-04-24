@@ -1231,7 +1231,7 @@ select.input-field{cursor:pointer}
       <div style="display:flex;gap:6px;margin-top:12px">
         <button class="icon-btn" onclick="toggleTheme()" title="Giao diện"><span class="material-icons-round" id="themeIcon">dark_mode</span></button>
         <button class="icon-btn" onclick="openAccountModal()" title="Tài khoản"><span class="material-icons-round">manage_accounts</span></button>
-        <button class="icon-btn" onclick="openChatWindow()" title="Tin nhắn(" id="chatSidebarBtn" style="position:relative;display:none">
+        <button class="icon-btn" onclick="openChatWindow()" title="Tin nhắn" id="chatSidebarBtn" style="position:relative;display:none">
           <span class="material-icons-round">chat</span>
           <span id="chatUnreadDot" style="display:none;position:absolute;top:5px;right:5px;width:9px;height:9px;background:var(--red);border-radius:50%;border:2px solid var(--surface)"></span>
         </button>
@@ -4056,11 +4056,23 @@ let chatUnreadMap = {};       // { "TênA": true }
 let chatMemberList = [];      // [{name, avatar}]
 let chatMyName = '';
 
+// chatSeenCount: { "TênA": 5 } — số tin đã xem lần cuối, lưu localStorage để tránh spam thông báo
+let chatSeenCount = {};
+
 function initChat() {
   chatMyName = document.getElementById('displayName').innerText;
+  // Khôi phục seen count từ localStorage
+  try {
+    const saved = localStorage.getItem('chatSeen_' + chatMyName);
+    if (saved) chatSeenCount = JSON.parse(saved);
+  } catch(e) {}
   loadChatMembers();
   if (chatTimer) clearInterval(chatTimer);
   chatTimer = setInterval(pollChat, CHAT_POLL_MS);
+}
+
+function saveChatSeenCount() {
+  try { localStorage.setItem('chatSeen_' + chatMyName, JSON.stringify(chatSeenCount)); } catch(e) {}
 }
 
 // Lấy danh sách thành viên (từ action get_members)
@@ -4121,24 +4133,21 @@ async function openConversation(targetName) {
   chatUnreadMap[targetName] = false;
   updateMemberPreview(targetName);
   updateFabUnreadCount();
-  // Nếu đã đọc hết thì ẩn chấm đỏ header
   const anyUnread = Object.values(chatUnreadMap).filter(Boolean).length > 0;
   if (!anyUnread) {
     const headerDot = document.getElementById('chatUnreadDot');
     if (headerDot) headerDot.style.display = 'none';
   }
 
-  // Highlight member
   document.querySelectorAll('.chat-member-item').forEach(el => el.classList.remove('active'));
   const key = targetName.replace(/\s/g,'_');
   const memberEl = document.getElementById('member_' + key);
   if (memberEl) memberEl.classList.add('active');
 
-  // Show conversation panel
   document.getElementById('chatMemberPanel').style.display = 'none';
   document.getElementById('chatConvPanel').style.display = 'flex';
   document.getElementById('chatConvName').textContent = targetName;
-  // Hiển thị avatar (ảnh nếu có, chữ cái đầu nếu không)
+  // Avatar
   const member = chatMemberList.find(m => m.name === targetName);
   const convAv = document.getElementById('chatConvAvatar');
   if (member && member.avatar && String(member.avatar).trim()) {
@@ -4149,7 +4158,24 @@ async function openConversation(targetName) {
   document.getElementById('chatMsgBox').innerHTML = '<div style="text-align:center;padding:30px;color:var(--text3);font-size:12px">Đang tải...</div>';
 
   await loadConversation(targetName, true);
+
+  // Đánh dấu đã xem — cập nhật seen count
+  const msgs = chatHistory[targetName] || [];
+  if (msgs.length > (chatSeenCount[targetName] || 0)) {
+    chatSeenCount[targetName] = msgs.length;
+    saveChatSeenCount();
+    markSeen(targetName, msgs.length);
+  }
+
   document.getElementById('chatMsgInput').focus();
+}
+
+// Gửi mark_seen lên server (fire-and-forget)
+function markSeen(targetName, count) {
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'mark_seen', from: chatMyName, to: targetName, count: count })
+  }).catch(() => {});
 }
 
 async function loadConversation(targetName, scrollDown) {
@@ -4179,7 +4205,7 @@ function renderMessages(msgs) {
   }
   let html = '';
   let lastDate = '';
-  msgs.forEach(msg => {
+  msgs.forEach((msg, idx) => {
     const isMine = msg.from === chatMyName;
     const parts = (msg.time || '').split(' ');
     const timeShort = (parts[0] || '').slice(0,5);
@@ -4191,13 +4217,28 @@ function renderMessages(msgs) {
     let content = '';
     try { content = decodeURIComponent(msg.content || ''); } catch(e) { content = msg.content || ''; }
     const hasImg = msg.imageUrl && msg.imageUrl.length > 5;
+    const safeContent = content.replace(/'/g,"&#39;");
+
+    // Trạng thái tin nhắn — chỉ hiện cho tin của mình
+    let statusHtml = '';
     if (isMine) {
-      html += '<div class="cmsg-row cmsg-mine"><div class="cmsg-bubble cmsg-mine-b">';
+      const st = (msg.status || '').trim();
+      if (st === 'seen') {
+        statusHtml = '<span class="cmsg-status seen" title="Đã xem">✓✓</span>';
+      } else if (st === 'received') {
+        statusHtml = '<span class="cmsg-status received" title="Đã nhận">✓✓</span>';
+      } else {
+        statusHtml = '<span class="cmsg-status sent" title="Đã gửi">✓</span>';
+      }
+    }
+
+    if (isMine) {
+      html += '<div class="cmsg-row cmsg-mine"><div class="cmsg-bubble cmsg-mine-b" oncontextmenu="showMsgPopup(event,\'' + safeContent + '\')" ontouchstart="startMsgLongPress(event,\'' + safeContent + '\')" ontouchend="cancelMsgLongPress()" ontouchmove="cancelMsgLongPress()">';
       if (hasImg) html += '<img src="' + msg.imageUrl + '" class="cmsg-img" onclick="viewFullImg(\'' + msg.imageUrl + '\')">';
       if (content) html += '<span>' + content + '</span>';
-      html += '<div class="cmsg-time">' + timeShort + '</div></div></div>';
+      html += '<div class="cmsg-time">' + timeShort + statusHtml + '</div></div></div>';
     } else {
-      html += '<div class="cmsg-row cmsg-other"><div class="cmsg-av">' + (msg.from||'?').charAt(0).toUpperCase() + '</div><div class="cmsg-bubble cmsg-other-b">';
+      html += '<div class="cmsg-row cmsg-other"><div class="cmsg-av">' + (msg.from||'?').charAt(0).toUpperCase() + '</div><div class="cmsg-bubble cmsg-other-b" oncontextmenu="showMsgPopup(event,\'' + safeContent + '\')" ontouchstart="startMsgLongPress(event,\'' + safeContent + '\')" ontouchend="cancelMsgLongPress()" ontouchmove="cancelMsgLongPress()">';
       if (hasImg) html += '<img src="' + msg.imageUrl + '" class="cmsg-img" onclick="viewFullImg(\'' + msg.imageUrl + '\')">';
       if (content) html += '<span>' + content + '</span>';
       html += '<div class="cmsg-time">' + timeShort + '</div></div></div>';
@@ -4231,6 +4272,37 @@ function removeChatImg() {
   document.getElementById('chatFileInput').value = '';
 }
 
+// Đọc file ảnh song song với gửi text — không block UI
+async function readFileAsBase64Fast(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve({ data: reader.result, mimeType: file.type });
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+}
+
+// Thêm tin nhắn tạm vào UI ngay lập tức (optimistic update)
+function addOptimisticMsg(text, imgObjectUrl) {
+  const box = document.getElementById('chatMsgBox');
+  const now = new Date();
+  const timeShort = now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0');
+  const div = document.createElement('div');
+  div.className = 'cmsg-row cmsg-mine';
+  div.setAttribute('data-optimistic','1');
+  let inner = '<div class="cmsg-bubble cmsg-mine-b" style="opacity:.75">';
+  if (imgObjectUrl) inner += '<img src="' + imgObjectUrl + '" class="cmsg-img">';
+  if (text) inner += '<span>' + text + '</span>';
+  inner += '<div class="cmsg-time">' + timeShort + '</div></div>';
+  div.innerHTML = inner;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  // Cập nhật preview ngay
+  const key = chatCurrentTarget.replace(/\s/g,'_');
+  const preEl = document.getElementById('preview_' + key);
+  if (preEl) preEl.textContent = 'Bạn: ' + (text || (imgObjectUrl ? '📷 Ảnh' : ''));
+}
+
 async function sendMsg() {
   if (!chatCurrentTarget) return;
   const input = document.getElementById('chatMsgInput');
@@ -4239,13 +4311,20 @@ async function sendMsg() {
   const btn = document.getElementById('chatSendMsgBtn');
   btn.disabled = true;
 
+  const fileToSend = chatImgFile;
+  const imgObjectUrl = fileToSend ? URL.createObjectURL(fileToSend) : null;
+
+  // Xóa input & hiện tin nhắn ngay — không chờ server
+  input.value = ''; input.style.height = 'auto';
+  removeChatImg();
+  addOptimisticMsg(text, imgObjectUrl);
+  btn.disabled = false; input.focus();
+
+  // Gửi lên server ngầm
   let imgData = null;
-  if (chatImgFile) {
-    imgData = await new Promise(r => {
-      const rd = new FileReader();
-      rd.onload = () => r({ data: rd.result, mimeType: chatImgFile.type });
-      rd.readAsDataURL(chatImgFile);
-    });
+  if (fileToSend) {
+    try { imgData = await readFileAsBase64Fast(fileToSend); } catch(e) {}
+    if (imgObjectUrl) URL.revokeObjectURL(imgObjectUrl);
   }
   try {
     await fetch(WEB_APP_URL, {
@@ -4258,13 +4337,109 @@ async function sendMsg() {
         image: imgData
       })
     });
-    input.value = ''; input.style.height = 'auto';
-    removeChatImg();
+    // Xóa tin tạm, load tin thật từ server
+    document.querySelectorAll('[data-optimistic="1"]').forEach(el => el.remove());
     await loadConversation(chatCurrentTarget, true);
     updateMemberPreview(chatCurrentTarget);
-  } catch(e) { showToast('error','Lỗi gửi tin nhắn',''); }
-  btn.disabled = false; input.focus();
+  } catch(e) {
+    // Đánh dấu tin lỗi
+    document.querySelectorAll('[data-optimistic="1"]').forEach(el => {
+      el.querySelector('.cmsg-bubble').style.opacity = '1';
+      el.querySelector('.cmsg-bubble').style.borderBottom = '2px solid var(--red)';
+    });
+    showToast('error','Lỗi gửi tin nhắn','Kiểm tra kết nối mạng');
+  }
 }
+
+// Gửi Like 👍
+async function sendLike() {
+  if (!chatCurrentTarget) return;
+  const btn = document.getElementById('chatLikeBtn');
+  btn.style.transform = 'scale(1.4)';
+  setTimeout(() => btn.style.transform = '', 300);
+  addOptimisticMsg('👍', null);
+  // Gửi ngầm
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action:'send_chat', from:chatMyName, to:chatCurrentTarget, content:encodeURIComponent('👍'), image:null })
+  }).then(async () => {
+    document.querySelectorAll('[data-optimistic="1"]').forEach(el => el.remove());
+    await loadConversation(chatCurrentTarget, true);
+    updateMemberPreview(chatCurrentTarget);
+  }).catch(() => showToast('error','Lỗi gửi',''));
+}
+
+// Context menu popup cho tin nhắn
+let _popupMsgText = '';
+let _longPressTimer = null;
+function showMsgPopup(e, text) {
+  e.preventDefault();
+  _popupMsgText = text;
+  const popup = document.getElementById('chatMsgPopup');
+  const box = document.getElementById('chatMsgBox');
+  const boxRect = box.getBoundingClientRect();
+  let x = e.clientX - boxRect.left;
+  let y = e.clientY - boxRect.top + box.scrollTop;
+  popup.style.left = Math.min(x, box.clientWidth - 160) + 'px';
+  popup.style.top = y + 'px';
+  popup.classList.add('show');
+  popup.style.position = 'absolute';
+}
+function startMsgLongPress(e, text) {
+  _longPressTimer = setTimeout(() => {
+    const touch = e.touches[0];
+    showMsgPopup({ preventDefault:()=>{}, clientX:touch.clientX, clientY:touch.clientY }, text);
+  }, 500);
+}
+function cancelMsgLongPress() { clearTimeout(_longPressTimer); }
+function hideMsgPopup() { document.getElementById('chatMsgPopup').classList.remove('show'); }
+function copyMsgText() {
+  if (_popupMsgText) navigator.clipboard?.writeText(_popupMsgText).then(() => showToast('success','Đã sao chép',''));
+  hideMsgPopup();
+}
+function forwardMsg() {
+  hideMsgPopup();
+  if (!_popupMsgText) return;
+  // Hiện danh sách thành viên để chọn người chuyển tiếp
+  const members = chatMemberList.filter(m => m.name !== chatCurrentTarget);
+  if (!members.length) { showToast('warning','Không có ai để chuyển tiếp',''); return; }
+  // Tạo overlay chọn người
+  const ov = document.createElement('div');
+  ov.style.cssText = 'position:fixed;inset:0;z-index:800;background:rgba(0,0,0,.4);display:flex;align-items:flex-end;justify-content:center';
+  ov.onclick = (e) => { if(e.target===ov) ov.remove(); };
+  let inner = '<div style="background:var(--surface);border-radius:20px 20px 0 0;width:100%;max-width:400px;padding:16px 0 24px">';
+  inner += '<div style="text-align:center;font-size:14px;font-weight:800;padding:0 16px 12px;border-bottom:1px solid var(--border);color:var(--text)">Chuyển tiếp đến</div>';
+  members.forEach(m => {
+    inner += `<div onclick="doForwardMsg('${m.name}',this.closest('.forward-ov'))" class="forward-ov" style="display:flex;align-items:center;gap:10px;padding:12px 20px;cursor:pointer;transition:.12s" onmouseover="this.style.background='var(--bg)'" onmouseout="this.style.background=''">
+      <div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,var(--blue),#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0">${m.name.charAt(0).toUpperCase()}</div>
+      <div style="font-size:14px;font-weight:700;color:var(--text)">${m.name}</div>
+    </div>`;
+  });
+  inner += '</div>';
+  ov.innerHTML = inner;
+  // Lưu text vào ov để dùng sau
+  ov._fwdText = _popupMsgText;
+  document.body.appendChild(ov);
+}
+async function doForwardMsg(toName, ovEl) {
+  const ov = document.querySelector('[style*="rgba(0,0,0,.4)"]');
+  const fwdText = _popupMsgText;
+  if(ov) ov.remove();
+  if(!fwdText || !toName) return;
+  try {
+    await fetch(WEB_APP_URL, {
+      method:'POST',
+      body: JSON.stringify({ action:'send_chat', from:chatMyName, to:toName, content:encodeURIComponent('↩ ' + fwdText), image:null })
+    });
+    showToast('success','Đã chuyển tiếp','Tin nhắn đã được gửi đến ' + toName);
+  } catch(e) { showToast('error','Lỗi chuyển tiếp',''); }
+}
+
+// Click ngoài để đóng popup
+document.addEventListener('click', function(e) {
+  const popup = document.getElementById('chatMsgPopup');
+  if (popup && popup.classList.contains('show') && !popup.contains(e.target)) hideMsgPopup();
+});
 
 // Poll: kiểm tra tin nhắn mới từ tất cả members
 async function pollChat() {
@@ -4277,29 +4452,36 @@ async function pollChat() {
       });
       const data = await res.json();
       if (!Array.isArray(data)) continue;
-      const prev = chatHistory[m.name] || [];
-      const hasNew = data.length > prev.length;
-      const newMsgs = hasNew ? data.slice(prev.length) : [];
+      const prevCount = chatSeenCount[m.name] || 0;
+      const prevHistory = chatHistory[m.name] || [];
       chatHistory[m.name] = data;
 
-      if (hasNew) {
-        // Tin nhắn mới đến (không phải của mình)
+      // Tin nhắn thực sự mới (chưa từng thấy)
+      if (data.length > prevCount) {
+        const newMsgs = data.slice(prevCount);
         newMsgs.forEach(msg => {
           if (msg.from !== chatMyName) {
-            // Thông báo toast kiểu messenger
             showChatToast(msg.from, msg.content, msg.imageUrl);
             if (chatCurrentTarget !== m.name) {
               chatUnreadMap[m.name] = true;
               document.getElementById('chatUnreadDot').style.display = 'block';
-              // FAB: show badge with count + shake animation
               updateFabUnreadCount();
               shakeFab();
-              // Âm báo nhẹ (nếu trình duyệt cho phép)
               try { playChatDing(); } catch(e) {}
             }
           }
         });
-        // Nếu đang xem hội thoại này → cập nhật
+        // Cập nhật seen count nếu đang mở hội thoại này
+        if (chatCurrentTarget === m.name) {
+          chatSeenCount[m.name] = data.length;
+          saveChatSeenCount();
+          // Gửi mark_seen lên server
+          markSeen(m.name, data.length);
+        }
+      }
+
+      // Cập nhật UI nếu có thay đổi (kể cả status tick)
+      if (data.length !== prevHistory.length || JSON.stringify(data.map(d=>d.status)) !== JSON.stringify(prevHistory.map(d=>d.status))) {
         if (chatCurrentTarget === m.name) {
           renderMessages(data);
           const box = document.getElementById('chatMsgBox');
@@ -4360,13 +4542,18 @@ function showChatToast(senderName, encodedContent, imageUrl) {
   let text = '';
   try { text = decodeURIComponent(encodedContent || ''); } catch(e) { text = encodedContent || ''; }
   const display = text || (imageUrl ? '📷 Đã gửi ảnh' : '');
-  const avatar = senderName.charAt(0).toUpperCase();
+  const initial = senderName.charAt(0).toUpperCase();
+  // Tìm avatar của sender trong danh sách member
+  const member = chatMemberList.find(m => m.name === senderName);
+  const avatarHTML = (member && member.avatar && String(member.avatar).trim())
+    ? `<img src="${member.avatar}" alt="${initial}" onerror="this.parentElement.innerHTML='${initial}'">`
+    : initial;
 
   const toast = document.createElement('div');
   toast.className = 'chat-toast';
   toast.onclick = () => { openChatWindow(); openConversation(senderName); toast.remove(); };
   toast.innerHTML = `
-    <div class="chat-toast-av">${avatar}</div>
+    <div class="chat-toast-av">${avatarHTML}</div>
     <div class="chat-toast-body">
       <div class="chat-toast-name">${senderName}</div>
       <div class="chat-toast-text">${display}</div>
@@ -4376,7 +4563,6 @@ function showChatToast(senderName, encodedContent, imageUrl) {
     </button>
   `;
   document.body.appendChild(toast);
-  // Animate in
   requestAnimationFrame(() => toast.classList.add('show'));
   setTimeout(() => { toast.classList.remove('show'); setTimeout(() => toast.remove(), 350); }, 5000);
 }
@@ -4478,7 +4664,7 @@ function toggleEmojiPanel(e) {
   panel.classList.toggle('show');
 }
 
-// Click ngoài panel thì đóng
+// Click ngoài emoji panel thì đóng
 document.addEventListener('click', function(e) {
   const panel = document.getElementById('chatEmojiPanel');
   const btn = document.getElementById('chatEmojiBtn');
@@ -4501,7 +4687,8 @@ function backToMemberList() {
 
 .chat-topbar{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border);flex-shrink:0}
 .chat-topbar-icon{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.chat-topbar-title{font-size:14px;font-weight:800;color:var(--text);flex:1}
+.chat-topbar-title{font-size:14px;font-weight:800;color:var(--text)}
+.chat-topbar > div:nth-child(2){flex:1}
 .chat-topbar-sub{font-size:11px;color:var(--text3)}
 .chat-x{width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2)}
 .chat-x:hover{background:var(--bg)}
@@ -4541,9 +4728,28 @@ function backToMemberList() {
 .cmsg-bubble{max-width:75%;padding:8px 11px;border-radius:18px;font-size:13px;line-height:1.5;word-break:break-word}
 .cmsg-mine-b{background:var(--blue);color:#fff;border-bottom-right-radius:4px}
 .cmsg-other-b{background:var(--surface);color:var(--text);border:1px solid var(--border);border-bottom-left-radius:4px}
-.cmsg-time{font-size:10px;opacity:.6;margin-top:3px;font-weight:600}
-.cmsg-mine-b .cmsg-time{text-align:right}
+.cmsg-time{font-size:10px;opacity:.6;margin-top:3px;font-weight:600;display:flex;align-items:center;gap:3px}
+.cmsg-mine-b .cmsg-time{justify-content:flex-end}
+.cmsg-status{font-size:11px;font-weight:700;line-height:1;opacity:1}
+.cmsg-status.sent{color:rgba(255,255,255,0.55)}
+.cmsg-status.received{color:rgba(255,255,255,0.75)}
+.cmsg-status.seen{color:#93c5fd}
 .cmsg-img{max-width:180px;max-height:180px;border-radius:10px;object-fit:cover;display:block;cursor:zoom-in;margin-bottom:4px}
+
+/* LIKE BUTTON */
+#chatLikeBtn{width:34px;height:34px;border-radius:50%;border:none;background:var(--bg);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;transition:transform .15s;border:1px solid var(--border)}
+#chatLikeBtn:hover{transform:scale(1.18)}
+#chatLikeBtn:active{transform:scale(0.9)}
+
+/* MESSAGE CONTEXT POPUP */
+.cmsg-popup{position:absolute;background:var(--surface);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 28px rgba(0,0,0,.15);padding:4px;z-index:700;display:none;flex-direction:column;min-width:150px;animation:popupIn .15s ease}
+@keyframes popupIn{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}
+.cmsg-popup.show{display:flex}
+.cmsg-popup-btn{display:flex;align-items:center;gap:8px;padding:8px 12px;border:none;background:transparent;cursor:pointer;font-size:13px;font-weight:600;color:var(--text);border-radius:8px;width:100%;text-align:left;transition:.12s}
+.cmsg-popup-btn:hover{background:var(--bg)}
+.cmsg-popup-btn .material-icons-round{font-size:16px;color:var(--text2)}
+/* Tin nhắn có thể long-press để hiện popup */
+.cmsg-bubble{position:relative}
 
 /* INPUT AREA */
 .chat-input-area{padding:8px 10px;border-top:1px solid var(--border);background:var(--surface);flex-shrink:0}
@@ -4560,9 +4766,10 @@ function backToMemberList() {
 #chatImgPickBtn:hover{color:var(--text)}
 
 /* CHAT TOAST THÔNG BÁO */
-.chat-toast{position:fixed;top:70px;right:16px;width:300px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 8px 30px rgba(0,0,0,.15);display:flex;align-items:center;gap:10px;padding:11px 12px;z-index:9000;cursor:pointer;transform:translateX(330px);transition:transform .3s cubic-bezier(.4,0,.2,1);user-select:none}
+.chat-toast{position:fixed;top:70px;right:16px;width:300px;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 2px 12px rgba(0,0,0,.08),0 1px 4px rgba(0,0,0,.05);display:flex;align-items:center;gap:10px;padding:11px 12px;z-index:9000;cursor:pointer;transform:translateX(330px);transition:transform .3s cubic-bezier(.4,0,.2,1);user-select:none}
 .chat-toast.show{transform:translateX(0)}
-.chat-toast-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0}
+.chat-toast-av{width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#2563eb,#7c3aed);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;flex-shrink:0;overflow:hidden}
+.chat-toast-av img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block}
 .chat-toast-body{flex:1;min-width:0}
 .chat-toast-name{font-size:13px;font-weight:800;color:var(--text)}
 .chat-toast-text{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
@@ -4759,7 +4966,7 @@ function backToMemberList() {
   <!-- TOPBAR -->
   <div class="chat-topbar">
     <div class="chat-topbar-icon"><span class="material-icons-round" style="color:#fff;font-size:17px">forum</span></div>
-    <div><div class="chat-topbar-title">Tin nhắn (Beta)</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
+    <div><div class="chat-topbar-title">Tin nhắn</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
     <button class="chat-x" onclick="closeChatWindow()"><span class="material-icons-round" style="font-size:16px">close</span></button>
   </div>
 
@@ -4776,6 +4983,12 @@ function backToMemberList() {
       <button class="conv-back" onclick="backToMemberList()"><span class="material-icons-round" style="font-size:17px">arrow_back</span></button>
       <div id="chatConvAvatar">?</div>
       <div id="chatConvName">...</div>
+    </div>
+
+    <!-- MESSAGE CONTEXT POPUP -->
+    <div id="chatMsgPopup" class="cmsg-popup">
+      <button class="cmsg-popup-btn" onclick="copyMsgText()"><span class="material-icons-round">content_copy</span>Sao chép</button>
+      <button class="cmsg-popup-btn" onclick="forwardMsg()"><span class="material-icons-round">forward</span>Chuyển tiếp</button>
     </div>
 
     <div id="chatMsgBox"></div>
@@ -4804,6 +5017,7 @@ function backToMemberList() {
         <textarea id="chatMsgInput" rows="1" placeholder="Nhắn tin..."
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"
           oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px'"></textarea>
+        <button id="chatLikeBtn" type="button" onclick="sendLike()" title="Thả tim">👍</button>
         <button id="chatSendMsgBtn" onclick="sendMsg()">
           <span class="material-icons-round" style="font-size:18px">send</span>
         </button>
