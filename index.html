@@ -2641,6 +2641,7 @@ function logout(){
   if(fabDot){ fabDot.classList.remove('active'); fabDot.textContent=''; }
   if(chatTimer){ clearInterval(chatTimer); chatTimer=null; }
   chatUnreadMap={}; chatHistory={}; chatCurrentTarget=null;
+  chatNotifiedSet = new Set(); chatInitialized = {}; chatSeenCount = {};
   const chatWin = document.getElementById('chatWindow');
   if(chatWin) chatWin.style.display='none';
 }
@@ -3319,13 +3320,15 @@ function renderList(data){
   setTimeout(addBulkCheckboxes, 50);
 }
 
+// Cache lưu object đơn theo code — tra cứu chính xác bất kể nguồn data (ngày/tìm kiếm/filter)
+const _detailCache = {};
+
 function renderListFromData(data, targetId) {
   const list = document.getElementById(targetId || 'historyList'); 
   if(!data||!data.length){list.innerHTML="<div style='text-align:center;color:var(--text3);margin-top:24px;font-size:13px'>Không tìm thấy đơn phù hợp</div>";return} 
   const groups={Shopee:[],Tiktok:[],VTP:[],Lazada:[],Khác:[]}; 
-  data.forEach((item,i)=>{
-    item.idx = historyDataCache.indexOf(item);
-    if(item.idx === -1) item.idx = i;
+  data.forEach((item)=>{
+    if(item.code) _detailCache[item.code] = item; // Lưu cache theo code
     if(groups[item.channel])groups[item.channel].push(item);else groups['Khác'].push(item);
   }); 
   list.innerHTML=''; 
@@ -3338,7 +3341,8 @@ function renderListFromData(data, targetId) {
         if(it.status.includes('bẩn'))pillClass='pill-amber'; 
         if(it.status.includes('tráo')||it.status.includes('Thiếu'))pillClass='pill-red'; 
         if(it.status.includes('Bảo hành'))pillClass='pill-sky'; 
-        const clickAction=userRole==='admin'?`onclick="showDetail(${it.idx})"`:''; 
+        const safeCode = (it.code||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+        const clickAction=userRole==='admin'?`onclick="showDetailByCode('${safeCode}')"`:''; 
         const styleCursor=userRole==='admin'?'':'cursor:default;'; 
         html+=`<div class="history-item" ${clickAction} style="${styleCursor}"> <div style="flex:1;min-width:0;margin-right:10px"> <div class="history-code">${it.code}</div> <div style="margin-top:6px;display:flex;flex-direction:column;gap:6px">${getMiniProductHtml(it.product)}</div> <div class="history-shop" style="margin-top:6px">${it.shop||''}</div> </div> <div style="text-align:right;flex-shrink:0"> <div class="pill ${pillClass}" style="font-size:10px">${it.status.split('-')[0]}</div> <div class="history-time" style="margin-top:4px">${new Date(it.time).toLocaleTimeString('vi',{hour:'2-digit',minute:'2-digit'})}</div> </div> </div>`; 
       }); 
@@ -3346,6 +3350,15 @@ function renderListFromData(data, targetId) {
     } 
   } 
   setTimeout(addBulkCheckboxes, 50); 
+}
+
+// Mở chi tiết đơn bằng code — luôn đúng đơn dù đến từ ngày/search/filter
+function showDetailByCode(code) {
+  if(userRole !== 'admin') return;
+  const d = _detailCache[code];
+  if(!d) { showToast('error','Không tìm thấy đơn','Vui lòng thử lại'); return; }
+  populateDetailModal(d, 'modal');
+  openModal('detailModal');
 }
 // ===== TÀI KHOẢN - AVATAR =====
 function openAccountModal(){
@@ -4056,7 +4069,12 @@ let chatUnreadMap = {};       // { "TênA": true }
 let chatMemberList = [];      // [{name, avatar}]
 let chatMyName = '';
 
-// chatSeenCount: { "TênA": 5 } — số tin đã xem lần cuối, lưu localStorage để tránh spam thông báo
+// chatNotifiedSet: Set lưu ID duy nhất của từng tin đã toast trong phiên này
+// Key = "from|time" — mỗi tin chỉ toast đúng 1 lần mỗi phiên đăng nhập
+// Khi đăng nhập lại: Set rỗng → toast lại tin cuối cùng chưa xem
+let chatNotifiedSet = new Set();
+
+// chatSeenCount: số tin đã xem lần cuối với từng người, lưu localStorage
 let chatSeenCount = {};
 
 function initChat() {
@@ -4066,6 +4084,8 @@ function initChat() {
     const saved = localStorage.getItem('chatSeen_' + chatMyName);
     if (saved) chatSeenCount = JSON.parse(saved);
   } catch(e) {}
+  // chatNotifiedSet luôn bắt đầu rỗng mỗi phiên → cho phép toast lại tin cuối chưa xem
+  chatNotifiedSet = new Set();
   loadChatMembers();
   if (chatTimer) clearInterval(chatTimer);
   chatTimer = setInterval(pollChat, CHAT_POLL_MS);
@@ -4448,9 +4468,8 @@ document.addEventListener('click', function(e) {
   if (popup && popup.classList.contains('show') && !popup.contains(e.target)) hideMsgPopup();
 });
 
-// chatInitialized: track xem member nào đã được seed data lần đầu
-// Lần đầu fetch chỉ khởi tạo chatHistory + cập nhật chatSeenCount, KHÔNG toast
-let chatInitialized = {}; // { "TênA": true }
+// chatInitialized: lần đầu fetch mỗi member trong phiên → chỉ seed data, KHÔNG toast
+let chatInitialized = {};
 
 // Poll: kiểm tra tin nhắn mới từ tất cả members
 async function pollChat() {
@@ -4467,36 +4486,46 @@ async function pollChat() {
       const prevHistory = chatHistory[m.name];
       chatHistory[m.name] = data;
 
-      // Lần đầu tiên fetch member này → chỉ seed, không toast
+      // ── LẦN ĐẦU FETCH: seed data, không toast ──────────────────
       if (!chatInitialized[m.name]) {
         chatInitialized[m.name] = true;
-        // Cập nhật seenCount lên đúng số tin hiện tại để tránh toast khi reload
-        if (data.length > (chatSeenCount[m.name] || 0)) {
-          // Đếm số tin từ người kia chưa được đánh dấu seen
-          const unseenFromOther = data.slice(chatSeenCount[m.name] || 0)
-            .filter(msg => msg.from !== chatMyName);
-          if (unseenFromOther.length > 0) {
-            // Có tin chưa đọc thật sự → chỉ hiện badge, KHÔNG toast
-            chatUnreadMap[m.name] = true;
-            const dot = document.getElementById('chatUnreadDot');
-            if (dot) dot.style.display = 'block';
-            updateFabUnreadCount();
-          } else {
-            // Toàn bộ là tin của mình → cập nhật seen count luôn
-            chatSeenCount[m.name] = data.length;
-            saveChatSeenCount();
+
+        // Đánh dấu tất cả tin hiện tại vào notifiedSet để không toast lại
+        data.forEach(msg => {
+          if (msg.from !== chatMyName) {
+            chatNotifiedSet.add(msg.from + '|' + msg.time);
           }
+        });
+
+        // Nếu có tin chưa xem → chỉ hiện badge, KHÔNG toast
+        const seenCount = chatSeenCount[m.name] || 0;
+        const unseenFromOther = data.slice(seenCount).filter(msg => msg.from !== chatMyName);
+        if (unseenFromOther.length > 0) {
+          chatUnreadMap[m.name] = true;
+          const dot = document.getElementById('chatUnreadDot');
+          if (dot) dot.style.display = 'block';
+          updateFabUnreadCount();
+        } else {
+          // Tất cả tin đã đọc → cập nhật seen count
+          chatSeenCount[m.name] = data.length;
+          saveChatSeenCount();
         }
         updateMemberPreview(m.name);
-        continue; // Bỏ qua toast cho lần đầu
+        continue;
       }
 
-      // Từ lần 2 trở đi: so sánh với chatSeenCount
-      const prevCount = chatSeenCount[m.name] || 0;
-      if (data.length > prevCount) {
-        const newMsgs = data.slice(prevCount);
+      // ── CÁC LẦN POLL SAU: chỉ xử lý tin thực sự mới ──────────
+      const prevLen = (prevHistory || []).length;
+      if (data.length > prevLen) {
+        // Lấy các tin mới đến kể từ lần poll trước
+        const newMsgs = data.slice(prevLen);
         newMsgs.forEach(msg => {
-          if (msg.from !== chatMyName) {
+          if (msg.from === chatMyName) return; // Bỏ qua tin của mình
+          const msgKey = msg.from + '|' + msg.time;
+
+          // Chỉ toast nếu chưa từng notify tin này trong phiên
+          if (!chatNotifiedSet.has(msgKey)) {
+            chatNotifiedSet.add(msgKey);
             showChatToast(msg.from, msg.content, msg.imageUrl);
             if (chatCurrentTarget !== m.name) {
               chatUnreadMap[m.name] = true;
@@ -4508,11 +4537,13 @@ async function pollChat() {
             }
           }
         });
-        if (chatCurrentTarget === m.name) {
-          chatSeenCount[m.name] = data.length;
-          saveChatSeenCount();
-          markSeen(m.name, data.length);
-        }
+      }
+
+      // Nếu đang mở hội thoại này → cập nhật seen count + gửi mark_seen
+      if (chatCurrentTarget === m.name && data.length > (chatSeenCount[m.name] || 0)) {
+        chatSeenCount[m.name] = data.length;
+        saveChatSeenCount();
+        markSeen(m.name, data.length);
       }
 
       // Cập nhật UI nếu có thay đổi (số tin hoặc status tick)
@@ -5003,7 +5034,7 @@ function backToMemberList() {
   <!-- TOPBAR -->
   <div class="chat-topbar">
     <div class="chat-topbar-icon"><span class="material-icons-round" style="color:#fff;font-size:17px">forum</span></div>
-    <div><div class="chat-topbar-title">Tin nhắn (Thử nghiệm)</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
+    <div><div class="chat-topbar-title">Tin nhắn</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
     <button class="chat-x" onclick="closeChatWindow()"><span class="material-icons-round" style="font-size:16px">close</span></button>
   </div>
 
