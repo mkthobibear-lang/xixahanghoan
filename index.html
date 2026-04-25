@@ -4330,11 +4330,16 @@ function addOptimisticMsg(text, imgObjectUrl) {
   if (preEl) preEl.textContent = 'Bạn: ' + (text || (imgObjectUrl ? '📷 Ảnh' : ''));
 }
 
+let _isSendingMsg = false;
+
 async function sendMsg() {
   if (!chatCurrentTarget) return;
+  if (_isSendingMsg) return; // Chống gửi đôi
   const input = document.getElementById('chatMsgInput');
   const text = input.value.trim();
   if (!text && !chatImgFile) return;
+
+  _isSendingMsg = true;
   const btn = document.getElementById('chatSendMsgBtn');
   btn.disabled = true;
 
@@ -4345,7 +4350,7 @@ async function sendMsg() {
   input.value = ''; input.style.height = 'auto';
   removeChatImg();
   addOptimisticMsg(text, imgObjectUrl);
-  btn.disabled = false; input.focus();
+  input.focus();
 
   // Gửi lên server ngầm
   let imgData = null;
@@ -4364,17 +4369,18 @@ async function sendMsg() {
         image: imgData
       })
     });
-    // Xóa tin tạm, load tin thật từ server
     document.querySelectorAll('[data-optimistic="1"]').forEach(el => el.remove());
     await loadConversation(chatCurrentTarget, true);
     updateMemberPreview(chatCurrentTarget);
   } catch(e) {
-    // Đánh dấu tin lỗi
     document.querySelectorAll('[data-optimistic="1"]').forEach(el => {
       el.querySelector('.cmsg-bubble').style.opacity = '1';
       el.querySelector('.cmsg-bubble').style.borderBottom = '2px solid var(--red)';
     });
     showToast('error','Lỗi gửi tin nhắn','Kiểm tra kết nối mạng');
+  } finally {
+    _isSendingMsg = false;
+    btn.disabled = false;
   }
 }
 
@@ -4490,53 +4496,59 @@ async function pollChat() {
       if (!chatInitialized[m.name]) {
         chatInitialized[m.name] = true;
 
-        // Đánh dấu tất cả tin hiện tại vào notifiedSet để không toast lại
-        data.forEach(msg => {
-          if (msg.from !== chatMyName) {
-            chatNotifiedSet.add(msg.from + '|' + msg.time);
-          }
-        });
-
-        // Nếu có tin chưa xem → chỉ hiện badge, KHÔNG toast
         const seenCount = chatSeenCount[m.name] || 0;
         const unseenFromOther = data.slice(seenCount).filter(msg => msg.from !== chatMyName);
+
         if (unseenFromOther.length > 0) {
+          // Có tin chưa xem từ phiên trước → toast tin CUỐI CÙNG 1 lần + badge
+          // Các tin cũ hơn seed vào Set (không toast lại)
+          data.slice(0, -1).forEach(msg => {
+            if (msg.from !== chatMyName) chatNotifiedSet.add(msg.from + '|' + msg.time);
+          });
+          // Tin cuối chưa trong Set → sẽ được xử lý ở block poll thông thường ngay bên dưới
           chatUnreadMap[m.name] = true;
-          const dot = document.getElementById('chatUnreadDot');
-          if (dot) dot.style.display = 'block';
-          updateFabUnreadCount();
+          _showUnreadBadge();
         } else {
-          // Tất cả tin đã đọc → cập nhật seen count
+          // Tất cả đã xem → seed toàn bộ, không toast gì cả
+          data.forEach(msg => {
+            if (msg.from !== chatMyName) chatNotifiedSet.add(msg.from + '|' + msg.time);
+          });
           chatSeenCount[m.name] = data.length;
           saveChatSeenCount();
         }
         updateMemberPreview(m.name);
-        continue;
+
+        // Nếu có tin chưa xem → KHÔNG continue, cho chạy tiếp xuống block poll
+        // để toast tin cuối cùng ngay lần đầu
+        if (unseenFromOther.length === 0) continue;
+
+        // Giả lập prevHistory = [] để block poll bên dưới xử lý đúng
+        // (prevHistory đang là undefined ở lần đầu)
       }
 
-      // ── CÁC LẦN POLL SAU: chỉ xử lý tin thực sự mới ──────────
-      const prevLen = (prevHistory || []).length;
-      if (data.length > prevLen) {
-        // Lấy các tin mới đến kể từ lần poll trước
-        const newMsgs = data.slice(prevLen);
+      // ── CÁC LẦN POLL (kể cả lần đầu nếu có tin chưa xem): xử lý tin mới ──
+      // prevHistory = undefined lần đầu → prevLen = 0 → slice toàn bộ
+      // Nhưng chatNotifiedSet đã seed tất cả trừ tin cuối → chỉ tin cuối được toast
+      const prevLen = prevHistory ? prevHistory.length : 0;
+      if (data.length > prevLen || !prevHistory) {
+        const newMsgs = !prevHistory ? data : data.slice(prevLen);
+        let hadNewFromOther = false;
         newMsgs.forEach(msg => {
-          if (msg.from === chatMyName) return; // Bỏ qua tin của mình
+          if (msg.from === chatMyName) return;
           const msgKey = msg.from + '|' + msg.time;
-
-          // Chỉ toast nếu chưa từng notify tin này trong phiên
-          if (!chatNotifiedSet.has(msgKey)) {
-            chatNotifiedSet.add(msgKey);
-            showChatToast(msg.from, msg.content, msg.imageUrl);
-            if (chatCurrentTarget !== m.name) {
-              chatUnreadMap[m.name] = true;
-              const dot = document.getElementById('chatUnreadDot');
-              if (dot) dot.style.display = 'block';
-              updateFabUnreadCount();
-              shakeFab();
-              try { playChatDing(); } catch(e) {}
-            }
+          if (chatNotifiedSet.has(msgKey)) return;
+          chatNotifiedSet.add(msgKey);
+          hadNewFromOther = true;
+          showChatToast(msg.from, msg.content, msg.imageUrl);
+          if (chatCurrentTarget !== m.name) {
+            chatUnreadMap[m.name] = true;
+            _showUnreadBadge();
           }
         });
+        if (hadNewFromOther) {
+          if (chatCurrentTarget !== m.name) shakeFab();
+          try { playChatDing(); } catch(e) {}
+        }
       }
 
       // Nếu đang mở hội thoại này → cập nhật seen count + gửi mark_seen
@@ -4561,6 +4573,13 @@ async function pollChat() {
   }
 }
 
+// Hiện badge chưa đọc trên cả FAB lẫn header dot (sidebar)
+function _showUnreadBadge() {
+  updateFabUnreadCount();
+  const headerDot = document.getElementById('chatUnreadDot');
+  if (headerDot) headerDot.style.display = 'block';
+}
+
 // Đếm tổng tin chưa đọc và hiển thị badge số trên FAB
 function updateFabUnreadCount() {
   const fabDot = document.getElementById('chatFabDot');
@@ -4569,9 +4588,14 @@ function updateFabUnreadCount() {
   if (count > 0) {
     fabDot.textContent = count > 9 ? '9+' : String(count);
     fabDot.classList.add('active');
+    // Đồng bộ header dot
+    const headerDot = document.getElementById('chatUnreadDot');
+    if (headerDot) headerDot.style.display = 'block';
   } else {
     fabDot.textContent = '';
     fabDot.classList.remove('active');
+    const headerDot = document.getElementById('chatUnreadDot');
+    if (headerDot) headerDot.style.display = 'none';
   }
 }
 
@@ -5034,7 +5058,7 @@ function backToMemberList() {
   <!-- TOPBAR -->
   <div class="chat-topbar">
     <div class="chat-topbar-icon"><span class="material-icons-round" style="color:#fff;font-size:17px">forum</span></div>
-    <div><div class="chat-topbar-title">Tin nhắn</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
+    <div><div class="chat-topbar-title">Tin nhắn (Thử Nghiệm)</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
     <button class="chat-x" onclick="closeChatWindow()"><span class="material-icons-round" style="font-size:16px">close</span></button>
   </div>
 
