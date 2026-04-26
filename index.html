@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>XIXA — Kho Hàng Hoàn AI-1.0</title>
+<title>XIXA — Kho Hàng Hoàn vAI</title>
 <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/679/679720.png" type="image/x-icon">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -1202,7 +1202,7 @@ select.input-field{cursor:pointer}
   <aside class="sidebar">
     <div class="sidebar-logo">
       <img src="https://i.ibb.co/cKKgz9X6/ch-29-7-x-15-5-cm.png" alt="XIXA">
-      <div class="ver">Kho Hàng Hoàn · AI</div>
+      <div class="ver">Kho Hàng Hoàn · vAI</div>
     </div>
     <div class="nav-section">
       <div class="nav-label">Menu</div>
@@ -1818,7 +1818,7 @@ select.input-field{cursor:pointer}
   <div class="ai-topbar">
     <div class="ai-topbar-icon">✦</div>
     <div style="flex:1;min-width:0">
-      <div class="ai-topbar-title">TRỢ LÝ XIXA</div>
+      <div class="ai-topbar-title">TRỢ LÝ ẢO XIXA</div>
       <div class="ai-topbar-sub">AI · Hỏi đáp kho hàng</div>
     </div>
     <button class="ai-close-btn" onclick="toggleAiChat()">
@@ -1835,7 +1835,22 @@ select.input-field{cursor:pointer}
     <div class="ai-chip" onclick="aiAsk('Liệt kê các đơn bị lỗi/tráo tháng này')">Đơn lỗi tháng này</div>
   </div>
   <div class="ai-ctx-badge" id="aiCtxBadge">Chưa có dữ liệu · Vào Dashboard chọn tháng trước</div>
+
+  <!-- IMAGE PREVIEW AREA -->
+  <div id="aiImgPreviewWrap" style="display:none;padding:6px 12px 0;align-items:center;gap:8px;background:var(--surface)">
+    <div style="position:relative;display:inline-block">
+      <img id="aiImgPreview" style="width:56px;height:56px;object-fit:cover;border-radius:8px;border:1px solid var(--border);display:block">
+      <button onclick="aiRemoveImg()" style="position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:var(--red);border:none;color:#fff;font-size:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-weight:800;line-height:1">✕</button>
+    </div>
+    <div style="font-size:11px;color:var(--text3);font-weight:600">Ảnh đính kèm · AI sẽ đọc và phân tích</div>
+  </div>
+
   <div class="ai-input-row">
+    <!-- Upload ảnh button -->
+    <label id="aiImgPickBtn" title="Đính kèm ảnh bill/sản phẩm" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text2);transition:.15s" onmouseover="this.style.borderColor='#1a73e8';this.style.color='#1a73e8'" onmouseout="this.style.borderColor='var(--border-strong)';this.style.color='var(--text2)'">
+      <span class="material-icons-round" style="font-size:16px">image</span>
+      <input type="file" id="aiFileInput" accept="image/*" style="display:none" onchange="aiHandleImg(this)">
+    </label>
     <input class="ai-input" id="aiInput" placeholder="Hỏi về đơn hoàn, shop, kênh..."
       onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}">
     <button class="ai-send" onclick="aiSend()">
@@ -6236,6 +6251,41 @@ function aiShowOrderImages(order) {
   box.scrollTop = box.scrollHeight;
 }
 
+// ── Image state ───────────────────────────────────────────────
+AI.imgBase64 = null;
+AI.imgMime   = null;
+
+function aiHandleImg(input) {
+  const file = input.files[0];
+  if (!file) return;
+  // Giới hạn 4MB
+  if (file.size > 4 * 1024 * 1024) {
+    showToast('warning', 'Ảnh quá lớn', 'Vui lòng chọn ảnh dưới 4MB');
+    input.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const dataUrl = e.target.result;
+    AI.imgBase64 = dataUrl.split(',')[1];
+    AI.imgMime   = file.type;
+    // Show preview
+    document.getElementById('aiImgPreview').src = dataUrl;
+    document.getElementById('aiImgPreviewWrap').style.display = 'flex';
+    // Update placeholder
+    document.getElementById('aiInput').placeholder = 'Hỏi về ảnh này... (mã đơn, tình trạng, so sánh...)';
+  };
+  reader.readAsDataURL(file);
+}
+
+function aiRemoveImg() {
+  AI.imgBase64 = null;
+  AI.imgMime   = null;
+  document.getElementById('aiFileInput').value = '';
+  document.getElementById('aiImgPreviewWrap').style.display = 'none';
+  document.getElementById('aiInput').placeholder = 'Hỏi về đơn hoàn, shop, kênh...';
+}
+
 async function aiSend() {
   const input = document.getElementById('aiInput');
   const q = input.value.trim();
@@ -6247,46 +6297,79 @@ async function aiSend() {
 async function aiAsk(question) {
   if (AI.loading) return;
   document.getElementById('aiChips').style.display = 'none';
-  aiAddMsg('user', question);
-  let context = aiBuildContext();
-  if (!context) {
-    aiAddMsg('bot', '⚠️ Chưa có dữ liệu tháng nào. Vào **Dashboard** và chọn tháng trước nhé.');
-    return;
+
+  // Capture image state before clearing
+  const hasImg   = !!AI.imgBase64;
+  const imgB64   = AI.imgBase64;
+  const imgMime  = AI.imgMime;
+  const imgSrc   = hasImg ? document.getElementById('aiImgPreview').src : null;
+
+  // Show user bubble (with image thumbnail if any)
+  const box = document.getElementById('aiMsgs');
+  if (hasImg) {
+    const imgWrap = document.createElement('div');
+    imgWrap.style.cssText = 'align-self:flex-end;display:flex;flex-direction:column;align-items:flex-end;gap:4px;max-width:88%';
+    imgWrap.innerHTML = `<img src="${imgSrc}" style="width:100px;height:100px;object-fit:cover;border-radius:10px;border:1px solid var(--border)">`;
+    if (question) {
+      const qDiv = document.createElement('div');
+      qDiv.className = 'ai-bubble ai-bubble-user';
+      qDiv.innerHTML = question.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      imgWrap.appendChild(qDiv);
+    }
+    box.appendChild(imgWrap);
+    box.scrollTop = box.scrollHeight;
+  } else {
+    aiAddMsg('user', question);
   }
 
-  // Detect nếu user hỏi về mã đơn cụ thể — inject chi tiết đơn đó
-  const codeMatch = question.match(/\b([A-Z]{2,6}\d{8,20}|\d{10,20})\b/i);
+  // Clear image after showing
+  if (hasImg) aiRemoveImg();
+
+  let context = aiBuildContext();
+  if (!context) context = 'Chưa có dữ liệu tháng — hãy phân tích ảnh trực tiếp.';
+
+  // Detect order code in question
   let foundOrder = null;
+  const codeMatch = question.match(/\b([A-Z]{2,6}\d{8,20}|\d{10,20})\b/i);
   if (codeMatch) {
     foundOrder = aiFindOrder(codeMatch[1]);
     if (foundOrder) {
       const t = foundOrder.time ? new Date(foundOrder.time).toLocaleString('vi-VN') : '?';
-      context += `\n\nCHI TIẾT ĐƠN ĐƯỢC HỎI [${foundOrder.code}]:
-  Thời gian: ${t}
-  Nhân viên: ${foundOrder.staff || '?'}
-  Kênh: ${foundOrder.channel || '?'}
-  Shop: ${foundOrder.shop || '?'}
-  Sản phẩm: ${foundOrder.product || '?'}
-  Trạng thái: ${foundOrder.status || '?'}
-  Khiếu nại: ${foundOrder.complaintStatus || 'Chưa có'}`;
+      context += `\n\nCHI TIẾT ĐƠN [${foundOrder.code}]: Thời gian: ${t} | NV: ${foundOrder.staff||'?'} | Kênh: ${foundOrder.channel||'?'} | Shop: ${foundOrder.shop||'?'} | SP: ${foundOrder.product||'?'} | Tình trạng: ${foundOrder.status||'?'} | Khiếu nại: ${foundOrder.complaintStatus||'Chưa có'}`;
     }
   }
 
   AI.loading = true;
   aiShowTyping();
+
   try {
     if (AI.history.length > AI.MAX_HISTORY * 2) AI.history = AI.history.slice(-AI.MAX_HISTORY * 2);
-    const res = await fetch(WEB_APP_URL, {
-      method: 'POST',
-      body: JSON.stringify({action:'gemini_chat', question, context, history: AI.history})
-    });
+
+    let payload;
+    if (hasImg) {
+      // Dùng Vision API
+      payload = {
+        action: 'gemini_vision',
+        question: question || 'Đọc ảnh này và cho tôi biết thông tin quan trọng, so sánh với dữ liệu hệ thống nếu có.',
+        context,
+        imageBase64: imgB64,
+        imageMimeType: imgMime
+      };
+    } else {
+      // Dùng text API thông thường
+      payload = { action: 'gemini_chat', question, context, history: AI.history };
+    }
+
+    const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
     const data = await res.json();
     aiHideTyping();
+
     if (data.result === 'success') {
       aiAddMsg('bot', data.answer);
-      AI.history.push({role:'user',  text: question});
-      AI.history.push({role:'model', text: data.answer});
-      // Nếu hỏi về đơn cụ thể → hiện ảnh đính kèm
+      if (!hasImg) {
+        AI.history.push({role:'user',  text: question});
+        AI.history.push({role:'model', text: data.answer});
+      }
       if (foundOrder) aiShowOrderImages(foundOrder);
     } else {
       const msg = data.message || '';
@@ -6297,6 +6380,8 @@ async function aiAsk(question) {
         friendly = '🔑 API key không hợp lệ. Kiểm tra lại key trong Apps Script.';
       } else if (msg.includes('permission') || msg.includes('UrlFetchApp')) {
         friendly = '🔒 Apps Script chưa được cấp quyền. Chạy hàm **authorizeNow** trong Apps Script rồi deploy lại.';
+      } else if (msg.includes('model') || msg.includes('vision')) {
+        friendly = '🤖 Model Vision chưa được hỗ trợ. Kiểm tra lại tên model trong Apps Script.';
       }
       aiAddMsg('bot', friendly);
     }
@@ -6388,9 +6473,9 @@ THÔNG TIN ĐƠN:
 
 Yêu cầu bắt buộc:
 - Viết bằng tiếng Việt, lịch sự nhưng rõ ràng
+- Sản phẩm shop gửi đi đã đúng đủ, giống mô tả và chưa qua sử dụng có cả video quay quá trình đóng hàng
+- Sản phẩm trả về nếu bị bẩn hoặc lỗi thì nói là không thể lưu kho và bán lại được, còn nếu mất hoặc tráo thì gây thiệt hại lớn cho shop
 - TỔNG ĐỘ DÀI TỐI ĐA 256 KÝ TỰ (đếm kỹ, không được vượt quá)
-- Nói rõ lúc đóng, gửi hàng shop đã gửi đúng đủ, hàng mới 100%
-- Với tình trạng đó thì shop không thể lưu kho và bán lại được
 - Nêu mã vận đơn, tình trạng, yêu cầu cụ thể
 - CHỈ trả về nội dung khiếu nại, không thêm gì khác`;
 
