@@ -6405,7 +6405,8 @@ const _origUpdateAdminMetrics = window.updateAdminMetrics;
 window.updateAdminMetrics = function(...args) {
   if (_origUpdateAdminMetrics) _origUpdateAdminMetrics(...args);
   if (AI.open) aiUpdateCtxBadge();
-  // Chạy cảnh báo sớm mỗi khi data dashboard mới về
+  // Chạy cảnh báo sớm — bên trong đã có daily cache,
+  // chỉ gọi AI thực sự 1 lần/ngày/tháng, lần sau chỉ đọc cache
   aiEarlyWarningCheck();
 };
 
@@ -6473,8 +6474,8 @@ THÔNG TIN ĐƠN:
 
 Yêu cầu bắt buộc:
 - Viết bằng tiếng Việt, lịch sự nhưng rõ ràng
-- Sản phẩm shop gửi đi đã đúng đủ, giống mô tả và chưa qua sử dụng có cả video quay quá trình đóng hàng
-- Sản phẩm trả về nếu bị bẩn hoặc lỗi thì nói là không thể lưu kho và bán lại được, còn nếu mất hoặc tráo thì gây thiệt hại lớn cho shop
+- Sản phẩm khi gửi đi shop đã quay video, shop gửi đúng đủ giống mô tả và mới 100%
+- Với tình trạng bẩn, lỗi thì sẽ nói không thể lưu kho và bán lại được. Với tình trạng thiếu hoặc tráo hàng thì sẽ nói shop bị thiệt hại nặng
 - TỔNG ĐỘ DÀI TỐI ĐA 256 KÝ TỰ (đếm kỹ, không được vượt quá)
 - Nêu mã vận đơn, tình trạng, yêu cầu cụ thể
 - CHỈ trả về nội dung khiếu nại, không thêm gì khác`;
@@ -6540,19 +6541,51 @@ function aiRegenerateDraft() {
 
 // ================================================================
 // TÍNH NĂNG 2: CẢNH BÁO SỚM AI
+// Cache 1 lần/ngày vào localStorage — KHÔNG gọi AI mỗi lần reload
 // ================================================================
-let _earlyWarnLastRun = 0;
-const EARLY_WARN_COOLDOWN = 10 * 60 * 1000; // 10 phút
+
+// Key cache: "xixa_ai_warn_YYYY-MM-DD_month"
+function _warnCacheKey(month) {
+  const today = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+  const d = today.toISOString().slice(0,10); // YYYY-MM-DD
+  return `xixa_ai_warn_${d}_${month}`;
+}
+
+function _warnCacheGet(month) {
+  try {
+    const raw = localStorage.getItem(_warnCacheKey(month));
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
+}
+
+function _warnCacheSet(month, data) {
+  try {
+    // Xóa cache cũ (ngày khác) để không chiếm quá nhiều localStorage
+    Object.keys(localStorage)
+      .filter(k => k.startsWith('xixa_ai_warn_') && k !== _warnCacheKey(month))
+      .forEach(k => localStorage.removeItem(k));
+    localStorage.setItem(_warnCacheKey(month), JSON.stringify(data));
+  } catch(e) {}
+}
 
 async function aiEarlyWarningCheck() {
-  // Chỉ chạy cho admin, không chạy quá thường xuyên
+  // Chỉ chạy cho admin
   if (typeof userRole === 'undefined' || userRole !== 'admin') return;
-  if (Date.now() - _earlyWarnLastRun < EARLY_WARN_COOLDOWN) return;
   const m = document.getElementById('monthSelect')?.value;
   if (!m) return;
   const mc = _monthStatsCache[m];
   if (!mc?.currOrders?.length || !mc?.prevOrders?.length) return;
-  _earlyWarnLastRun = Date.now();
+
+  // ── Thử lấy từ cache ngày hôm nay trước ──
+  const cached = _warnCacheGet(m);
+  if (cached) {
+    // Đã có kết quả hôm nay → hiển thị lại, KHÔNG gọi AI
+    if (cached.alerts?.length && cached.analysis) {
+      aiShowEarlyWarning(cached.alerts, cached.analysis);
+    }
+    return;
+  }
 
   const curr = mc.currOrders;
   const prev = mc.prevOrders;
@@ -6580,11 +6613,10 @@ async function aiEarlyWarningCheck() {
   // Tìm shop có dấu hiệu bất thường
   const alerts = [];
   Object.entries(currShop).forEach(([shop, c]) => {
-    if (c.total < 5) return; // bỏ qua shop ít đơn
+    if (c.total < 5) return;
     const currRate = c.error / c.total;
     const p = prevShop[shop];
     const prevRate = p ? p.error / p.total : 0;
-    // Tỷ lệ lỗi tháng này > 30% VÀ tăng so với tháng trước > 10%
     if (currRate > 0.3 && (currRate - prevRate) > 0.1) {
       alerts.push({
         shop,
@@ -6596,9 +6628,13 @@ async function aiEarlyWarningCheck() {
     }
   });
 
-  if (!alerts.length) return;
+  // Không có cảnh báo → cache rỗng để hôm nay không gọi lại
+  if (!alerts.length) {
+    _warnCacheSet(m, { alerts: [], analysis: '', ts: Date.now() });
+    return;
+  }
 
-  // Gọi AI để phân tích và đưa ra nhận xét
+  // ── Gọi AI 1 lần, lưu cache ──
   const alertSummary = alerts.map(a =>
     `- ${a.shop}: tỷ lệ lỗi ${a.currRate}% (${a.errorCount}/${a.total} đơn), tháng trước ${a.prevRate}%`
   ).join('\n');
@@ -6608,18 +6644,23 @@ async function aiEarlyWarningCheck() {
       method: 'POST',
       body: JSON.stringify({
         action: 'gemini_chat',
-        question: `Phân tích ngắn gọn các shop sau đây đang có tỷ lệ lỗi tăng bất thường trong tháng này và đưa ra 1-2 khuyến nghị hành động cụ thể:
-${alertSummary}
-Trả lời ngắn gọn trong 3-5 câu, không dùng bullet points.`,
+        question: `Phân tích ngắn gọn các shop sau đây đang có tỷ lệ lỗi tăng bất thường trong tháng này và đưa ra 1-2 khuyến nghị hành động cụ thể:\n${alertSummary}\nTrả lời ngắn gọn trong 3-5 câu, không dùng bullet points.`,
         context: 'Hệ thống kho hàng hoàn XIXA — cảnh báo sớm',
         history: []
       })
     });
     const data = await res.json();
     if (data.result === 'success') {
+      // Lưu cache ngay lập tức — hôm nay sẽ không gọi lại nữa
+      _warnCacheSet(m, { alerts, analysis: data.answer, ts: Date.now() });
       aiShowEarlyWarning(alerts, data.answer);
+    } else {
+      // Lưu cache lỗi (chỉ alerts, không có analysis) → không retry hôm nay
+      _warnCacheSet(m, { alerts, analysis: '', ts: Date.now() });
     }
-  } catch(e) { /* silent fail */ }
+  } catch(e) {
+    // Lỗi mạng → KHÔNG cache → cho phép thử lại lần sau trong ngày
+  }
 }
 
 function aiShowEarlyWarning(alerts, aiAnalysis) {
