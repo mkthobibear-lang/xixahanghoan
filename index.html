@@ -2718,6 +2718,9 @@ function logout(){
   if(chatTimer){ clearInterval(chatTimer); chatTimer=null; }
   chatUnreadMap={}; chatHistory={}; chatCurrentTarget=null;
   chatNotifiedSet = new Set(); chatInitialized = {}; chatSeenCount = {};
+  onlineStatusMap = {};
+  if (_onlinePollTimer) { clearInterval(_onlinePollTimer); _onlinePollTimer = null; }
+  if (_onlinePingTimer) { clearInterval(_onlinePingTimer); _onlinePingTimer = null; }
   const chatWin = document.getElementById('chatWindow');
   if(chatWin) chatWin.style.display='none';
 }
@@ -4212,6 +4215,67 @@ let chatNotifiedSet = new Set();
 // chatSeenCount: số tin đã xem lần cuối với từng người, lưu localStorage
 let chatSeenCount = {};
 
+// ── ONLINE STATUS ──────────────────────────────────────────
+let onlineStatusMap = {};
+let _onlinePollTimer = null;
+let _onlinePingTimer = null;
+
+function startOnlinePing() {
+  _sendOnlinePing();
+  if (_onlinePingTimer) clearInterval(_onlinePingTimer);
+  _onlinePingTimer = setInterval(_sendOnlinePing, 45000);
+}
+function _sendOnlinePing() {
+  if (!chatMyName) return;
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action: 'ping', from: chatMyName, user: chatMyName })
+  }).then(r => r.json()).then(res => {
+    if (res && res.online) {
+      Object.assign(onlineStatusMap, res.online);
+      _applyOnlineDots();
+    }
+  }).catch(() => {});
+}
+
+async function pollOnlineStatus() {
+  if (!chatMyName) return;
+  try {
+    const res  = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'get_members', from: chatMyName })
+    });
+    const data = await res.json();
+    if (data.result !== 'success' || !data.members) return;
+    data.members.forEach(m => { onlineStatusMap[m.name] = !!m.online; });
+    chatMemberList.forEach(m => {
+      const found = data.members.find(x => x.name === m.name);
+      if (found) m.online = found.online;
+    });
+    _applyOnlineDots();
+  } catch(e) {}
+}
+
+function _applyOnlineDots() {
+  chatMemberList.forEach(m => {
+    const key   = m.name.replace(/\s/g, '_');
+    const dotEl = document.getElementById('ondot_' + key);
+    if (!dotEl) return;
+    const on = !!onlineStatusMap[m.name];
+    dotEl.className = 'online-dot ' + (on ? 'is-online' : 'is-offline');
+    dotEl.title     = on ? 'Đang online' : 'Offline';
+  });
+  if (chatCurrentTarget) {
+    const hDot = document.getElementById('chatConvOnlineDot');
+    const hSub = document.getElementById('chatConvSub');
+    const on   = !!onlineStatusMap[chatCurrentTarget];
+    if (hDot) { hDot.className = 'online-dot ' + (on ? 'is-online' : 'is-offline'); hDot.title = on ? 'Đang online' : 'Offline'; }
+    if (hSub) { hSub.textContent = on ? 'Đang online' : ''; }
+  }
+}
+// ──────────────────────────────────────────────────────────
+
+
 function initChat() {
   chatMyName = document.getElementById('displayName').innerText;
   // Khôi phục seen count từ localStorage
@@ -4224,6 +4288,11 @@ function initChat() {
   loadChatMembers();
   if (chatTimer) clearInterval(chatTimer);
   chatTimer = setInterval(pollChat, CHAT_POLL_MS);
+  // Online status
+  startOnlinePing();
+  pollOnlineStatus();
+  if (_onlinePollTimer) clearInterval(_onlinePollTimer);
+  _onlinePollTimer = setInterval(pollOnlineStatus, 30000);
 }
 
 function saveChatSeenCount() {
@@ -4260,7 +4329,7 @@ function renderMemberList() {
     div.id = 'member_' + m.name.replace(/\s/g,'_');
     div.onclick = () => openConversation(m.name);
     div.innerHTML = `
-      <div class="chat-member-avatar">${m.avatar && String(m.avatar).trim() ? '<img src="'+m.avatar+'" alt="'+m.name.charAt(0).toUpperCase()+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" onerror="this.parentElement.innerHTML=\''+m.name.charAt(0).toUpperCase()+'\';">' : m.name.charAt(0).toUpperCase()}</div>
+      <div class="chat-member-avatar">${m.avatar && String(m.avatar).trim() ? '<img src="'+m.avatar+'" alt="'+m.name.charAt(0).toUpperCase()+'" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block" onerror="this.parentElement.innerHTML=\''+m.name.charAt(0).toUpperCase()+'\';">' : m.name.charAt(0).toUpperCase()}<div class="online-dot ${onlineStatusMap[m.name]?'is-online':'is-offline'}" id="ondot_${m.name.replace(/\s/g,'_')}" title="${onlineStatusMap[m.name]?'Đang online':'Offline'}"></div></div>
       <div class="chat-member-info">
         <div class="chat-member-name">${m.name}</div>
         <div class="chat-member-preview" id="preview_${m.name.replace(/\s/g,'_')}">Nhấn để nhắn tin</div>
@@ -4309,6 +4378,12 @@ async function openConversation(targetName) {
   document.getElementById('chatMemberPanel').style.display = 'none';
   document.getElementById('chatConvPanel').style.display = 'flex';
   document.getElementById('chatConvName').textContent = targetName;
+  // Online dot header
+  const _hDot2 = document.getElementById('chatConvOnlineDot');
+  const _hSub2 = document.getElementById('chatConvSub');
+  const _isOnNow = !!onlineStatusMap[targetName];
+  if (_hDot2) { _hDot2.className = 'online-dot ' + (_isOnNow ? 'is-online' : 'is-offline'); _hDot2.title = _isOnNow ? 'Đang online' : 'Offline'; }
+  if (_hSub2) { _hSub2.textContent = _isOnNow ? 'Đang online' : ''; }
   // Avatar
   const member = chatMemberList.find(m => m.name === targetName);
   const convAv = document.getElementById('chatConvAvatar');
@@ -5189,6 +5264,29 @@ function backToMemberList() {
   }
   #chatFab .material-icons-round { font-size: 21px; }
 }
+
+/* ===== ONLINE STATUS DOT ===== */
+.online-dot {
+  position: absolute;
+  width: 11px; height: 11px;
+  border-radius: 50%;
+  border: 2.5px solid var(--surface);
+  bottom: -1px; right: -1px;
+  pointer-events: none;
+  z-index: 2;
+  transition: background .3s;
+}
+.online-dot.is-online  { background: #22c55e; animation: onlinePulse 2.2s infinite; }
+.online-dot.is-offline { background: var(--border-strong); }
+@keyframes onlinePulse {
+  0%   { box-shadow: 0 0 0 0 rgba(34,197,94,.75); }
+  70%  { box-shadow: 0 0 0 5px rgba(34,197,94,0); }
+  100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); }
+}
+.chat-member-avatar { position: relative !important; overflow: visible !important; }
+#chatConvAvatar     { position: relative !important; overflow: visible !important; }
+.conv-online-text   { font-size: 10px; font-weight: 700; color: #22c55e; margin-top: 1px; min-height: 13px; }
+
 </style>
 
 <!-- CHAT WINDOW -->
@@ -5212,8 +5310,11 @@ function backToMemberList() {
   <div id="chatConvPanel">
     <div class="conv-topbar">
       <button class="conv-back" onclick="backToMemberList()"><span class="material-icons-round" style="font-size:17px">arrow_back</span></button>
-      <div id="chatConvAvatar">?</div>
-      <div id="chatConvName">...</div>
+      <div id="chatConvAvatar">?<div class="online-dot is-offline" id="chatConvOnlineDot" title="Offline"></div></div>
+      <div style="flex:1;min-width:0">
+        <div id="chatConvName" style="font-size:14px;font-weight:800;color:var(--text)">...</div>
+        <div class="conv-online-text" id="chatConvSub"></div>
+      </div>
     </div>
 
     <!-- MESSAGE CONTEXT POPUP -->
