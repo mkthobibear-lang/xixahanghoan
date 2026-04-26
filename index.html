@@ -2718,7 +2718,7 @@ function logout(){
   if(chatTimer){ clearInterval(chatTimer); chatTimer=null; }
   chatUnreadMap={}; chatHistory={}; chatCurrentTarget=null;
   chatNotifiedSet = new Set(); chatInitialized = {}; chatSeenCount = {};
-  onlineStatusMap = {};
+  onlineStatusMap = {}; lastSeenMap = {};
   if (_onlinePollTimer) { clearInterval(_onlinePollTimer); _onlinePollTimer = null; }
   if (_onlinePingTimer) { clearInterval(_onlinePingTimer); _onlinePingTimer = null; }
   const chatWin = document.getElementById('chatWindow');
@@ -4217,6 +4217,7 @@ let chatSeenCount = {};
 
 // ── ONLINE STATUS ──────────────────────────────────────────
 let onlineStatusMap = {};
+let lastSeenMap      = {};   // { ten: timestampMs }
 let _onlinePollTimer = null;
 let _onlinePingTimer = null;
 
@@ -4247,13 +4248,32 @@ async function pollOnlineStatus() {
     });
     const data = await res.json();
     if (data.result !== 'success' || !data.members) return;
-    data.members.forEach(m => { onlineStatusMap[m.name] = !!m.online; });
+    data.members.forEach(m => {
+      onlineStatusMap[m.name] = !!m.online;
+      if (m.lastSeen) lastSeenMap[m.name] = m.lastSeen;
+    });
     chatMemberList.forEach(m => {
       const found = data.members.find(x => x.name === m.name);
-      if (found) m.online = found.online;
+      if (found) { m.online = found.online; if (found.lastSeen) m.lastSeen = found.lastSeen; }
     });
     _applyOnlineDots();
   } catch(e) {}
+}
+
+function _formatLastSeen(tsMs) {
+  if (!tsMs) return '';
+  const diff = Math.floor((Date.now() - tsMs) / 1000);
+  if (diff < 60) return 'vừa mới online';
+  if (diff < 3600) return 'online ' + Math.floor(diff / 60) + ' phút trước';
+  if (diff < 86400) return 'online ' + Math.floor(diff / 3600) + ' giờ trước';
+  return 'online ' + Math.floor(diff / 86400) + ' ngày trước';
+}
+
+function _getOnlineSubText(name) {
+  if (onlineStatusMap[name]) return 'Đang online';
+  const ts = lastSeenMap[name];
+  if (!ts) return '';
+  return _formatLastSeen(ts);
 }
 
 function _applyOnlineDots() {
@@ -4270,7 +4290,10 @@ function _applyOnlineDots() {
     const hSub = document.getElementById('chatConvSub');
     const on   = !!onlineStatusMap[chatCurrentTarget];
     if (hDot) { hDot.className = 'online-dot ' + (on ? 'is-online' : 'is-offline'); hDot.title = on ? 'Đang online' : 'Offline'; }
-    if (hSub) { hSub.textContent = on ? 'Đang online' : ''; }
+    if (hSub) {
+      hSub.textContent = _getOnlineSubText(chatCurrentTarget);
+      hSub.style.color = on ? '#22c55e' : 'var(--text3)';
+    }
   }
 }
 // ──────────────────────────────────────────────────────────
@@ -4383,7 +4406,10 @@ async function openConversation(targetName) {
   const _hSub2 = document.getElementById('chatConvSub');
   const _isOnNow = !!onlineStatusMap[targetName];
   if (_hDot2) { _hDot2.className = 'online-dot ' + (_isOnNow ? 'is-online' : 'is-offline'); _hDot2.title = _isOnNow ? 'Đang online' : 'Offline'; }
-  if (_hSub2) { _hSub2.textContent = _isOnNow ? 'Đang online' : ''; }
+  if (_hSub2) {
+    _hSub2.textContent = typeof _getOnlineSubText === 'function' ? _getOnlineSubText(targetName) : (_isOnNow ? 'Đang online' : '');
+    _hSub2.style.color = _isOnNow ? '#22c55e' : 'var(--text3)';
+  }
   // Avatar
   const member = chatMemberList.find(m => m.name === targetName);
   const convAv = document.getElementById('chatConvAvatar');
@@ -5285,7 +5311,7 @@ function backToMemberList() {
 }
 .chat-member-avatar { position: relative !important; overflow: visible !important; }
 #chatConvAvatar     { position: relative !important; overflow: visible !important; }
-.conv-online-text   { font-size: 10px; font-weight: 700; color: #22c55e; margin-top: 1px; min-height: 13px; }
+.conv-online-text   { font-size: 10px; font-weight: 700; color: var(--text3); margin-top: 1px; min-height: 13px; transition: color .3s; }
 
 </style>
 
