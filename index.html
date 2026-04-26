@@ -2199,6 +2199,50 @@ select.input-field{cursor:pointer}
 
 <script>
 const WEB_APP_URL="https://script.google.com/macros/s/AKfycbzNyibf___3pwV3OKW16ZyFeiDEbkUuEXWEBW8f3ae1Zzh1jLTZ5DGVG6-ELvK4rhhP5g/exec";
+
+// ================================================================
+// FRONTEND CACHE — localStorage với TTL
+// ================================================================
+const FC = {
+  set(key, data, ttlSec) {
+    try {
+      localStorage.setItem('xixa_' + key, JSON.stringify({ d: data, exp: Date.now() + ttlSec * 1000 }));
+    } catch(e) {}
+  },
+  get(key) {
+    try {
+      const raw = localStorage.getItem('xixa_' + key);
+      if (!raw) return null;
+      const obj = JSON.parse(raw);
+      if (Date.now() > obj.exp) { localStorage.removeItem('xixa_' + key); return null; }
+      return obj.d;
+    } catch(e) { return null; }
+  },
+  del(key) { try { localStorage.removeItem('xixa_' + key); } catch(e) {} },
+  delPrefix(prefix) {
+    try {
+      Object.keys(localStorage)
+        .filter(k => k.startsWith('xixa_' + prefix))
+        .forEach(k => localStorage.removeItem(k));
+    } catch(e) {}
+  }
+};
+
+// fetch + JSON với timeout 12s
+async function apiFetch(payload) {
+  const ctrl = new AbortController();
+  const tid   = setTimeout(() => ctrl.abort(), 12000);
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify(payload),
+      signal: ctrl.signal
+    });
+    return await res.json();
+  } finally {
+    clearTimeout(tid);
+  }
+}
 const CHANNEL_ICONS={Tiktok:'https://i.ibb.co/0yZXscPz/Screenshot-2026-01-08-163441-removebg-preview.png',Shopee:'https://i.ibb.co/ymqBwR9K/shopee-logo-png-seeklogo-378738-removebg-preview.png',VTP:'https://i.ibb.co/7dNs15VX/Screenshot-2026-01-08-164038.png',Lazada:'https://i.ibb.co/0VqqmmCV/19a57791bf92848b511de18eaebca94a-removebg-preview.png',default:'https://cdn-icons-png.flaticon.com/512/263/263142.png'};
 const SHOP_LISTS={Shopee:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"],Tiktok:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"],Lazada:["XIXA - Giày sức khỏe","HOBIBEAR - Official Store","Apakowa Official Store","XIXA Official Store","FERRONI"]};
 const SHOP_LOGOS={"XIXA - Giày sức khỏe":"https://i.ibb.co/gZVxsP2Q/Logo-Xixa-removebg-preview.png","HOBIBEAR - Official Store":"https://i.ibb.co/ymjgNn7L/Logo-Hobibear-01-removebg-preview.png","Apakowa Official Store":"https://i.ibb.co/hF254fyb/Avatar-Apakowa-01-removebg-preview.png","XIXA Official Store":"https://i.ibb.co/SD73ZRxz/Bear-2026-XIXA-01.jpg","FERRONI":"https://i.ibb.co/1YGgCLCD/z7440002345017-2a71c6f5adbb7fa5bced69038dac37ae.jpg",default:"https://cdn-icons-png.flaticon.com/512/126/126477.png"};
@@ -2262,12 +2306,20 @@ function completeBgTask(id, msg, isSuccess) { clearInterval(bgTasks[id]); const 
 // ===============================================
 // CHUÔNG THÔNG BÁO VÀ KHIẾU NẠI
 // ===============================================
-function loadPendingComplaints() {
+function loadPendingComplaints(force) {
+  // Cache 60 giây trừ khi force=true (sau khi update khiếu nại)
+  if (!force) {
+    const cached = FC.get('complaints');
+    if (cached) {
+      pendingComplaintsCache = cached;
+      _applyComplaintsUI();
+      return;
+    }
+  }
   async function doLoad() {
     const tryFetch = (action) =>
       fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action})})
         .then(r=>r.json()).catch(()=>null);
-
     let res = await tryFetch("get_all_complaints");
     if(res && res.result === 'success' && res.data) {
       pendingComplaintsCache = res.data;
@@ -2277,22 +2329,27 @@ function loadPendingComplaints() {
         pendingComplaintsCache = res.data;
       }
     }
-    const notiDot = document.getElementById('notiDot');
-    const pending = pendingComplaintsCache.filter(it => {
-      const s=(it.complaintStatus||'').trim();
-      return s===''||s==='Chưa xử lý'||s==='Đang xử lý'||s==='Khiếu nại lần 2';
-    });
-    if(pending.length > 0) notiDot.classList.add('active');
-    else notiDot.classList.remove('active');
-    renderCsDropdown();
-    const notiPanel = document.getElementById('notiPanel');
-    if(notiPanel && notiPanel.style.transform === 'translateX(0%)') renderNotiPanel();
-    if(userRole === 'admin' && window._showDirtyAlertOnLoad) {
-      window._showDirtyAlertOnLoad = false;
-      showDirtyAlertIfNeeded();
-    }
+    FC.set('complaints', pendingComplaintsCache, 60);
+    _applyComplaintsUI();
   }
   doLoad().catch(e => console.log("Lỗi tải thông báo", e));
+}
+
+function _applyComplaintsUI() {
+  const notiDot = document.getElementById('notiDot');
+  const pending = pendingComplaintsCache.filter(it => {
+    const s=(it.complaintStatus||'').trim();
+    return s===''||s==='Chưa xử lý'||s==='Đang xử lý'||s==='Khiếu nại lần 2';
+  });
+  if(pending.length > 0) notiDot.classList.add('active');
+  else notiDot.classList.remove('active');
+  renderCsDropdown();
+  const notiPanel = document.getElementById('notiPanel');
+  if(notiPanel && notiPanel.style.transform === 'translateX(0%)') renderNotiPanel();
+  if(userRole === 'admin' && window._showDirtyAlertOnLoad) {
+    window._showDirtyAlertOnLoad = false;
+    showDirtyAlertIfNeeded();
+  }
 }
 
 function showDirtyAlertIfNeeded() {
@@ -2518,7 +2575,8 @@ function sendUpdateComplaint(payload, taskId) {
    .then(r=>r.json()).then(res=>{
        if(res.result==='success'){
            completeBgTask(taskId, `Cập nhật thành công`, true);
-           loadPendingComplaints(); 
+           FC.del('complaints'); // invalidate để load lại mới
+           loadPendingComplaints(true); // force refresh
            if(document.getElementById('historyView').style.display === 'block') loadHistory();
            if(userRole === 'admin') loadMonthlyStats(true);
        } else {
@@ -2535,13 +2593,29 @@ function getComplaintColor(status) {
 }
 
 // SẢN PHẨM (LOGIC CŨ)
-function loadProductsGlobal() { fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action:"get_products"})}) .then(r=>r.json()).then(res=>{ if(res.result==='success') { allProducts = res.data; if(document.getElementById('productView').style.display === 'block') renderProductGrid(); } }).catch(e => console.log("Lỗi tải sản phẩm")); }
+function loadProductsGlobal() {
+  // Thử cache localStorage trước (TTL 5 phút)
+  const cached = FC.get('products');
+  if (cached && cached.length) {
+    allProducts = cached;
+    if (document.getElementById('productView').style.display === 'block') renderProductGrid();
+    return;
+  }
+  fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action:"get_products"})})
+    .then(r=>r.json()).then(res=>{
+      if (res.result==='success') {
+        allProducts = res.data;
+        FC.set('products', allProducts, 300); // cache 5 phút
+        if (document.getElementById('productView').style.display === 'block') renderProductGrid();
+      }
+    }).catch(e => console.log("Lỗi tải sản phẩm"));
+}
 function renderProductGrid() { const grid = document.getElementById('productGrid'); const searchInput = document.getElementById('searchProductInput'); const keyword = searchInput ? searchInput.value.toLowerCase().trim() : ''; let filteredData = allProducts; if (keyword) { filteredData = allProducts.filter(p => p.name.toLowerCase().includes(keyword)); } if(filteredData.length === 0) { grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; color: var(--text3); padding: 30px;">' + (keyword ? 'Không tìm thấy sản phẩm phù hợp' : 'Chưa có sản phẩm nào') + '</div>'; return; } grid.innerHTML = filteredData.map(p => ` <div class="product-card" onclick="openProductOrders('${p.name}')"> <button type="button" class="btn-edit-product" title="Sửa thông tin" onclick="openEditProduct(event, '${p.name}')"> <span class="material-icons-round" style="font-size:16px">more_vert</span> </button> <img src="${p.image || 'https://cdn-icons-png.flaticon.com/512/1524/1524855.png'}" alt="Sản phẩm" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1524/1524855.png'"> <div class="p-name">${p.name}</div> </div> `).join(''); }
 function openProductOrders(productName) { document.getElementById('channelListTitle').innerHTML = `<span class="material-icons-round" style="vertical-align:middle;margin-right:8px;color:var(--blue)">inventory_2</span> ${productName}`; document.getElementById('channelListContainer').innerHTML = `<div style='text-align:center;padding:30px;color:var(--text3)'>Đang tải lịch sử đơn...</div>`; openModal('channelDetailModal'); fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_product", productName: productName})}) .then(r=>r.json()).then(data=>{ if(data.result==='success'){ renderChannelList(data.data); document.getElementById('channelListSubtitle').innerText = `Toàn thời gian · Tổng: ${data.data.length} đơn`; }else document.getElementById('channelListContainer').innerHTML="<div style='text-align:center;padding:20px;color:var(--red)'>Lỗi dữ liệu</div>"; }).catch(()=>{document.getElementById('channelListContainer').innerHTML="<div style='text-align:center;padding:20px;color:var(--red)'>Lỗi kết nối</div>";}); }
 function openEditProduct(event, name) { event.stopPropagation(); document.getElementById('editProductOldName').value = name; document.getElementById('editProductName').value = name; document.getElementById('editProductImage').value = ''; openModal('editProductModal'); }
 document.getElementById('editProductForm').addEventListener('submit', function(e) { e.preventDefault(); const oldName = document.getElementById('editProductOldName').value; const newName = document.getElementById('editProductName').value; const fileInput = document.getElementById('editProductImage'); const payload = { action: 'edit_product', oldName: oldName, newName: newName }; const taskId = 'task_' + new Date().getTime(); addBgTask(taskId, `Đang sửa: ${newName}`); closeModal('editProductModal'); if(fileInput.files.length > 0) { const f = fileInput.files[0]; const rd = new FileReader(); rd.onload = () => { payload.image = { data: rd.result, mimeType: f.type }; sendEditProduct(payload, taskId, newName); }; rd.readAsDataURL(f); } else { sendEditProduct(payload, taskId, newName); } });
-function sendEditProduct(payload, taskId, name) { fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify(payload)}) .then(r=>r.json()).then(res=>{ if(res.result==='success'){ completeBgTask(taskId, `Sửa thành công: ${name}`, true); loadProductsGlobal(); } else { completeBgTask(taskId, `Lỗi: ${res.message}`, false); } }).catch(()=> { completeBgTask(taskId, "Lỗi kết nối", false); }); }
-document.getElementById('newProductForm').addEventListener('submit', function(e){ e.preventDefault(); const name = document.getElementById('newProductName').value; const fileInput = document.getElementById('newProductImage'); if(!fileInput.files.length){showToast('warning','Chưa chọn ảnh','Vui lòng chọn ảnh sản phẩm');return;} const f = fileInput.files[0]; const rd = new FileReader(); rd.onload = () => { const payload = { action: 'add_product', name: name, image: { data: rd.result, mimeType: f.type } }; const taskId = 'task_' + new Date().getTime(); addBgTask(taskId, `Đang thêm: ${name}`); closeModal('addProductModal'); document.getElementById('newProductForm').reset(); fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify(payload)}) .then(r=>r.json()).then(res=>{ if(res.result==='success'){ completeBgTask(taskId, `Đã thêm: ${name}`, true); loadProductsGlobal(); } else { completeBgTask(taskId, `Lỗi: ${res.message}`, false); } }).catch(()=> { completeBgTask(taskId, "Lỗi kết nối", false); }); }; rd.readAsDataURL(f); });
+function sendEditProduct(payload, taskId, name) { fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify(payload)}) .then(r=>r.json()).then(res=>{ if(res.result==='success'){ completeBgTask(taskId, `Sửa thành công: ${name}`, true); FC.del('products'); loadProductsGlobal(); } else { completeBgTask(taskId, `Lỗi: ${res.message}`, false); } }).catch(()=> { completeBgTask(taskId, "Lỗi kết nối", false); }); }
+document.getElementById('newProductForm').addEventListener('submit', function(e){ e.preventDefault(); const name = document.getElementById('newProductName').value; const fileInput = document.getElementById('newProductImage'); if(!fileInput.files.length){showToast('warning','Chưa chọn ảnh','Vui lòng chọn ảnh sản phẩm');return;} const f = fileInput.files[0]; const rd = new FileReader(); rd.onload = () => { const payload = { action: 'add_product', name: name, image: { data: rd.result, mimeType: f.type } }; const taskId = 'task_' + new Date().getTime(); addBgTask(taskId, `Đang thêm: ${name}`); closeModal('addProductModal'); document.getElementById('newProductForm').reset(); fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify(payload)}) .then(r=>r.json()).then(res=>{ if(res.result==='success'){ completeBgTask(taskId, `Đã thêm: ${name}`, true); FC.del('products'); loadProductsGlobal(); } else { completeBgTask(taskId, `Lỗi: ${res.message}`, false); } }).catch(()=> { completeBgTask(taskId, "Lỗi kết nối", false); }); }; rd.readAsDataURL(f); });
 function formatProductDisplay(prodStr) { if(!prodStr) return "---"; const parts = prodStr.split('|').map(p=>p.trim()); return parts.map(pt => { let baseName = pt.replace(/\(.*\)/, '').trim(); let matchedProd = allProducts.find(p => p.name.toLowerCase() === baseName.toLowerCase()); let imgHtml = (matchedProd && matchedProd.image) ? `<img src="${matchedProd.image}" style="width:36px;height:36px;border-radius:6px;object-fit:cover;border:1px solid var(--border)">` : `<div style="width:36px;height:36px;border-radius:6px;background:var(--surface2);border:1px dashed var(--border-strong);display:flex;align-items:center;justify-content:center"><span class="material-icons-round" style="font-size:16px;color:var(--text3)">inventory_2</span></div>`; return `<div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">${imgHtml} <span style="font-weight:600;font-size:13px;color:var(--text)">${pt}</span></div>`; }).join(''); }
 function getMiniProductHtml(prodStr) { if(!prodStr) return `<span style="color:var(--text3);font-size:12px">Không có sản phẩm</span>`; const parts = prodStr.split('|').map(p=>p.trim()); return parts.map(pt => { let baseName = pt.replace(/\(.*\)/, '').trim(); let match = allProducts.find(p => p.name.toLowerCase() === baseName.toLowerCase()); let imgUrl = (match && match.image) ? match.image : 'https://cdn-icons-png.flaticon.com/512/1524/1524855.png'; return `<div style="display:flex;align-items:center;gap:8px;"><img src="${imgUrl}" style="width:28px;height:28px;border-radius:4px;object-fit:cover;border:1px solid var(--border);background:var(--surface2);flex-shrink:0;"> <span style="font-size:12px;color:var(--text2);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pt}</span></div>`; }).join(''); }
 
@@ -2634,6 +2708,8 @@ function logout(){
   document.getElementById('historyList').innerHTML="";
   pendingComplaintsCache=[];
   document.getElementById('notiDot').classList.remove('active');
+  // Xóa toàn bộ cache frontend
+  FC.delPrefix('');
   // Ẩn FAB và reset state chat
   const fab = document.getElementById('chatFab');
   if(fab){ fab.style.display='none'; fab.classList.remove('shaking'); }
@@ -2697,25 +2773,52 @@ function analyzeTrends(currOrders, prevOrdersRaw, cutoffDay) {
   container.innerHTML=html;
 }
 
+// Cache tháng trong memory session — tránh fetch lại khi chuyển tab rồi quay lại
+let _monthStatsCache = {}; // { "2026-04": { currOrders, prevOrders, chartData, ts } }
+
 function loadMonthlyStats(isSilent = false){ 
     const m=document.getElementById('monthSelect').value; 
-    if(!m)return; 
-    
+    if(!m)return;
+
+    // Dùng memory cache nếu còn mới (60 giây) và silent (background refresh)
+    const mc = _monthStatsCache[m];
+    if (isSilent && mc && (Date.now() - mc.ts) < 60000) {
+      // Render lại từ cache ngay, không fetch
+      if (mc.currOrders) {
+        const today=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+        const [yr,mo]=m.split('-').map(Number);
+        const curYM=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+        const cutoffDay=(m===curYM)?today.getDate():new Date(yr,mo,0).getDate();
+        updateAdminMetrics(mc.currOrders,mc.prevOrders,cutoffDay);
+        renderShopStats(mc.currOrders,mc.prevOrders,cutoffDay);
+        updateChannelCmp(mc.currOrders,mc.prevOrders,cutoffDay);
+        renderTopProducts(mc.currOrders,mc.prevOrders,cutoffDay);
+        analyzeTrends(mc.currOrders,mc.prevOrders,cutoffDay);
+        if(mc.chartData) renderMonthlyChart(mc.chartData);
+      }
+      return;
+    }
+
     if(!isSilent) showDashLoading(true,"Đang tải tháng "+m.slice(5)+" / "+m.slice(0,4)+" ..."); 
     
     const [yr,mo]=m.split('-').map(Number); 
     const prevMo=mo===1?12:mo-1; 
     const prevYr=mo===1?yr-1:yr; 
     const prevM=`${prevYr}-${String(prevMo).padStart(2,'0')}`; 
-const today=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'})); const curYM=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
+    const today=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+    const curYM=`${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}`;
     const cutoffDay=(m===curYM)?today.getDate():new Date(yr,mo,0).getDate(); 
-    window.currentCutoffDay=cutoffDay; 
-    let done=0; let prevOrders=null; let currOrders=null; 
+    window.currentCutoffDay=cutoffDay;
+
+    // Fetch 3 request song song
+    let done=0; let prevOrders=null; let currOrders=null; let chartData=null;
     const checkDone=()=>{ 
         done++; 
         if(done>=3){ 
             if(!isSilent) showDashLoading(false); 
             if(currOrders!==null){ 
+                // Lưu vào memory cache
+                _monthStatsCache[m] = { currOrders, prevOrders, chartData, ts: Date.now() };
                 updateAdminMetrics(currOrders,prevOrders,cutoffDay); 
                 renderShopStats(currOrders,prevOrders,cutoffDay); 
                 updateChannelCmp(currOrders,prevOrders,cutoffDay); 
@@ -2725,7 +2828,7 @@ const today=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Mi
         } 
     }; 
     fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"report_daily_channel",month:m})}) 
-    .then(r=>r.json()).then(d=>{if(d.result==='success')renderMonthlyChart(d);checkDone();}) 
+    .then(r=>r.json()).then(d=>{if(d.result==='success'){chartData=d;renderMonthlyChart(d);}checkDone();}) 
     .catch(checkDone); 
     
     fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:m})}) 
@@ -3266,6 +3369,9 @@ document.getElementById('returnForm').addEventListener('submit',async function(e
             document.getElementById('successMsg').innerText="Lưu thành công.";
             openModal('successModal');
             resetForm();
+            // Xóa cache ngày hôm nay để loadHistory lấy dữ liệu mới
+            FC.del('history_' + getTodayString());
+            FC.del('products'); // sản phẩm có thể đã dùng → invalidate
             loadHistory();
             loadPendingComplaints();
             if(userRole === 'admin') loadMonthlyStats(true);
@@ -3295,13 +3401,26 @@ function resetForm() {
 // HISTORY
 function skeletonHTML(){ let s=''; for(let i=0;i<3;i++){ s+=`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);margin-bottom:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between"> <div style="display:flex;align-items:center;gap:12px"> <div class="skeleton-block" style="width:22px;height:22px;border-radius:6px"></div> <div> <div class="skeleton-block" style="width:${80+i*20}px;height:13px;margin-bottom:6px"></div> <div class="skeleton-block" style="width:60px;height:10px"></div> </div> </div> <div class="skeleton-block" style="width:48px;height:22px;border-radius:100px"></div> </div>`; } return s; }
 function loadHistory(){ 
-  const date = document.getElementById('historyDate').value; 
+  const date = document.getElementById('historyDate').value;
   historyDataCacheDate = date;
+
+  // Thử cache localStorage trước (TTL 30 giây)
+  const cacheKey = 'history_' + date;
+  const cached = FC.get(cacheKey);
+  if (cached) {
+    historyDataCache = cached;
+    renderList(cached);
+    return;
+  }
+
   historyDataCache = [];
   document.getElementById('historyList').innerHTML=skeletonHTML(); 
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get",date:date})}) 
     .then(r=>r.json()) 
-    .then(d=>renderList(d)) 
+    .then(d=>{
+      if (Array.isArray(d)) FC.set(cacheKey, d, 30);
+      renderList(d);
+    }) 
     .catch(()=>{document.getElementById('historyList').innerHTML="<div style='text-align:center;color:var(--red);margin-top:16px;font-size:13px'>Lỗi tải dữ liệu</div>"}); 
 }
 function executeSearch(){ executeGlobalSearch(); }
@@ -3832,12 +3951,28 @@ function executeGlobalSearch() {
   const kw = (document.getElementById('filterKeyword')?.value || '').trim();
   if(!kw) { showToast('warning', 'Nhập từ khóa', 'Vui lòng nhập mã đơn, sản phẩm hoặc shop'); return; }
   const listEl = document.getElementById('searchList');
+
+  // Thử cache localStorage trước (TTL 2 phút)
+  const cacheKey = 'search_' + kw.toLowerCase();
+  const cached = FC.get(cacheKey);
+  if (cached) {
+    searchDataCache = cached;
+    searchFilterStatus = 'all';
+    document.querySelectorAll('[id^="schip-"]').forEach(c => c.classList.remove('active'));
+    const schipAll = document.getElementById('schip-all');
+    if(schipAll) schipAll.classList.add('active');
+    document.getElementById('searchChips').style.display = searchDataCache.length ? 'flex' : 'none';
+    renderSearchResults(searchDataCache);
+    return;
+  }
+
   listEl.innerHTML = skeletonHTML();
   document.getElementById('searchChips').style.display = 'none';
   fetch(WEB_APP_URL, {method:"POST", body:JSON.stringify({action:"search", keyword:kw})})
     .then(r=>r.json())
     .then(d => {
       searchDataCache = Array.isArray(d) ? d : [];
+      FC.set(cacheKey, searchDataCache, 120); // cache 2 phút
       searchFilterStatus = 'all';
       document.querySelectorAll('[id^="schip-"]').forEach(c => c.classList.remove('active'));
       const schipAll = document.getElementById('schip-all');
@@ -3846,7 +3981,7 @@ function executeGlobalSearch() {
       renderSearchResults(searchDataCache);
     })
     .catch(() => {
-      document.getElementById('searchList').innerHTML = "<div style='text-align:center;color:var(--red);margin-top:16px;font-size:13px'>Lỗi tìm kiếm</div>";
+      listEl.innerHTML = "<div style='text-align:center;color:var(--red);margin-top:16px;font-size:13px'>Lỗi tìm kiếm</div>";
     });
 }
 
@@ -4096,12 +4231,19 @@ function saveChatSeenCount() {
 }
 
 // Lấy danh sách thành viên (từ action get_members)
-async function loadChatMembers() {
+let _membersLoadedAt = 0;
+async function loadChatMembers(force) {
+  // Không refetch nếu đã load trong 5 phút và không force
+  if (!force && chatMemberList.length && (Date.now() - _membersLoadedAt) < 300000) {
+    renderMemberList();
+    return;
+  }
   try {
     const res = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({ action:'get_members' }) });
     const data = await res.json();
     if (data.result === 'success') {
       chatMemberList = data.members.filter(m => m.name !== chatMyName);
+      _membersLoadedAt = Date.now();
       renderMemberList();
     }
   } catch(e) {}
@@ -4477,17 +4619,19 @@ document.addEventListener('click', function(e) {
 // chatInitialized: lần đầu fetch mỗi member trong phiên → chỉ seed data, KHÔNG toast
 let chatInitialized = {};
 
-// Poll: kiểm tra tin nhắn mới từ tất cả members
+// Poll: fetch tất cả members SONG SONG thay vì tuần tự
 async function pollChat() {
-  if (!chatMyName) return;
-  for (const m of chatMemberList) {
+  if (!chatMyName || !chatMemberList.length) return;
+
+  // Promise.all → tất cả fetch chạy cùng lúc, không chờ nhau
+  await Promise.all(chatMemberList.map(async (m) => {
     try {
       const res = await fetch(WEB_APP_URL, {
         method: 'POST',
         body: JSON.stringify({ action: 'get_chat', from: chatMyName, to: m.name })
       });
       const data = await res.json();
-      if (!Array.isArray(data)) continue;
+      if (!Array.isArray(data)) return;
 
       const prevHistory = chatHistory[m.name];
       chatHistory[m.name] = data;
@@ -4518,12 +4662,9 @@ async function pollChat() {
         }
         updateMemberPreview(m.name);
 
-        // Nếu có tin chưa xem → KHÔNG continue, cho chạy tiếp xuống block poll
+        // Nếu có tin chưa xem → KHÔNG return, cho chạy tiếp xuống block poll
         // để toast tin cuối cùng ngay lần đầu
-        if (unseenFromOther.length === 0) continue;
-
-        // Giả lập prevHistory = [] để block poll bên dưới xử lý đúng
-        // (prevHistory đang là undefined ở lần đầu)
+        if (unseenFromOther.length === 0) return; // dùng return thay continue vì đang trong arrow function
       }
 
       // ── CÁC LẦN POLL (kể cả lần đầu nếu có tin chưa xem): xử lý tin mới ──
@@ -4570,7 +4711,7 @@ async function pollChat() {
         updateMemberPreview(m.name);
       }
     } catch(e) {}
-  }
+  })); // end Promise.all map
 }
 
 // Hiện badge chưa đọc trên cả FAB lẫn header dot (sidebar)
@@ -4660,18 +4801,16 @@ function showChatToast(senderName, encodedContent, imageUrl) {
 }
 
 function openChatWindow() {
-  // Ẩn FAB bằng animation thu nhỏ
   const fab = document.getElementById('chatFab');
   if (fab && fab.style.display !== 'none') {
     fab.classList.remove('pop-in', 'shaking');
     fab.classList.add('pop-out');
-    // Sau khi animation xong mới ẩn hoàn toàn
     setTimeout(() => { fab.style.display = 'none'; fab.classList.remove('pop-out'); }, 350);
   }
   document.getElementById('chatWindow').style.display = 'flex';
   document.getElementById('chatMemberPanel').style.display = 'flex';
   document.getElementById('chatConvPanel').style.display = 'none';
-  loadChatMembers();
+  loadChatMembers(); // dùng cache nếu còn mới
   updateFabUnreadCount();
 }
 
@@ -5058,7 +5197,7 @@ function backToMemberList() {
   <!-- TOPBAR -->
   <div class="chat-topbar">
     <div class="chat-topbar-icon"><span class="material-icons-round" style="color:#fff;font-size:17px">forum</span></div>
-    <div><div class="chat-topbar-title">Tin nhắn (Thử Nghiệm)</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
+    <div><div class="chat-topbar-title">Messenger (Beta)</div><div class="chat-topbar-sub">XIXA nội bộ</div></div>
     <button class="chat-x" onclick="closeChatWindow()"><span class="material-icons-round" style="font-size:16px">close</span></button>
   </div>
 
