@@ -4263,14 +4263,14 @@ async function pollOnlineStatus() {
 function _formatLastSeen(tsMs) {
   if (!tsMs) return '';
   const diff = Math.floor((Date.now() - tsMs) / 1000);
-  if (diff < 60) return 'vừa mới online';
-  if (diff < 3600) return 'online ' + Math.floor(diff / 60) + ' phút trước';
-  if (diff < 86400) return 'online ' + Math.floor(diff / 3600) + ' giờ trước';
+  if (diff < 60) return 'vừa mới hoạt động';
+  if (diff < 3600) return 'hoạt động ' + Math.floor(diff / 60) + ' phút trước';
+  if (diff < 86400) return 'hoạt động ' + Math.floor(diff / 3600) + ' giờ trước';
   return 'online ' + Math.floor(diff / 86400) + ' ngày trước';
 }
 
 function _getOnlineSubText(name) {
-  if (onlineStatusMap[name]) return 'Đang online';
+  if (onlineStatusMap[name]) return 'Đang hoạt động';
   const ts = lastSeenMap[name];
   if (!ts) return '';
   return _formatLastSeen(ts);
