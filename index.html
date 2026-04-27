@@ -1116,6 +1116,7 @@ select.input-field{cursor:pointer}
 /* --- Main 2-col layout --- */
 .dash-main-grid{display:grid;grid-template-columns:1fr 280px;gap:16px;margin-bottom:18px}
 .dash-chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:18px 20px}
+#chartInsightBtn:hover{background:rgba(124,58,237,.06)!important;border-color:rgba(124,58,237,.4)!important;color:var(--text)!important}
 .dash-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .dash-chart-title{font-size:14px;font-weight:800;color:var(--text)}
 .dash-chart-controls{display:flex;gap:8px;align-items:center}
@@ -1376,7 +1377,7 @@ select.input-field{cursor:pointer}
         <input type="month" id="monthSelect" style="display:none" onchange="var tb=document.getElementById('monthSelectTopbar');if(tb)tb.value=this.value;loadMonthlyStats()">
 
         <!-- TREND ALERT -->
-        <div id="trendAnalysisContainer" style="display:none;margin-bottom:18px"></div>
+        <div id="trendAnalysisContainer" style="display:none;margin-bottom:18px;font-size:13px"></div>
 
         <!-- KPI CARDS -->
         <div class="kpi-grid" id="adminMetrics">
@@ -1423,6 +1424,30 @@ select.input-field{cursor:pointer}
               <div class="dash-chart-title">Đơn hoàn theo ngày</div>
             </div>
             <div style="position:relative;height:200px"><canvas id="monthlyChart"></canvas></div>
+
+            <!-- AI Chart Insight -->
+            <div id="chartInsightWrap" style="margin:10px 0 6px">
+              <button id="chartInsightBtn" onclick="requestChartInsight()"
+                style="display:flex;align-items:center;gap:6px;width:100%;padding:7px 12px;
+                       border:1px dashed var(--border);border-radius:8px;background:transparent;
+                       color:var(--text2);font-size:12px;font-weight:600;cursor:pointer;
+                       transition:.15s;font-family:inherit;justify-content:center">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0">
+                  <path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z"
+                        fill="url(#ig)" stroke="none"/>
+                  <defs><linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stop-color="#1a73e8"/><stop offset="100%" stop-color="#7c3aed"/>
+                  </linearGradient></defs>
+                </svg>
+                ✦ AI nhận xét biểu đồ
+              </button>
+              <div id="chartInsightResult" style="display:none;margin-top:8px;padding:10px 13px;
+                   background:linear-gradient(135deg,rgba(26,115,232,.06),rgba(124,58,237,.06));
+                   border:1px solid rgba(124,58,237,.2);border-radius:8px;
+                   font-size:12.5px;color:var(--text);line-height:1.6">
+              </div>
+            </div>
+
             <!-- Channel summary strip -->
             <div class="ch-sum-row">
               <div class="ch-sum-item" onclick="openChannelPopup('Shopee')">
@@ -1934,13 +1959,14 @@ select.input-field{cursor:pointer}
         <div style="font-size:9px;color:var(--text3);margin-top:1px">TB / lần</div>
       </div>
     </div>
+    <div id="aiTokenBreakdown" style="display:none;margin-top:8px;padding:6px 8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)"></div>
     <div style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center">
       * Daily quota từ Apps Script (nếu server forward) · Phút tính xấp xỉ
     </div>
   </div>
 
   <div class="ai-msgs" id="aiMsgs">
-    <div class="ai-bubble ai-bubble-bot">Xin chào! Tôi có thể phân tích dữ liệu kho hàng tháng này. Bạn muốn hỏi gì? (Trợ lý là AI và có thể mắc sai sót)</div>
+    <div class="ai-bubble ai-bubble-bot">Xin chào! Tôi có thể phân tích dữ liệu kho hàng tháng này. Bạn muốn hỏi gì? (Trợ lý là AI và có thể mắc sai sót.)</div>
   </div>
   <div class="ai-chips" id="aiChips">
     <div class="ai-chip" onclick="aiAskToday()">Hôm nay bao nhiêu đơn?</div>
@@ -2223,13 +2249,38 @@ select.input-field{cursor:pointer}
           </div>
           <div class="dm-complaint-top">
             <div class="dm-complaint-status" id="modalComplaintStatus">---</div>
-            <button class="dm-update-btn admin-only" onclick="openUpdateComplaintModal()">
+            <button class="dm-update-btn" onclick="toggleInlineComplaintForm('modal')" id="modalComplaintEditBtn">
               <span class="material-icons-round">edit</span>Cập nhật
             </button>
           </div>
           <div class="dm-proof-img" id="modalComplaintImageContainer" style="display:none">
             <div class="dm-proof-label">Ảnh kết quả / Bằng chứng</div>
             <img id="modalComplaintImage" class="dm-img-thumb" style="width:80px;height:80px;margin-top:4px" onclick="window.open(this.src)">
+          </div>
+          <!-- INLINE UPDATE FORM -->
+          <div id="modalInlineComplaintForm" style="display:none;margin-top:10px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Cập nhật trạng thái</div>
+            <select id="modalInlineStatusSelect" class="input-field" style="font-size:12px;padding:7px 10px;margin-bottom:8px" onchange="checkInlineImageReq('modal')">
+              <option>Chưa xử lý</option>
+              <option>Đang xử lý</option>
+              <option>Khiếu nại lần 2</option>
+              <option>Đã khiếu nại thành công</option>
+              <option>Chưa thành công</option>
+              <option>Đã bảo hành</option>
+            </select>
+            <div id="modalInlineImgReq" style="display:none;font-size:10px;color:var(--red);margin-bottom:6px">* Bắt buộc đính kèm ảnh cho trạng thái này</div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;border:1px dashed var(--border-strong);border-radius:8px;font-size:12px;color:var(--text2);margin-bottom:8px">
+              <span class="material-icons-round" style="font-size:16px;color:var(--blue)">add_photo_alternate</span>
+              <span id="modalInlineImgLabel">Đính kèm ảnh bằng chứng (tuỳ chọn)</span>
+              <input type="file" id="modalInlineImgInput" accept="image/*" style="display:none" onchange="previewInlineImg('modal',this)">
+            </label>
+            <img id="modalInlineImgPreview" style="display:none;width:60px;height:60px;object-fit:cover;border-radius:6px;margin-bottom:8px;cursor:pointer" onclick="this.style.display='none';document.getElementById('modalInlineImgInput').value=''">
+            <div style="display:flex;gap:8px">
+              <button onclick="submitInlineComplaintUpdate('modal')" style="flex:1;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">
+                <span class="material-icons-round" style="font-size:14px">save</span>Lưu cập nhật
+              </button>
+              <button onclick="toggleInlineComplaintForm('modal')" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer">Huỷ</button>
+            </div>
           </div>
         </div>
       </div>
@@ -2317,9 +2368,38 @@ select.input-field{cursor:pointer}
           <div class="dm-complaint-label">Trạng thái Khiếu nại / Bảo hành</div>
           <div class="dm-complaint-top">
             <div class="dm-complaint-status" id="subModalComplaintStatus">---</div>
-            <button class="dm-update-btn admin-only" onclick="openUpdateComplaintModal()">
+            <button class="dm-update-btn" onclick="toggleInlineComplaintForm('subModal')" id="subModalComplaintEditBtn">
               <span class="material-icons-round">edit</span>Cập nhật
             </button>
+          </div>
+          <div id="subModalComplaintImageContainer" style="display:none">
+            <div class="dm-proof-label">Ảnh kết quả / Bằng chứng</div>
+            <img id="subModalComplaintImage" class="dm-img-thumb" style="width:80px;height:80px;margin-top:4px" onclick="window.open(this.src)">
+          </div>
+          <!-- INLINE UPDATE FORM -->
+          <div id="subModalInlineComplaintForm" style="display:none;margin-top:10px;padding:12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border)">
+            <div style="font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Cập nhật trạng thái</div>
+            <select id="subModalInlineStatusSelect" class="input-field" style="font-size:12px;padding:7px 10px;margin-bottom:8px" onchange="checkInlineImageReq('subModal')">
+              <option>Chưa xử lý</option>
+              <option>Đang xử lý</option>
+              <option>Khiếu nại lần 2</option>
+              <option>Đã khiếu nại thành công</option>
+              <option>Chưa thành công</option>
+              <option>Đã bảo hành</option>
+            </select>
+            <div id="subModalInlineImgReq" style="display:none;font-size:10px;color:var(--red);margin-bottom:6px">* Bắt buộc đính kèm ảnh cho trạng thái này</div>
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;padding:7px 10px;border:1px dashed var(--border-strong);border-radius:8px;font-size:12px;color:var(--text2);margin-bottom:8px">
+              <span class="material-icons-round" style="font-size:16px;color:var(--blue)">add_photo_alternate</span>
+              <span id="subModalInlineImgLabel">Đính kèm ảnh bằng chứng (tuỳ chọn)</span>
+              <input type="file" id="subModalInlineImgInput" accept="image/*" style="display:none" onchange="previewInlineImg('subModal',this)">
+            </label>
+            <img id="subModalInlineImgPreview" style="display:none;width:60px;height:60px;object-fit:cover;border-radius:6px;margin-bottom:8px;cursor:pointer" onclick="this.style.display='none';document.getElementById('subModalInlineImgInput').value=''">
+            <div style="display:flex;gap:8px">
+              <button onclick="submitInlineComplaintUpdate('subModal')" style="flex:1;padding:8px;background:var(--blue);color:#fff;border:none;border-radius:8px;font-size:12px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px">
+                <span class="material-icons-round" style="font-size:14px">save</span>Lưu cập nhật
+              </button>
+              <button onclick="toggleInlineComplaintForm('subModal')" style="padding:8px 12px;background:var(--surface);border:1px solid var(--border);border-radius:8px;font-size:12px;cursor:pointer">Huỷ</button>
+            </div>
           </div>
           <div class="dm-proof-img" id="subModalComplaintImageContainer" style="display:none">
             <div class="dm-proof-label">Ảnh kết quả / Bằng chứng</div>
@@ -2756,6 +2836,118 @@ function openDetailFromNotification(code) {
   showDetail(0, true); 
 }
 
+// Inline complaint form functions
+function toggleInlineComplaintForm(prefix) {
+  const form = document.getElementById(prefix + 'InlineComplaintForm');
+  const isOpen = form.style.display !== 'none';
+  form.style.display = isOpen ? 'none' : 'block';
+  if (!isOpen) {
+    // Preset trạng thái hiện tại
+    const sel = document.getElementById(prefix + 'InlineStatusSelect');
+    if (sel) sel.value = window.currentViewComplaintStatus || 'Chưa xử lý';
+    checkInlineImageReq(prefix);
+  }
+}
+
+function checkInlineImageReq(prefix) {
+  const sel = document.getElementById(prefix + 'InlineStatusSelect');
+  const req = document.getElementById(prefix + 'InlineImgReq');
+  const needImg = ['Đã khiếu nại thành công','Đã bảo hành','Chưa thành công'].includes(sel?.value);
+  if (req) req.style.display = needImg ? 'block' : 'none';
+}
+
+function previewInlineImg(prefix, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const lbl  = document.getElementById(prefix + 'InlineImgLabel');
+  const prev = document.getElementById(prefix + 'InlineImgPreview');
+  if (lbl)  lbl.innerText = file.name;
+  if (prev) {
+    const reader = new FileReader();
+    reader.onload = e => { prev.src = e.target.result; prev.style.display = 'block'; };
+    reader.readAsDataURL(file);
+  }
+}
+
+async function submitInlineComplaintUpdate(prefix) {
+  // Normalize mã đơn
+  const code      = String(window.currentViewCode||'').replace(/'/g,'').replace(/\s/g,'').toUpperCase().trim();
+  const sel       = document.getElementById(prefix + 'InlineStatusSelect');
+  const imgInput  = document.getElementById(prefix + 'InlineImgInput');
+  const saveBtn   = document.querySelector(`#${prefix}InlineComplaintForm button`);
+  if (!code || !sel) return;
+
+  const newStatus = sel.value;
+  const needImg   = ['Đã khiếu nại thành công','Đã bảo hành','Chưa thành công'].includes(newStatus);
+  if (needImg && (!imgInput?.files || imgInput.files.length === 0)) {
+    showToast('warning','Cần đính kèm ảnh','Vui lòng chọn ảnh bằng chứng cho trạng thái này');
+    return;
+  }
+
+  // Loading state
+  if (saveBtn) { saveBtn.disabled = true; saveBtn.innerHTML = '<span class="material-icons-round" style="font-size:14px;animation:spin .8s linear infinite">refresh</span> Đang lưu...'; }
+
+  // Backend lưu mã đơn với prefix ' nên phải thêm vào khi gửi
+  const payload = { action:'update_complaint', code:"'"+code, maVanDon:"'"+code, newStatus, status:newStatus };
+
+  if (imgInput?.files?.length > 0) {
+    const file = imgInput.files[0];
+    const b64  = await new Promise(res => {
+      const rd = new FileReader();
+      rd.onload = e => res(e.target.result);
+      rd.readAsDataURL(file);
+    });
+    payload.image = { data: b64, mimeType: file.type };
+  }
+
+  try {
+    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.result === 'success') {
+      // Cập nhật UI ngay
+      const statusEl = document.getElementById(prefix + 'ComplaintStatus');
+      if (statusEl) { statusEl.innerText = newStatus; statusEl.style.color = getComplaintColor(newStatus); }
+      window.currentViewComplaintStatus = newStatus;
+
+      // Cập nhật cache tất cả tháng
+      const cleanCode = code.replace(/'/g,'').trim();
+      Object.values(_monthStatsCache||{}).forEach(mc => {
+        (mc?.currOrders||[]).forEach(o => { if((o.code||'').replace(/'/g,'').trim()===cleanCode) o.complaintStatus=newStatus; });
+      });
+      (window.historyDataCache||[]).forEach(o => { if((o.code||'').replace(/'/g,'').trim()===cleanCode) o.complaintStatus=newStatus; });
+
+      // Ảnh kết quả — hiện luôn nếu vừa upload
+      if (payload.image) {
+        const imgCont = document.getElementById(prefix + 'ComplaintImageContainer');
+        const imgEl   = document.getElementById(prefix + 'ComplaintImage');
+        if (imgCont && imgEl) {
+          imgEl.src = URL.createObjectURL(imgInput.files[0]);
+          imgCont.style.display = 'block';
+        }
+      }
+
+      // Ẩn form + reset
+      const form = document.getElementById(prefix + 'InlineComplaintForm');
+      if (form) form.style.display = 'none';
+      if (imgInput) imgInput.value = '';
+      const prev = document.getElementById(prefix + 'InlineImgPreview');
+      if (prev) { prev.style.display = 'none'; prev.src = ''; }
+      const lbl = document.getElementById(prefix + 'InlineImgLabel');
+      if (lbl) lbl.innerText = 'Đính kèm ảnh bằng chứng (tuỳ chọn)';
+
+      showToast('success','✅ Đã cập nhật',`Đơn ${code} → "${newStatus}"`);
+      if (typeof loadPendingComplaints==='function') loadPendingComplaints();
+      if (typeof renderComplaintList==='function') renderComplaintList();
+    } else {
+      showToast('error','❌ Lỗi cập nhật', data.message||'Kiểm tra mã đơn và thử lại');
+    }
+  } catch(e) {
+    showToast('error','❌ Lỗi kết nối', e.message);
+  } finally {
+    if (saveBtn) { saveBtn.disabled=false; saveBtn.innerHTML='<span class="material-icons-round" style="font-size:14px">save</span>Lưu cập nhật'; }
+  }
+}
+
 function openUpdateComplaintModal() {
   document.getElementById('complaintOrderCode').value = window.currentViewCode;
   document.getElementById('complaintStatusSelect').value = window.currentViewComplaintStatus || "Chưa xử lý";
@@ -3019,20 +3211,34 @@ function analyzeTrends(currOrders, prevOrdersRaw, cutoffDay) {
   let spikes=[];
   Object.keys(currStats).forEach(shop=>{ const cCount=currStats[shop]; const pCount=prevStats[shop]||0; if(cCount>=5){ const increasePct=pCount===0?100:Math.round(((cCount-pCount)/pCount)*100); if(increasePct>=40)spikes.push({shop,increasePct,cCount,pCount}); } });
   if(spikes.length===0){container.style.display='none';return;}
-  container.style.display='block';
   spikes.sort((a,b)=>b.increasePct-a.increasePct);
-  let html=`<div class="trend-banner"><span class="material-icons-round">trending_up</span><div class="trend-banner-content"><div class="trend-banner-title">Cảnh báo: Shop tăng tỷ lệ hoàn đột biến tháng này</div><div class="trend-spikes">`;
-  spikes.forEach(s=>{
-    html+=`<div class="trend-spike-item"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${s.shop}</div><div class="trend-spike-pct">+${s.increasePct}%</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Tháng này: <b style="color:var(--text)">${s.cCount}</b> · Cùng kỳ: ${s.pCount}</div></div>`;
-  });
-  html+=`</div></div></div>`;
-  container.innerHTML=html;
+
+  // Hiện placeholder ngay lập tức trong khi đợi AI
+  container.style.display='block';
+  container.innerHTML=`<div style="padding:12px 16px;border:1px dashed var(--orange);border-radius:var(--r);background:rgba(234,88,12,.05);display:flex;align-items:center;gap:10px">
+    <span class="material-icons-round" style="color:var(--orange);font-size:18px">trending_up</span>
+    <div style="flex:1">
+      <div style="font-size:12px;font-weight:800;color:var(--orange);margin-bottom:6px">Shop tăng đơn hoàn — ✦ AI đang phân tích...</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">${spikes.map(s=>`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(234,88,12,.12);color:var(--orange)">${s.shop.split(' ')[0]} +${s.increasePct}%</span>`).join('')}</div>
+    </div>
+  </div>`;
+
+  const alerts = spikes.map(s=>({
+    shop: s.shop,
+    currRate: s.increasePct,
+    prevRate: 0,
+    errorCount: s.cCount,
+    total: s.cCount
+  }));
+  // Gọi AI — kết quả sẽ thay thế placeholder trên
+  aiEarlyWarningCheck(alerts);
 }
 
 // Cache tháng trong memory session — tránh fetch lại khi chuyển tab rồi quay lại
 let _monthStatsCache = {}; // { "2026-04": { currOrders, prevOrders, chartData, ts } }
 
-function loadMonthlyStats(isSilent = false){ 
+function loadMonthlyStats(isSilent = false){
+  resetChartInsight();
     const m=document.getElementById('monthSelect').value; 
     if(!m)return;
     // Reset session flag khi đổi sang tháng mới (nhưng giữ cache localStorage)
@@ -3206,6 +3412,119 @@ function renderShopStats(orders,prevOrdersRaw,cutoffDay){
 }
 function openShopStatusDetail(shopName,channelContext,statusType){ if(!window.currentMonthOrders)return; const m=document.getElementById('monthSelect').value; const [year,month]=m.split('-'); const orders=window.currentMonthOrders.filter(o=>{ const currentShop=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ"; let ch=o.channel; if(ch.toLowerCase().includes('shopee'))ch='Shopee'; else if(ch.toLowerCase().includes('tiktok'))ch='Tiktok'; else if(ch.toLowerCase().includes('lazada'))ch='Lazada'; else if(ch.toLowerCase().includes('viettel')||ch.toLowerCase().includes('vtp'))ch='VTP'; else ch='Khác'; let sm=false; if(statusType==='good')sm=o.status.includes('Tốt'); else if(statusType==='dirty')sm=o.status.includes('bẩn'); else if(statusType==='error')sm=o.status.includes('tráo')||o.status.includes('Thiếu'); else if(statusType==='warranty')sm=o.status.includes('Bảo hành'); return currentShop.trim()===shopName.trim()&&ch===channelContext&&sm; }); const labels={good:'Hàng tốt',dirty:'Hàng bẩn',error:'Lỗi / Thiếu',warranty:'Bảo hành'}; const logo=SHOP_LOGOS[shopName]||SHOP_LOGOS.default; document.getElementById('channelListTitle').innerHTML=`<img src="${logo}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px"> ${shopName}`; document.getElementById('channelListSubtitle').innerText=`${labels[statusType]} · Tháng ${month}/${year} · ${orders.length} đơn`; openModal('channelDetailModal'); renderChannelList(orders); }
 function openShopDetailPopup(shopName,channelContext){ if(!window.currentMonthOrders)return; const m=document.getElementById('monthSelect').value; const [year,month]=m.split('-'); const orders=window.currentMonthOrders.filter(o=>{ const s=(o.shop&&o.shop.trim()!="")?o.shop:"Không rõ"; let ch=o.channel; if(ch.toLowerCase().includes('shopee'))ch='Shopee'; else if(ch.toLowerCase().includes('tiktok'))ch='Tiktok'; else if(ch.toLowerCase().includes('lazada'))ch='Lazada'; else if(ch.toLowerCase().includes('viettel')||ch.toLowerCase().includes('vtp'))ch='VTP'; else ch='Khác'; return s.trim()===shopName.trim()&&ch===channelContext; }); const logo=SHOP_LOGOS[shopName]||SHOP_LOGOS.default; document.getElementById('channelListTitle').innerHTML=`<img src="${logo}" style="width:24px;height:24px;border-radius:50%;vertical-align:middle;margin-right:8px"> ${shopName}`; document.getElementById('channelListSubtitle').innerText=`Tất cả · Tháng ${month}/${year} · ${orders.length} đơn`; openModal('channelDetailModal'); renderChannelList(orders); }
+// ================================================================
+// AI CHART INSIGHT — lazy load, cache theo tháng, không tự gọi
+// ================================================================
+let _chartInsightCache = {}; // { "2026-04": "insight text" }
+
+function requestChartInsight() {
+  const m   = document.getElementById('monthSelect')?.value;
+  const mc  = m ? _monthStatsCache[m] : null;
+  const btn = document.getElementById('chartInsightBtn');
+  const res = document.getElementById('chartInsightResult');
+  if (!m || !mc?.currOrders?.length) {
+    if (res) { res.style.display='block'; res.innerText='Chưa có dữ liệu tháng này.'; }
+    return;
+  }
+
+  // Đã có cache → hiện ngay, không gọi API
+  if (_chartInsightCache[m]) {
+    if (btn) btn.style.display = 'none';
+    if (res) { res.style.display='block'; res.innerHTML=_chartInsightCache[m]; }
+    return;
+  }
+
+  // Loading state
+  if (btn) { btn.disabled=true; btn.innerHTML='<span style="animation:spin .8s linear infinite;display:inline-block;font-size:14px">↻</span> Đang phân tích...'; }
+  if (res) res.style.display='none';
+
+  // Build summary nhanh từ cache — không cần gọi thêm API data
+  const orders   = mc.currOrders;
+  const total    = orders.length;
+  const good     = orders.filter(o=>o.status?.includes('Tốt')).length;
+  const bad      = total - good;
+  const [yr, mo] = m.split('-');
+
+  // Đếm theo kênh từng ngày để tìm peak
+  const dayMap = {};
+  orders.forEach(o => {
+    const d = o.time ? new Date(o.time).getDate() : 0;
+    if (!dayMap[d]) dayMap[d] = 0;
+    dayMap[d]++;
+  });
+  const peakDay   = Object.entries(dayMap).sort((a,b)=>b[1]-a[1])[0];
+  const lowestDay = Object.entries(dayMap).sort((a,b)=>a[1]-b[1])[0];
+  const shopMap   = {};
+  orders.forEach(o => {
+    const s = (o.shop||'Không rõ').trim();
+    if (!shopMap[s]) shopMap[s] = { total:0, bad:0 };
+    shopMap[s].total++;
+    if (!o.status?.includes('Tốt')) shopMap[s].bad++;
+  });
+  const worstShop = Object.entries(shopMap).sort((a,b)=>b[1].bad-a[1].bad)[0];
+
+  const prompt = `Phân tích biểu đồ đơn hoàn theo ngày tháng ${parseInt(mo)}/${yr} của kho hàng XIXA.
+
+Dữ liệu tổng quan:
+- Tổng: ${total} đơn | Tốt: ${good}(${Math.round(good/total*100)}%) | Lỗi/bẩn: ${bad}(${Math.round(bad/total*100)}%)
+- Ngày nhiều đơn nhất: ngày ${peakDay?.[0]} (${peakDay?.[1]} đơn)
+- Ngày ít đơn nhất: ngày ${lowestDay?.[0]} (${lowestDay?.[1]} đơn)
+- Shop có đơn lỗi nhiều nhất: ${worstShop?.[0]} (${worstShop?.[1]?.bad} đơn lỗi / ${worstShop?.[1]?.total} tổng)
+
+Theo kênh:
+${Object.entries({Shopee:0,Tiktok:0,'Viettel/VTP':0,Lazada:0}).map(([k])=>{
+  const cnt=orders.filter(o=>{const c=(o.channel||'').toLowerCase();
+    if(k==='Shopee')return c.includes('shopee');
+    if(k==='Tiktok')return c.includes('tiktok');
+    if(k==='Viettel/VTP')return c.includes('vtp')||c.includes('viettel');
+    if(k==='Lazada')return c.includes('lazada');
+    return false;
+  }).length;
+    return '- ' + k + ': ' + cnt + ' đơn';
+}).join('\n')}
+
+Yêu cầu: Viết 2–3 câu nhận xét ngắn gọn, súc tích bằng tiếng Việt. Context: kho hoàn giày dép, đơn hoàn chủ yếu do khách không vừa size (bình thường), đơn tốt 97-98% là hàng còn nguyên vẹn. Nêu điểm nổi bật nhất (ngày peak, xu hướng, shop đáng chú ý), không lặp số liệu đã có. Dùng emoji 1–2 cái. KHÔNG thêm tiêu đề hay gạch đầu dòng.`;
+
+  const _chartTmt = setTimeout(() => {
+    if (btn) { btn.disabled=false; btn.style.display='flex'; btn.innerHTML='✦ AI nhận xét (thử lại)'; }
+    if (res) { res.style.display='none'; }
+  }, 30000);
+
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action:'gemini_chat', question:prompt, context:'', history:[] })
+  })
+  .then(r=>r.json())
+  .then(data => {
+    clearTimeout(_chartTmt);
+    if (btn) { btn.disabled=false; btn.style.display='none'; }
+    if (data.result==='success') {
+      const txt = data.answer.trim().split('\n').join('<br>');
+      _chartInsightCache[m] = txt;
+      if (res) { res.innerHTML=txt; res.style.display='block'; }
+      if (data.usage) aiTokensUpdate(data.usage, 'chart');
+      else aiTokensUpdate({ prompt_tokens:Math.round(prompt.length/4), completion_tokens:Math.round((data.answer||'').length/4) }, 'chart');
+    } else {
+      if (btn) btn.style.display='flex';
+      if (res) { res.innerText='❌ Không thể phân tích lúc này. Thử lại sau.'; res.style.display='block'; }
+    }
+  })
+  .catch(()=>{
+    clearTimeout(_chartTmt);
+    if (btn) { btn.disabled=false; btn.style.display='flex'; }
+  });
+}
+
+// Reset insight khi đổi tháng
+function resetChartInsight() {
+  const btn = document.getElementById('chartInsightBtn');
+  const res = document.getElementById('chartInsightResult');
+  if (btn) { btn.style.display='flex'; btn.disabled=false; btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z" fill="url(#ig)" stroke="none"/><defs><linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a73e8"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg> ✦ AI nhận xét biểu đồ'; }
+  if (res) { res.style.display='none'; res.innerHTML=''; }
+}
+
+// ================================================================
+
 function renderMonthlyChart(data){ const ctx=document.getElementById('monthlyChart').getContext('2d'); if(monthlyChart)monthlyChart.destroy(); if(!data||!data.datasets)return; const totalShopee=data.datasets.shopee.reduce((a,b)=>a+b,0); const totalTiktok=data.datasets.tiktok.reduce((a,b)=>a+b,0); const totalVtp=data.datasets.vtp.reduce((a,b)=>a+b,0); const totalLazada=(data.datasets.lazada||[]).reduce((a,b)=>a+b,0); document.getElementById('sumShopee').innerText=totalShopee; document.getElementById('sumTiktok').innerText=totalTiktok; document.getElementById('sumVTP').innerText=totalVtp; document.getElementById('sumLazada').innerText=totalLazada; const isDark=document.body.classList.contains('dark'); const gc=isDark?'rgba(255,255,255,.06)':'rgba(0,0,0,.04)'; const tc=isDark?'#a0a09a':'#5c5c58'; monthlyChart=new Chart(ctx,{ type:'bar', data:{labels:data.labels,datasets:[ {label:'Shopee',data:data.datasets.shopee,backgroundColor:'#ea580c',borderRadius:3,barPercentage:.8,categoryPercentage:.9}, {label:'Tiktok',data:data.datasets.tiktok,backgroundColor:'#1a1a18',borderRadius:3,barPercentage:.8,categoryPercentage:.9}, {label:'Viettel',data:data.datasets.vtp,backgroundColor:'#dc2626',borderRadius:3,barPercentage:.8,categoryPercentage:.9}, {label:'Lazada',data:data.datasets.lazada||[],backgroundColor:'#2563eb',borderRadius:3,barPercentage:.8,categoryPercentage:.9} ]}, options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false}, scales:{x:{stacked:true,grid:{display:false},ticks:{font:{weight:'700',size:11},color:tc}}, y:{stacked:true,beginAtZero:true,border:{dash:[4,4]},grid:{color:gc},ticks:{color:tc,font:{size:11}}}}, plugins:{legend:{display:false},tooltip:{backgroundColor:isDark?'#1a1a18':'rgba(15,15,15,.9)',padding:12,cornerRadius:8,titleFont:{weight:'bold'},bodyFont:{family:'Plus Jakarta Sans'},displayColors:true,callbacks:{title:function(items){return'Ngày '+items[0].label}}}} } }); }
 function openChannelPopup(channel){ const mv=document.getElementById('monthSelect').value; if(!mv){showToast('warning','Chưa chọn tháng','Vui lòng chọn tháng trước');return;} const icon=CHANNEL_ICONS[channel]||CHANNEL_ICONS.default; document.getElementById('channelListTitle').innerHTML=`<img src="${icon}" style="width:22px;vertical-align:middle;margin-right:8px"> ${channel}`; document.getElementById('channelListContainer').innerHTML=`<div style='text-align:center;padding:30px;color:var(--text3)'>Đang tải...</div>`; openModal('channelDetailModal'); showLoading(true,"Đang tải chi tiết...",true); fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"get_orders_by_month",month:mv,channel:channel})}) .then(r=>r.json()).then(data=>{ showLoading(false); if(data.result==='success'){ renderChannelList(data.data); const [y,m]=mv.split('-'); document.getElementById('channelListSubtitle').innerText=`Tháng ${m}/${y} · Tổng: ${data.data.length} đơn`; }else document.getElementById('channelListContainer').innerHTML="<div style='text-align:center;padding:20px;color:var(--red)'>Lỗi dữ liệu</div>"; }).catch(()=>showLoading(false)); }
 function openMetricDetail(type){ if(!window.currentMonthOrders)return; const mv=document.getElementById('monthSelect').value; if(!mv)return; const [year,month]=mv.split('-'); let filtered=window.currentMonthOrders; const labels={all:'Tất cả đơn',good:'Hàng tốt',error:'Lỗi / Thiếu',other:'Bẩn + Bảo hành'}; if(type==='good')filtered=filtered.filter(o=>o.status.includes('Tốt')); else if(type==='error')filtered=filtered.filter(o=>o.status.includes('tráo')||o.status.includes('Thiếu')); else if(type==='other')filtered=filtered.filter(o=>o.status.includes('bẩn')||o.status.includes('Bảo hành')); document.getElementById('channelListTitle').innerText=labels[type]; document.getElementById('channelListSubtitle').innerText=`Tháng ${month}/${year} · ${filtered.length} đơn`; openModal('channelDetailModal'); renderChannelList(filtered); }
@@ -3279,6 +3598,11 @@ function populateDetailModal(d, prefix) {
 
   window.currentViewCode = d.code;
   window.currentViewComplaintStatus = d.complaintStatus || "Chưa xử lý";
+  // Sync inline form preset (nếu đang mở)
+  ['modal','subModal'].forEach(pfx => {
+    const sel = document.getElementById(pfx+'InlineStatusSelect');
+    if (sel) sel.value = d.complaintStatus || 'Chưa xử lý';
+  });
 
   if(prefix === 'modal') {
     const showSla = d.status && !d.status.toLowerCase().includes('tốt');
@@ -4071,7 +4395,6 @@ function renderComments(prefix, code) {
         <span class="comment-author">${c.staffName||'Ẩn danh'}</span>
         <span class="comment-time">${c.time}</span>
       </div>
-      <div class="comment-text">${(c.content||'').replace(/\n/g,'<br>')}</div>
     </div>`).join('');
   listEl.scrollTop = listEl.scrollHeight;
 }
@@ -5788,6 +6111,8 @@ body.dark .ai-bubble-bot::before{
   background:linear-gradient(135deg,rgba(96,165,250,.3) 0%,rgba(167,139,250,.28) 50%,rgba(56,189,248,.22) 100%);
 }
 .ai-bubble-bot b{color:var(--blue);font-weight:700}
+.ai-bubble-bot .ai-status-ok{color:var(--green);font-weight:700}
+.ai-bubble-bot .ai-status-err{color:var(--red);font-weight:700}
 
 /* ── Chips ── */
 .ai-chips{
@@ -6423,7 +6748,7 @@ function aiTokensSave() {
 }
 
 // Cập nhật sau mỗi API call — nhận usage từ server response
-function aiTokensUpdate(usage) {
+function aiTokensUpdate(usage, category) {
   if (!usage) return;
   const total = (usage.prompt_tokens || 0) + (usage.completion_tokens || 0);
   if (!total) return;
@@ -6432,6 +6757,12 @@ function aiTokensUpdate(usage) {
   AI_TOKENS.minuteUsed  += total;
   AI_TOKENS.sessionUsed += total;
   AI_TOKENS.sessionCalls++;
+
+  // Breakdown theo danh mục (lưu session)
+  if (!AI_TOKENS.breakdown) AI_TOKENS.breakdown = {};
+  const cat = category || 'other';
+  AI_TOKENS.breakdown[cat] = (AI_TOKENS.breakdown[cat] || 0) + total;
+
   aiTokensSave();
   aiTokensRender();
 
@@ -6486,6 +6817,18 @@ function aiTokensRender() {
     const diffH = Math.floor((next - now) / 3600000);
     const diffM = Math.floor(((next - now) % 3600000) / 60000);
     resetEl.innerText = `Reset sau ${diffH}h ${diffM}m`;
+  }
+
+  // Breakdown theo danh mục
+  const bd = AI_TOKENS.breakdown || {};
+  const bdEl = document.getElementById('aiTokenBreakdown');
+  if (bdEl && Object.keys(bd).length > 0) {
+    const labels = { chat:'💬 Chat', suggest:'✦ Gợi ý', complaint:'📝 KN', chart:'📊 Biểu đồ', warning:'⚠️ Cảnh báo', other:'🔧 Khác' };
+    bdEl.innerHTML = Object.entries(bd)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([k,v])=>`<div style="display:flex;justify-content:space-between;font-size:10px;padding:2px 0;color:var(--text2)"><span>${labels[k]||k}</span><span style="font-family:monospace;font-weight:600">${v.toLocaleString()}</span></div>`)
+      .join('');
+    bdEl.style.display = 'block';
   }
 }
 
@@ -6686,8 +7029,22 @@ function aiAddMsg(role, text) {
   const box = document.getElementById('aiMsgs');
   const div = document.createElement('div');
   div.className = `ai-bubble ${role==='user'?'ai-bubble-user':'ai-bubble-bot'}`;
-  div.innerHTML = text.replace(/&/g,'&amp;').replace(/</g,'&lt;')
-    .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>').replace(/\n/g,'<br>');
+  if (role === 'user') {
+    // User: escape HTML toàn bộ
+    div.innerHTML = String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+  } else {
+    // Bot: cho phép <b><br> có sẵn, convert **bold** và \n→<br>
+    const t = String(text||'');
+    // Nếu đã có HTML tags → render trực tiếp
+    if (/<[a-z][\s\S]*>/i.test(t)) {
+      div.innerHTML = t.replace(/\n/g,'<br>');
+    } else {
+      div.innerHTML = t
+        .replace(/&(?![a-z#0-9]+;)/g,'&amp;')
+        .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')
+        .replace(/\n/g,'<br>');
+    }
+  }
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }
@@ -6929,6 +7286,113 @@ function aiRemoveImg() {
 
 
 // ================================================================
+// AI CHAT — COMPLAINT UPDATE INTENT DETECTION
+// Cho phép user nhắn trong chat để update trạng thái + ảnh
+// ================================================================
+
+// Map từ khóa → trạng thái hệ thống
+const AI_STATUS_MAP = [
+  { keys: ['thành công', 'khiếu nại thành công', 'kn thành công', 'đã thành công', 'được bồi thường', 'đã bồi'], status: 'Đã khiếu nại thành công' },
+  { keys: ['đang xử lý', 'đang khiếu nại', 'đang kn', 'đã gửi kn', 'đã nộp', 'đã submit', 'đã gửi khiếu nại'], status: 'Đang xử lý' },
+  { keys: ['lần 2', 'khiếu nại lần 2', 'kn lần 2', 'escalate', 'leo thang'], status: 'Khiếu nại lần 2' },
+  { keys: ['không thành công', 'thất bại', 'bị từ chối', 'không được', 'chưa thành công'], status: 'Chưa thành công' },
+  { keys: ['bảo hành xong', 'đã bảo hành', 'bh xong', 'bảo hành thành công'], status: 'Đã bảo hành' },
+  { keys: ['chưa xử lý', 'mới', 'reset', 'chưa kn'], status: 'Chưa xử lý' },
+];
+
+// Detect xem tin nhắn có phải lệnh update không
+// Trả về { code, status, hasImage } hoặc null
+function aiDetectUpdateIntent(question, hasImg) {
+  const q = question.toLowerCase();
+
+  // Phải có từ khóa update TRƯỚC — nếu không có thì bỏ qua luôn
+  const UPDATE_TRIGGERS = [
+    'đã khiếu nại', 'khiếu nại thành công', 'kn thành công',
+    'đang xử lý', 'đang kn', 'đã gửi kn', 'đã nộp',
+    'lần 2', 'không thành công', 'thất bại', 'bị từ chối',
+    'bảo hành xong', 'đã bảo hành', 'chưa thành công',
+    'cập nhật trạng thái', 'đã xử lý', 'đã khiếu', 'đã kn',
+    'bồi thường', 'được bồi', 'thành công rồi', 'kn xong',
+  ];
+  const hasUpdateWord = UPDATE_TRIGGERS.some(t => q.includes(t));
+  if (!hasUpdateWord) return null;
+
+  // Tách token từ câu hỏi để tìm mã đơn
+  // Hỗ trợ: SPXVN069... | 139...DH | VN... | TK... | số thuần
+  const tokens = question.split(/[\s,.:;!?()[\]]+/);
+  let code = null;
+  for (const tok of tokens) {
+    const t = tok.replace(/['"]/g, '');
+    // SPX/VN/TK/LZ + số (Shopee, TikTok, Lazada)
+    if (/^[A-Z]{2,6}\d{8,20}$/i.test(t)) { code = t.toUpperCase(); break; }
+    // Số + DH (Viettel Post: 139153195882DH)
+    if (/^\d{8,20}DH$/i.test(t)) { code = t.toUpperCase(); break; }
+    // Số thuần dài (≥10 chữ số)
+    if (/^\d{10,20}$/.test(t)) { code = t; break; }
+  }
+  // Normalize code sau khi tìm được
+  if (code) code = code.replace(/'/g,'').replace(/\s/g,'').toUpperCase().trim();
+  if (!code) return null;
+
+  // Map trạng thái
+  let detectedStatus = null;
+  for (const entry of AI_STATUS_MAP) {
+    if (entry.keys.some(k => q.includes(k))) {
+      detectedStatus = entry.status;
+      break;
+    }
+  }
+  if (!detectedStatus) return null;
+
+  return { code, status: detectedStatus, hasImage: hasImg };
+}
+
+// Thực thi update complaint từ AI chat
+async function aiExecuteComplaintUpdate(code, status, imgBase64, imgMime) {
+  // Normalize mã đơn: bỏ ', bỏ khoảng trắng, uppercase
+  const cleanCode = String(code||'').replace(/'/g,'').replace(/\s/g,'').toUpperCase().trim();
+  if (!cleanCode) return { ok: false, msg: 'Mã đơn không hợp lệ' };
+
+  // Gửi cả dạng có và không có ' vì backend lưu dạng '139...DH
+  const payload = {
+    action:    'update_complaint',
+    code:      "'" + cleanCode,
+    maVanDon:  "'" + cleanCode,
+    newStatus: status,
+    status:    status,
+  };
+
+  if (imgBase64) {
+    payload.image = {
+      data:     'data:' + imgMime + ';base64,' + imgBase64,
+      mimeType: imgMime,
+    };
+  }
+
+  try {
+    const res  = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
+    const data = await res.json();
+    if (data.result === 'success') {
+      // Cập nhật tất cả cache có thể chứa đơn này (bất kể tháng nào)
+      const cleanCode = code.replace(/'/g,'').trim();
+      Object.values(_monthStatsCache || {}).forEach(mc => {
+        if (!mc?.currOrders) return;
+        const ord = mc.currOrders.find(o => (o.code||'').replace(/'/g,'').trim() === cleanCode);
+        if (ord) ord.complaintStatus = status;
+      });
+      // Cập nhật historyDataCache
+      (window.historyDataCache || []).forEach(o => {
+        if ((o.code||'').replace(/'/g,'').trim() === cleanCode) o.complaintStatus = status;
+      });
+      return { ok: true };
+    }
+    return { ok: false, msg: (data.message || 'Lỗi server') + ' (mã: ' + cleanCode + ')' };
+  } catch(e) {
+    return { ok: false, msg: 'Lỗi kết nối: ' + e.message };
+  }
+}
+
+// ================================================================
 // AI FOLLOW-UP ENGINE v2 — AI tự quyết định gợi ý (không logic cứng)
 // ================================================================
 
@@ -6977,12 +7441,13 @@ QUY TẮC GỢI Ý:
 ✅ GỢI Ý khi: câu trả lời đề cập đến 1 đơn hàng CỤ THỂ (có mã đơn)
 ✅ GỢI Ý "complaint_good" khi: đơn có mã cụ thể VÀ tình trạng là TỐT — vì shop vẫn cần khiếu nại để không bị đánh vi phạm
 ✅ GỢI Ý "complaint_bad" khi: đơn có mã cụ thể VÀ tình trạng bẩn/lỗi/tráo/thiếu
+✅ GỢI Ý "update_status" khi: đơn có mã cụ thể VÀ tình trạng bẩn/lỗi/tráo/thiếu/tốt (luôn cho phép cập nhật trạng thái KN)
 ❌ KHÔNG gợi ý khi: tổng hợp nhiều đơn, thống kê tháng/ngày, không có mã đơn cụ thể
 
 Các loại gợi ý (dùng đúng theo quy tắc trên):
 - "complaint_good": đơn TỐT → shop khiếu nại vì hàng đúng đủ nhưng khách trả do không vừa/không còn nhu cầu
 - "complaint_bad": đơn bẩn/lỗi/tráo/thiếu → shop khiếu nại vì lỗi khách/shipper
-- "update_status": cập nhật trạng thái khiếu nại cho đơn cụ thể
+- "update_status": LUÔN gợi ý khi có đơn cụ thể bị bẩn/lỗi/tráo/thiếu — cho phép cập nhật "Đang xử lý"/"Đã khiếu nại thành công"/v.v. ngay trong chat
 - "view_images": xem ảnh đơn cụ thể
 - "find_similar": tìm đơn tương tự cùng shop
 - "compare_day": so sánh ngày/thời điểm khác
@@ -6991,9 +7456,9 @@ Các loại gợi ý (dùng đúng theo quy tắc trên):
 
 QUAN TRỌNG — prompt field phải dùng đúng template sau (thay [MÃ], [TÌNH TRẠNG], [SẢN PHẨM], [SHOP] bằng giá trị thực từ câu trả lời AI):
 
-- complaint_good: dùng đúng template này:\n"Soạn nội dung khiếu nại CHỦ SHOP gửi lên [TÊN KÊNH: Shopee/TikTok Shop/Lazada tùy kênh của đơn] cho đơn hoàn [MÃ]. Góc nhìn: TÔI LÀ CHỦ SHOP. Tình huống: Shop gửi đúng đủ sản phẩm [SẢN PHẨM] giống mô tả, hàng mới 100%, có video quay lúc đóng gói làm bằng chứng. Khách hoàn lại vì không vừa size hoặc không còn nhu cầu — đây không phải lỗi của shop. Yêu cầu [TÊN KÊNH] không đánh vi phạm, không trừ điểm uy tín shop. Viết tiếng Việt, lịch sự, tối đa 256 ký tự, chỉ trả về nội dung khiếu nại."
+- complaint_good: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. Bắt đầu bằng 'Kính gửi [TÊN KÊNH],' — KHÔNG viết 'Tôi là chủ shop' hay tên shop. Đơn [MÃ] sản phẩm [SẢN PHẨM] gửi đúng đủ giống mô tả, hàng mới 100%, có video đóng gói. Khách hoàn vì không vừa size (lý do phổ biến với giày dép) hoặc không còn nhu cầu — không phải lỗi shop. Yêu cầu không đánh vi phạm, không trừ điểm uy tín. Tối đa 256 ký tự, chỉ trả về nội dung khiếu nại."
 
-- complaint_bad: dùng đúng template này:\n"Soạn nội dung khiếu nại CHỦ SHOP gửi lên [TÊN KÊNH: Shopee/TikTok Shop/Lazada tùy kênh của đơn] cho đơn hoàn [MÃ]. Góc nhìn: TÔI LÀ CHỦ SHOP. Tình huống: Hàng hoàn về bị [TÌNH TRẠNG], sản phẩm [SẢN PHẨM] từ shop [SHOP]. Nguyên nhân do lỗi khách hàng hoặc shipper, không phải lỗi shop — shop đã quay video đóng gói, hàng mới 100% khi xuất kho. Hậu quả: hàng bẩn/lỗi không thể lưu kho và bán lại, shop chịu thiệt hại trực tiếp. Yêu cầu [TÊN KÊNH] bồi thường hoặc không trừ điểm/phí shop. Viết tiếng Việt, lịch sự, tối đa 256 ký tự (đếm kỹ, KHÔNG vượt quá), chỉ trả về nội dung khiếu nại."
+- complaint_bad: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. Bắt đầu bằng 'Kính gửi [TÊN KÊNH],' — KHÔNG viết 'Tôi là chủ shop' hay tên shop. Đơn [MÃ] sản phẩm [SẢN PHẨM] hoàn về bị [TÌNH TRẠNG] do lỗi khách/shipper, shop đã quay video đóng gói hàng mới 100%. Hàng bẩn/lỗi không thể bán lại, shop chịu thiệt hại. Yêu cầu bồi thường hoặc không trừ điểm/phí. Tối đa 256 ký tự (đếm kỹ), chỉ trả về nội dung khiếu nại."
 
 - Các loại khác (update_status, view_images, find_similar, compare_day, trend_analysis, detail_shop): dùng câu hỏi ngắn gọn tiếng Việt
 
@@ -7018,11 +7483,22 @@ CHỈ trả về JSON, không thêm gì khác.`;
     let text = data.answer.trim();
     text = text.replace(/^```json\s*/,'').replace(/^```\s*/,'').replace(/\s*```$/,'').trim();
     const parsed = JSON.parse(text);
+    // Track token (lần gọi nhỏ để quyết định gợi ý)
+    if (data.usage) aiTokensUpdate(data.usage, 'suggest');
     if (!parsed.suggestions || !Array.isArray(parsed.suggestions)) return [];
 
-    return parsed.suggestions
-      .filter(s => s.type && AI_FU_ICON_MAP[s.type])
-      .slice(0, 3)
+    let _suggestions = parsed.suggestions
+      .filter(s => s.type && AI_FU_ICON_MAP[s.type]);
+
+    // Đơn bị bẩn/lỗi/tráo/thiếu mà AI không gợi ý update_status → tự thêm vào
+    const _hasUpdateStatus = _suggestions.some(s => s.type === 'update_status');
+    const _hasBadOrder = parsed.reason && /bẩn|lỗi|tráo|thiếu|bị bẩn/i.test(parsed.reason);
+    const _hasBadCode  = AI_FU.orderCode && _suggestions.some(s => s.type === 'complaint_bad');
+    if (!_hasUpdateStatus && (_hasBadOrder || _hasBadCode)) {
+      _suggestions.push({ type: 'update_status', label: 'Cập nhật trạng thái KN', prompt: null });
+    }
+
+    return _suggestions.slice(0, 3)
       .map(s => {
         const meta = AI_FU_ICON_MAP[s.type];
         return {
@@ -7031,10 +7507,47 @@ CHỈ trả về JSON, không thêm gì khác.`;
           icon:    meta.icon,
           cls:     meta.cls,
           prompt:  s.prompt || null,
-          // special: update_status mở modal trực tiếp
+          // special: update_status → tìm đơn trong history rồi mở inline form
           action: s.type === 'update_status' ? () => {
-            if (typeof openModal === 'function' && AI_FU.orderCode) {
-              document.getElementById('complaintOrderCode').value = AI_FU.orderCode;
+            const _code = AI_FU.orderCode;
+            if (!_code) { showToast('warning','Chưa rõ mã đơn','Hãy hỏi AI về đơn cụ thể trước'); return; }
+            // Tìm đơn trong danh sách history và click để mở detail modal
+            const _found = (window.historyDataCache||[]).find(o =>
+              (o.code||'').replace(/'/g,'').toUpperCase() === _code.replace(/'/g,'').toUpperCase()
+            );
+            if (_found) {
+              // Đặt currentViewCode để inline form biết đang cập nhật đơn nào
+              window.currentViewCode = _code;
+              window.currentViewComplaintStatus = _found.complaintStatus || 'Chưa xử lý';
+              // Tìm row trong bảng history và click
+              const _rows = document.querySelectorAll('#historyTable tr, .order-row');
+              let _clicked = false;
+              _rows.forEach(row => {
+                if (!_clicked && row.textContent && row.textContent.includes(_code.slice(-8))) {
+                  row.click(); _clicked = true;
+                }
+              });
+              // Nếu không tìm được row, hiện inline modal độc lập
+              setTimeout(() => {
+                const _form = document.getElementById('modalInlineComplaintForm')
+                           || document.getElementById('subModalInlineComplaintForm');
+                if (_form) {
+                  _form.style.display = 'block';
+                  const _sel = _form.querySelector('select');
+                  if (_sel) _sel.value = window.currentViewComplaintStatus;
+                  _form.scrollIntoView({ behavior:'smooth', block:'center' });
+                } else {
+                  // Fallback: mở modal cũ
+                  window.currentViewCode = _code;
+                  document.getElementById('complaintOrderCode').value = _code;
+                  document.getElementById('complaintStatusSelect').value = 'Đang xử lý';
+                  openModal('updateComplaintModal');
+                }
+              }, 400);
+            } else {
+              // Không có trong cache → mở modal cũ
+              window.currentViewCode = _code;
+              document.getElementById('complaintOrderCode').value = _code;
               document.getElementById('complaintStatusSelect').value = 'Đang xử lý';
               openModal('updateComplaintModal');
             }
@@ -7139,18 +7652,26 @@ function _aiFuOpenComplaintModal(type, aiPrompt) {
 
   if (type === 'complaint_good') {
     const prod = order ? (order.product||'?') : '?';
-    builtPrompt = `Soạn nội dung khiếu nại CHỦ SHOP gửi lên ${_chDisplay} cho đơn hoàn ${code}. Góc nhìn: TÔI LÀ CHỦ SHOP. Tình huống: Shop gửi đúng đủ sản phẩm ${prod} giống mô tả, hàng mới 100%, có video quay lúc đóng gói làm bằng chứng. Khách hoàn lại vì không vừa size hoặc không còn nhu cầu — đây không phải lỗi của shop. Yêu cầu ${_chDisplay} không đánh vi phạm, không trừ điểm uy tín shop. Viết tiếng Việt, lịch sự, tối đa 256 ký tự, chỉ trả về nội dung khiếu nại.`;
+    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. Bắt đầu bằng "Kính gửi ${_chDisplay}," — KHÔNG viết "Tôi là chủ shop" hay tên shop. Nội dung: Đơn hàng ${code} sản phẩm ${prod} shop gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. Khách hoàn lại vì không vừa size hoặc không còn nhu cầu, không phải lỗi shop. Yêu cầu không đánh vi phạm, không trừ điểm uy tín. Viết tiếng Việt, lịch sự, tối đa 256 ký tự, chỉ trả về nội dung khiếu nại.`;
   } else {
     // complaint_bad
     const prod   = order ? (order.product||'?') : '?';
     const stat   = order ? (order.status ||status||'bị lỗi') : (status||'bị lỗi');
     const shopNm = order ? (order.shop   ||shop  ||'?') : (shop||'?');
-    const isBan  = /bẩn|bị bẩn/.test(stat);
-    const isTrao = /tráo|thiếu/.test(stat);
-    const damage = isTrao
-      ? 'shop bị thiệt hại nặng vì hàng bị tráo/thiếu hoàn toàn'
-      : 'hàng bẩn/lỗi không thể lưu kho và bán lại được';
-    builtPrompt = `Soạn nội dung khiếu nại CHỦ SHOP gửi lên ${_chDisplay} cho đơn hoàn ${code}. Góc nhìn: TÔI LÀ CHỦ SHOP. Tình huống: Hàng hoàn về bị ${stat}, sản phẩm ${prod} từ shop ${shopNm}. Nguyên nhân do lỗi khách hàng hoặc shipper — shop đã quay video đóng gói, hàng mới 100% khi xuất kho. Hậu quả: ${damage}. Yêu cầu ${_chDisplay} bồi thường hoặc không trừ điểm/phí shop. Viết tiếng Việt, lịch sự, tối đa 256 ký tự, chỉ trả về nội dung khiếu nại.`;
+    const isBan   = /bẩn|bị bẩn|ẩm|ướt|mốc/.test(stat);
+    const isTrao  = /tráo|hàng giả|sai hàng|bị tráo/.test(stat);
+    const isThieu = /thiếu|mất hàng|thiếu hàng/.test(stat);
+    let damage;
+    if (isBan) {
+      damage = `hàng hoàn về bị ${stat}, không thể lưu kho hay bán lại được, shop phải chịu thiệt hại trực tiếp`;
+    } else if (isTrao) {
+      damage = `hàng hoàn về bị tráo — shop gửi đúng sản phẩm ${prod} khách đặt, có video bằng chứng, nhưng nhận lại hàng khác hoàn toàn, shop bị thiệt hại nặng`;
+    } else if (isThieu) {
+      damage = `hàng hoàn về bị thiếu — shop đóng gói đúng đủ số lượng theo đơn, có video bằng chứng, shop gửi đúng hàng theo mô tả nhưng bị thiếu khi nhận lại, thiệt hại nặng`;
+    } else {
+      damage = `hàng hoàn về bị ${stat}, gây thiệt hại trực tiếp cho shop`;
+    }
+    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. Bắt đầu bằng "Kính gửi ${_chDisplay}," — KHÔNG viết "Tôi là chủ shop" hay tên shop. Nội dung: Đơn ${code} sản phẩm ${prod} — shop đã gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. ${damage}. Yêu cầu bồi thường hoặc không trừ điểm/phí. BẮT BUỘC đề cập shop gửi đúng đủ và lập luận thiệt hại. Viết tiếng Việt, lịch sự, tối đa 256 ký tự (đếm kỹ, KHÔNG vượt quá), chỉ trả về nội dung khiếu nại.`;
   }
 
   // Đặt dữ liệu vào modal KN chuyên biệt và mở lên
@@ -7186,11 +7707,13 @@ function _aiFuOpenComplaintModal(type, aiPrompt) {
   .then(data => {
     document.getElementById('aiDraftLoading').style.display = 'none';
     if (data.result === 'success') {
+      // Track token usage
+      if (data.usage) aiTokensUpdate(data.usage, 'complaint');
+      else aiTokensUpdate({ prompt_tokens: Math.round(builtPrompt.length/4), completion_tokens: Math.round((data.answer||'').length/4) });
       let answer = data.answer.trim();
       if (answer.length > 256) answer = answer.substring(0, 253) + '...';
-      document.getElementById('aiDraftText').value = answer;
-      document.getElementById('aiDraftContent').style.display = 'block';
-      aiUpdateCharCount();
+      // Typewriter effect
+      aiTypewriterEffect(answer);
     } else {
       document.getElementById('aiDraftError').innerText = '❌ ' + (data.message||'Lỗi kết nối AI');
       document.getElementById('aiDraftError').style.display = 'block';
@@ -7266,6 +7789,10 @@ async function aiAsk(question, displayLabel) {
     aiAddMsg('user', displayLabel || question);
   }
 
+  // Lưu ảnh vào biến tạm TRƯỚC khi clear — intent check cần dùng
+  const _intentImgB64  = AI.imgBase64 || null;
+  const _intentImgMime = AI.imgMime   || null;
+
   // Clear image after showing
   if (hasImg) aiRemoveImg();
 
@@ -7301,6 +7828,60 @@ async function aiAsk(question, displayLabel) {
   }
   // ──────────────────────────────────────────────────────────
 
+  // ── Detect update intent — nếu user nhắn lệnh update → thực thi ngay ──
+  // Lưu ảnh TRƯỚC mọi xử lý (aiRemoveImg có thể đã chạy ở trên)
+  {
+    const _intent = aiDetectUpdateIntent(question, !!_intentImgB64);
+    if (_intent) {
+      const _imgB64  = _intentImgB64;
+      const _imgMime = _intentImgMime;
+
+      // Hiện loading
+      aiShowTyping();
+
+      const _result = await aiExecuteComplaintUpdate(
+        _intent.code,
+        _intent.status,
+        _imgB64  || null,
+        _imgMime || null
+      );
+
+      aiHideTyping();
+
+      if (_result.ok) {
+        const _imgNote = _imgB64 ? ' (đã đính kèm ảnh bằng chứng)' : '';
+        aiAddMsg('bot',
+          `✅ Đã cập nhật đơn <b>${_intent.code}</b> sang trạng thái <b>"${_intent.status}"</b>${_imgNote}.
+` +
+          `Hệ thống đã ghi nhận. Bạn có thể kiểm tra trong mục Khiếu nại.`
+        );
+        // Làm mới danh sách khiếu nại nếu đang mở
+        if (typeof loadPendingComplaints === 'function') loadPendingComplaints();
+        if (typeof renderComplaints      === 'function') renderComplaints();
+      } else {
+        aiAddMsg('bot',
+          `❌ Không thể cập nhật đơn <b>${_intent.code}</b>: ${_result.msg}.
+` +
+          `Vui lòng dùng nút "Cập nhật KN" trong modal đơn hàng.`
+        );
+      }
+
+      AI.loading = false;
+      if (typeof aiUpdateCtxBadge === 'function') aiUpdateCtxBadge();
+      // Follow-up gợi ý sau khi update
+      (async () => {
+        try {
+          const _sugg = await aiRequestFollowUp(question, _result.ok
+            ? `Đã cập nhật đơn ${_intent.code} sang "${_intent.status}" thành công`
+            : `Lỗi cập nhật đơn ${_intent.code}`
+          );
+          if (_sugg.length) aiShowFollowUp(_sugg);
+        } catch(e) {}
+      })();
+      return; // Không gửi lên Groq
+    }
+  }
+
   // ── Smart context: detect loại câu hỏi → tiết kiệm 60-70% token ──
   const _qType = hasImg ? 'summary' : aiDetectQueryType(question);
   let context = aiBuildContext(_qType, question);
@@ -7309,7 +7890,7 @@ async function aiAsk(question, displayLabel) {
 
   // Detect order code → inject chi tiết đơn đó (type='order' hoặc có mã trong câu hỏi)
   let foundOrder = null;
-  const codeMatch = question.match(/\b([A-Z]{2,6}\d{8,20}|\d{10,20})\b/i);
+  const codeMatch = question.match(/\b([A-Z]{2,6}\d{8,20}|\d{8,20}DH|\d{10,20})\b/i);
   if (codeMatch) {
     foundOrder = aiFindOrder(codeMatch[1]);
     if (foundOrder) {
@@ -7359,13 +7940,12 @@ async function aiAsk(question, displayLabel) {
     if (data.result === 'success') {
       aiAddMsg('bot', data.answer);
       // Cập nhật token usage từ Groq response (server phải forward data.usage)
-      if (data.usage) aiTokensUpdate(data.usage);
+      if (data.usage) aiTokensUpdate(data.usage, 'chat');
       else if (data.prompt_tokens || data.completion_tokens) {
-        aiTokensUpdate({ prompt_tokens: data.prompt_tokens||0, completion_tokens: data.completion_tokens||0 });
+        aiTokensUpdate({ prompt_tokens: data.prompt_tokens||0, completion_tokens: data.completion_tokens||0 }, 'chat');
       } else {
-        // Fallback: ước tính theo ký tự (~4 ký tự = 1 token)
         const estTokens = Math.round(((context||'').length + question.length + (data.answer||'').length) / 4);
-        aiTokensUpdate({ prompt_tokens: Math.round(estTokens * 0.8), completion_tokens: Math.round(estTokens * 0.2) });
+        aiTokensUpdate({ prompt_tokens: Math.round(estTokens * 0.8), completion_tokens: Math.round(estTokens * 0.2) }, 'chat');
       }
       if (!hasImg) {
         AI.history.push({role:'user',  text: question});
@@ -7468,9 +8048,9 @@ async function aiGenerateDraft() {
   document.getElementById('aiDraftCopied').style.display = 'none';
 
   const platformGuide = {
-    shopee: 'Shopee (Trung tâm Giải quyết Tranh chấp Shopee)',
-    tiktok: 'TikTok Shop (Trung tâm Hỗ trợ Người bán TikTok)',
-    lazada: 'Lazada (Trung tâm Hỗ trợ Seller Lazada)',
+    shopee: 'Shopee',
+    tiktok: 'TikTok Shop',
+    lazada: 'Lazada',
     general: 'bộ phận hỗ trợ người bán'
   };
 
@@ -7484,36 +8064,36 @@ async function aiGenerateDraft() {
   // Lập luận thiệt hại tùy tình trạng
   let _damageArg = '';
   if (_isBan || _isLoi) {
-    _damageArg = 'Hàng hoàn về bị ' + order.status + ', shop không thể lưu kho hay bán lại được, phải xử lý hàng hỏng.';
-  } else if (_isThieu || _isTrao) {
-    _damageArg = 'Hàng hoàn về bị ' + order.status + ', shop bị thiệt hại nặng về hàng hóa và tài chính, yêu cầu bồi thường đầy đủ.';
+    _damageArg = 'Hàng hoàn về bị ' + order.status + ', không thể lưu kho hay bán lại được, shop phải chịu thiệt hại trực tiếp. BẮT BUỘC đưa câu này vào nội dung.';
+  } else if (_isTrao) {
+    _damageArg = 'Hàng hoàn về bị tráo — shop đã gửi đúng sản phẩm ' + (order.product||'') + ' khách đặt và đúng với mô tả, có video bằng chứng, nhưng nhận lại hàng khác hoàn toàn. Shop bị thiệt hại nặng. BẮT BUỘC đưa câu này vào nội dung.';
+  } else if (_isThieu) {
+    _damageArg = 'Hàng hoàn về bị thiếu — shop đóng gói đúng đủ số lượng và gửi đúng sản phẩm ' + (order.product||'') + ' theo mô tả, có video bằng chứng, nhưng nhận lại thiếu hàng. Shop bị thiệt hại nặng. BẮT BUỘC đưa câu này vào nội dung.';
   } else {
-    // Trường hợp khác (bị từ chối, không nhận, v.v.)
-    _damageArg = 'Hàng hoàn về với tình trạng: ' + order.status + ', gây thiệt hại trực tiếp cho shop.';
+    _damageArg = 'Hàng hoàn về với tình trạng: ' + order.status + ', gây thiệt hại trực tiếp cho shop. BẮT BUỘC đưa câu này vào nội dung.';
   }
 
-  const prompt = `Soạn nội dung khiếu nại cho đơn hàng hoàn sau đây.
-Góc nhìn: TÔI LÀ CHỦ SHOP, khiếu nại lên ${platformGuide[_aiDraftPlatform]}
-Lý do: Hàng hoàn về bị "${order.status}" — do lỗi của KHÁCH HÀNG hoặc SHIPPER, không phải lỗi của shop.
-Mục đích: Yêu cầu sàn bồi thường hoặc không trừ điểm/phí vì đây không phải lỗi shop.
+  const prompt = `Soạn nội dung khiếu nại gửi lên ${platformGuide[_aiDraftPlatform]} cho đơn hoàn sau.
+Bắt đầu bằng "Kính gửi ${platformGuide[_aiDraftPlatform]}," — KHÔNG viết "Tôi là chủ shop" hay tên shop ở đầu.
 
 THÔNG TIN ĐƠN:
 - Mã vận đơn: ${order.code}
 - Sản phẩm: ${order.product || '?'}
 - Tình trạng hàng hoàn: ${order.status}
-- Shop: ${order.shop || '?'}
-- Kênh: ${order.channel || '?'}
 - Ngày nhận hàng hoàn: ${order.time ? new Date(order.time).toLocaleDateString('vi-VN') : '?'}
 
-Lập luận thiệt hại (BẮT BUỘC đưa vào nội dung):
+Lý do: Shop đã gửi đúng đủ sản phẩm ${order.product||''} giống mô tả, hàng mới 100%, có video quay lúc đóng gói làm bằng chứng. Hàng hoàn về bị "${order.status}" do lỗi khách/shipper, không phải lỗi shop.
+
+Lập luận thiệt hại BẮT BUỘC đưa vào nội dung (không được bỏ qua):
 ${_damageArg}
 
+Yêu cầu bồi thường hoặc không trừ điểm/phí.
+
 Yêu cầu bắt buộc:
-- Viết bằng tiếng Việt, lịch sự nhưng rõ ràng
-- Sản phẩm khi gửi đi shop đã quay video, shop gửi đúng đủ giống mô tả và mới 100%
-- Với tình trạng bẩn, lỗi thì sẽ nói không thể lưu kho và bán lại được. Với tình trạng thiếu hoặc tráo hàng thì sẽ nói shop bị thiệt hại nặng
+- Viết tiếng Việt, lịch sự, nêu mã vận đơn và yêu cầu cụ thể
+- BẮT BUỘC đề cập: shop gửi đúng đủ, hàng mới 100%, có video bằng chứng
+- BẮT BUỘC đề cập lập luận thiệt hại ở trên
 - TỔNG ĐỘ DÀI TỐI ĐA 256 KÝ TỰ (đếm kỹ, không được vượt quá)
-- Nêu mã vận đơn, tình trạng, yêu cầu cụ thể
 - CHỈ trả về nội dung khiếu nại, không thêm gì khác`;
 
   try {
@@ -7529,6 +8109,9 @@ Yêu cầu bắt buộc:
     const data = await res.json();
     document.getElementById('aiDraftLoading').style.display = 'none';
     if (data.result === 'success') {
+      // Track token usage
+      if (data.usage) aiTokensUpdate(data.usage, 'complaint');
+      else aiTokensUpdate({ prompt_tokens: Math.round(prompt.length/4), completion_tokens: Math.round((data.answer||'').length/4) }, 'complaint');
       // Tự cắt thông minh: ưu tiên cắt tại cuối câu gần nhất
       let answer = data.answer.trim();
       if (answer.length > 256) {
@@ -7542,9 +8125,8 @@ Yêu cầu bắt buộc:
           answer = answer.substring(0, 253) + '...';
         }
       }
-      document.getElementById('aiDraftText').value = answer;
-      document.getElementById('aiDraftContent').style.display = 'block';
-      aiUpdateCharCount();
+      // Typewriter effect
+      aiTypewriterEffect(answer);
     } else {
       document.getElementById('aiDraftError').innerText = '❌ ' + (data.message || 'Lỗi kết nối AI');
       document.getElementById('aiDraftError').style.display = 'block';
@@ -7554,6 +8136,40 @@ Yêu cầu bắt buộc:
     document.getElementById('aiDraftError').innerText = '❌ Lỗi kết nối. Kiểm tra Apps Script.';
     document.getElementById('aiDraftError').style.display = 'block';
   }
+}
+
+// Typewriter effect — gõ từng ký tự như AI đang viết thật
+function aiTypewriterEffect(text, callback) {
+  const ta = document.getElementById('aiDraftText');
+  if (!ta) { if(callback) callback(); return; }
+
+  // Hiện textarea trước
+  document.getElementById('aiDraftContent').style.display = 'block';
+  ta.value = '';
+  ta.style.caretColor = '#7c3aed';
+
+  let i = 0;
+  // Tốc độ: 18ms/ký tự — nhanh vừa, không chờ lâu
+  const SPEED = 18;
+  // Nếu text dài → tăng tốc để không mất quá 4 giây
+  const speed = text.length > 200 ? Math.max(8, Math.floor(4000 / text.length)) : SPEED;
+
+  // Dừng typewriter cũ nếu đang chạy
+  if (window._aiTypewriterTimer) clearInterval(window._aiTypewriterTimer);
+
+  window._aiTypewriterTimer = setInterval(() => {
+    ta.value += text[i];
+    i++;
+    aiUpdateCharCount();
+    // Scroll textarea xuống cuối
+    ta.scrollTop = ta.scrollHeight;
+    if (i >= text.length) {
+      clearInterval(window._aiTypewriterTimer);
+      window._aiTypewriterTimer = null;
+      ta.style.caretColor = '';
+      if (callback) callback();
+    }
+  }, speed);
 }
 
 function aiUpdateCharCount() {
@@ -7619,17 +8235,54 @@ function _warnCacheSet(month, data) {
 let _aiWarnInFlight = false;        // đang gọi AI → chặn gọi thêm
 let _aiWarnDoneSession = {};        // { "2026-04": true } → đã xử lý tháng này trong phiên
 
-async function aiEarlyWarningCheck() {
-  // Chỉ chạy cho admin
+async function aiEarlyWarningCheck(precomputedAlerts) {
   if (typeof userRole === 'undefined' || userRole !== 'admin') return;
   const m = document.getElementById('monthSelect')?.value;
   if (!m) return;
 
-  // ── CHẶN 1: đang có request AI đang bay → bỏ qua ──
-  if (_aiWarnInFlight) return;
+  // Nếu đang bay hoặc đã xong phiên này → bỏ qua
+  if (_aiWarnInFlight || _aiWarnDoneSession[m]) return;
 
-  // ── CHẶN 2: đã xử lý tháng này trong phiên đăng nhập → bỏ qua ──
-  if (_aiWarnDoneSession[m]) return;
+  // Ưu tiên cache localStorage — không gọi AI nếu đã có hôm nay
+  const _warn_cached = _warnCacheGet(m);
+  if (_warn_cached) {
+    _aiWarnDoneSession[m] = true;
+    if (_warn_cached.alerts?.length && _warn_cached.analysis) aiShowEarlyWarning(_warn_cached.alerts, _warn_cached.analysis);
+    return;
+  }
+
+  // Cần có alerts để phân tích
+  const _warnAlerts = precomputedAlerts && precomputedAlerts.length > 0
+    ? precomputedAlerts
+    : null;
+  if (!_warnAlerts) return;
+
+  // Gọi AI 1 lần — prompt ngắn gọn, đúng trọng tâm
+  _aiWarnInFlight = true;
+  const shortList = _warnAlerts.slice(0,3).map(a => `${a.shop.split(' ')[0]}(+${a.currRate}%)`).join(', ');
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'gemini_chat',
+        question: `Kho giày dép XIXA (giày dép), đơn hoàn tăng ở: ${shortList}. Nguyên nhân có thể và 1 gợi ý xử lý? Trả lời 2 câu ngắn, tiếng Việt.`,
+        context: '',
+        history: []
+      })
+    });
+    const data = await res.json();
+    if (data.usage) aiTokensUpdate(data.usage, 'warning');
+    _warnCacheSet(m, { alerts: _warnAlerts, analysis: data.result==='success' ? data.answer : '', ts: Date.now() });
+    _aiWarnDoneSession[m] = true;
+    if (data.result === 'success') aiShowEarlyWarning(_warnAlerts, data.answer);
+  } catch(e) {
+    _aiWarnDoneSession[m] = true;
+  } finally {
+    _aiWarnInFlight = false;
+  }
+  return;
+
+  // (dead code — giữ cho backward compat nếu gọi không có precomputed)
 
   const mc = _monthStatsCache[m];
   if (!mc?.currOrders?.length || !mc?.prevOrders?.length) return;
@@ -7704,13 +8357,23 @@ async function aiEarlyWarningCheck() {
       method: 'POST',
       body: JSON.stringify({
         action: 'gemini_chat',
-        question: `Phân tích ngắn gọn các shop sau đây đang có tỷ lệ lỗi tăng bất thường trong tháng này và đưa ra 1-2 khuyến nghị hành động cụ thể:\n${alertSummary}\nTrả lời ngắn gọn trong 3-5 câu, không dùng bullet points.`,
-        context: 'Hệ thống kho hàng hoàn XIXA — cảnh báo sớm',
+        question: `CONTEXT: Đây là kho hàng hoàn giày dép XIXA (Shopee/TikTok/Lazada). Đơn hoàn chủ yếu do khách không vừa size hoặc đơn bom — KHÔNG phải lỗi shop. Đơn "bẩn/lỗi/tráo" là do shipper/khách, không phải shop.
+
+Phân tích các shop sau đang có tỷ lệ lỗi/bẩn/tráo TĂNG bất thường:
+${alertSummary}
+
+Yêu cầu phân tích (3-4 câu, không dùng bullet points, không lặp số liệu đã có):
+1. Nhận xét xu hướng — bình thường hay đáng lo ngại với ngành giày dép?
+2. Nguyên nhân có thể: shipper xử lý ẩu, mùa vụ, hay pattern gì đặc biệt?
+3. Gợi ý hành động cụ thể cho chủ kho (quay video kỹ hơn, kiểm tra shipper, khiếu nại batch...)`,
+        context: 'Kho hàng hoàn giày dép XIXA — đơn hoàn do khách không vừa size và đơn bom là chính',
         history: []
       })
     });
     const data = await res.json();
     if (data.result === 'success') {
+      // Track token — early warning chạy ngầm cũng phải ghi nhận
+      if (data.usage) aiTokensUpdate(data.usage, 'warning');
       // Lưu cache ngay lập tức — hôm nay sẽ không gọi lại nữa
       _warnCacheSet(m, { alerts, analysis: data.answer, ts: Date.now() });
       _aiWarnDoneSession[m] = true; // đánh dấu phiên thành công
@@ -7730,34 +8393,59 @@ async function aiEarlyWarningCheck() {
 }
 
 function aiShowEarlyWarning(alerts, aiAnalysis) {
-  // Hiện banner cảnh báo trên Dashboard
   const container = document.getElementById('trendAnalysisContainer');
   if (!container) return;
 
-  const shopList = alerts.map(a =>
-    `<b>${a.shop}</b>: ${a.currRate}% lỗi (↑${a.currRate - a.prevRate}% so T.trước)`
-  ).join(' · ');
+  // Shop pills
+  const shopPills = alerts.map(a => {
+    const diff = a.currRate - a.prevRate;
+    const color = diff >= 5 ? 'var(--red)' : 'var(--amber)';
+    return `<span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:100px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.25);font-size:11px;font-weight:700;color:${color};white-space:nowrap">
+      <b>${a.shop.split(' ')[0]}</b> ↑${diff}%
+    </span>`;
+  }).join('');
 
-  const banner = `<div class="ai-warning-banner">
-    <span class="material-icons-round">smart_toy</span>
-    <div>
-      <div class="ai-warning-title">⚠️ AI Cảnh báo — Shop tăng tỷ lệ lỗi bất thường</div>
-      <div class="ai-warning-body" style="margin-bottom:6px">${shopList}</div>
-      <div class="ai-warning-body">${aiAnalysis.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\n/g,'<br>')}</div>
+  // AI analysis — render HTML nếu có
+  const analysisHtml = aiAnalysis
+    ? aiAnalysis.split('\n').join('<br>')
+    : '';
+
+  // Action buttons
+  const actionBtns = `
+    <div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">
+      <button onclick="aiAsk('Phân tích chi tiết các shop có tỷ lệ lỗi tăng tháng này. Gợi ý cách xử lý khiếu nại batch')"
+        style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.08);color:var(--red);cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;font-family:inherit">
+        <span class="material-icons-round" style="font-size:13px">chat</span>Hỏi AI chi tiết
+      </button>
+      <button onclick="if(typeof toggleAiChat==='function')toggleAiChat()"
+        style="font-size:11px;padding:5px 10px;border-radius:6px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-weight:600;display:flex;align-items:center;gap:4px;font-family:inherit">
+        <span class="material-icons-round" style="font-size:13px">close</span>Đóng
+      </button>
+    </div>`;
+
+  const banner = `<div class="ai-warning-banner" style="border-left:3px solid var(--red)">
+    <div style="display:flex;align-items:flex-start;gap:10px">
+      <div style="flex-shrink:0;width:32px;height:32px;border-radius:50%;background:rgba(239,68,68,.12);display:flex;align-items:center;justify-content:center">
+        <span class="material-icons-round" style="font-size:16px;color:var(--red)">auto_awesome</span>
+      </div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:12px;font-weight:800;color:var(--red);margin-bottom:6px">✦ AI Phân tích — Shop tăng tỷ lệ lỗi</div>
+        <div style="display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px">${shopPills}</div>
+        <div style="font-size:12px;color:var(--text);line-height:1.6">${analysisHtml}</div>
+        ${actionBtns}
+      </div>
     </div>
   </div>`;
 
-  // Thêm vào đầu trendAnalysisContainer (giữ trend banner cũ nếu có)
   const existing = container.innerHTML;
   container.innerHTML = banner + existing;
   container.style.display = 'block';
 
-  // Cũng gửi toast thông báo
   showToast('warning',
-    `⚠️ ${alerts.length} shop tỷ lệ lỗi tăng`,
-    alerts.map(a => a.shop).join(', '),
-    'Xem Dashboard',
-    () => switchView('dashboard')
+    `✦ ${alerts.length} shop cần chú ý`,
+    alerts.map(a => a.shop.split(' ')[0]).join(', '),
+    'Xem phân tích',
+    () => document.getElementById('trendAnalysisContainer')?.scrollIntoView({behavior:'smooth'})
   );
 }
 
