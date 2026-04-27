@@ -1088,6 +1088,13 @@ select.input-field{cursor:pointer}
 /* --- KPI Cards --- */
 .kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
 .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);padding:16px 18px;cursor:pointer;transition:.2s;position:relative;overflow:hidden}
+.kpi-ai-btn{position:absolute;bottom:8px;right:10px;border:none;background:none;cursor:pointer;font-size:15px;opacity:.4;transition:.2s;padding:2px 4px;border-radius:4px;line-height:1;color:#7c3aed}
+.kpi-ai-btn:hover{opacity:1;background:rgba(124,58,237,.1);transform:scale(1.2)}
+.kpi-ai-popup{position:fixed;z-index:9800;background:var(--surface);border:1.5px solid rgba(124,58,237,.3);border-radius:12px;padding:14px 16px;max-width:300px;box-shadow:0 8px 32px rgba(0,0,0,.15);animation:fadeUp .2s ease}
+.kpi-ai-popup-title{font-size:11px;font-weight:800;color:#7c3aed;margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.kpi-ai-popup-body{font-size:12.5px;color:var(--text);line-height:1.6}
+.kpi-ai-popup-close{position:absolute;top:8px;right:10px;border:none;background:none;cursor:pointer;font-size:16px;color:var(--text3);line-height:1}
+.kpi-ai-popup-loading{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--text3)}
 .kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-lg)}
 .kpi-card::before{content:'';position:absolute;top:0;left:0;width:4px;height:100%}
 .kpi-total::before{background:var(--sky)}
@@ -1387,6 +1394,7 @@ select.input-field{cursor:pointer}
             <div class="kpi-sub">đơn hoàn</div>
             <div class="kpi-cmp" id="m-total-cmp"></div>
             <div class="kpi-icon badge-sky"><span class="material-icons-round">inbox</span></div>
+            <button class="kpi-ai-btn" onclick="event.stopPropagation();kpiAiExplain('total')" title="AI XIXA giải thích">✦</button>
           </div>
           <div class="kpi-card kpi-good" style="cursor:pointer" onclick="openMetricDetail('good')">
             <div class="kpi-label">Hàng tốt</div>
@@ -1394,6 +1402,7 @@ select.input-field{cursor:pointer}
             <div class="kpi-sub" id="m-good-pct">—%</div>
             <div class="kpi-cmp" id="m-good-cmp"></div>
             <div class="kpi-icon badge-green"><span class="material-icons-round">check_circle</span></div>
+            <button class="kpi-ai-btn" onclick="event.stopPropagation();kpiAiExplain('good')" title="AI XIXA giải thích">✦</button>
           </div>
           <div class="kpi-card kpi-error" style="cursor:pointer" onclick="openMetricDetail('error')">
             <div class="kpi-label">Lỗi / Thiếu</div>
@@ -1401,6 +1410,7 @@ select.input-field{cursor:pointer}
             <div class="kpi-sub" id="m-error-pct">—%</div>
             <div class="kpi-cmp" id="m-error-cmp"></div>
             <div class="kpi-icon badge-red"><span class="material-icons-round">error</span></div>
+            <button class="kpi-ai-btn" onclick="event.stopPropagation();kpiAiExplain('error')" title="AI XIXA giải thích">✦</button>
           </div>
           <div class="kpi-card kpi-warn" style="cursor:pointer" onclick="openMetricDetail('other')">
             <div class="kpi-label">Bẩn + BH</div>
@@ -1408,6 +1418,7 @@ select.input-field{cursor:pointer}
             <div class="kpi-sub" id="m-other-pct">—%</div>
             <div class="kpi-cmp" id="m-other-cmp"></div>
             <div class="kpi-icon badge-amber"><span class="material-icons-round">warning</span></div>
+            <button class="kpi-ai-btn" onclick="event.stopPropagation();kpiAiExplain('other')" title="AI XIXA giải thích">✦</button>
           </div>
           <div class="kpi-card kpi-piship">
             <div class="kpi-label" style="color:var(--orange)">Phí PiShip</div>
@@ -1907,7 +1918,7 @@ select.input-field{cursor:pointer}
       <div class="ai-topbar-title">TRỢ LÝ ẢO XIXA</div>
       <div class="ai-topbar-sub">AI · Hỏi đáp kho hàng</div>
     </div>
-    <button class="ai-close-btn" id="aiTokenBtn" onclick="toggleAiTokenPanel()" title="Quota token Groq" style="margin-right:4px;position:relative">
+    <button class="ai-close-btn" id="aiTokenBtn" onclick="toggleAiTokenPanel()" title="Quota token XIXA" style="margin-right:4px;position:relative">
       <span class="material-icons-round" style="font-size:14px">data_usage</span>
       <span id="aiTokenAlertDot" style="display:none;position:absolute;top:3px;right:3px;width:6px;height:6px;background:#ef4444;border-radius:50%;border:1.5px solid rgba(255,255,255,.3)"></span>
     </button>
@@ -1921,7 +1932,7 @@ select.input-field{cursor:pointer}
   <!-- TOKEN USAGE PANEL -->
   <div id="aiTokenPanel" style="display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px;flex-shrink:0">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Groq API · Quota hôm nay</div>
+      <div style="font-size:11px;font-weight:800;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">XIXA API · Token hôm nay</div>
       <div style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace" id="aiTokenResetTime">Reset lúc 00:00 UTC</div>
     </div>
     <!-- Thanh daily tokens -->
@@ -1966,7 +1977,7 @@ select.input-field{cursor:pointer}
   </div>
 
   <div class="ai-msgs" id="aiMsgs">
-    <div class="ai-bubble ai-bubble-bot">Xin chào! Tôi có thể phân tích dữ liệu kho hàng tháng này. Bạn muốn hỏi gì? (Trợ lý là AI và có thể mắc sai sót.)</div>
+    <div class="ai-bubble ai-bubble-bot">Xin chào! Tôi có thể phân tích dữ liệu kho hàng tháng này. Bạn muốn hỏi gì? (Trợ lý là AI và có thể mắc sai sót)</div>
   </div>
   <div class="ai-chips" id="aiChips">
     <div class="ai-chip" onclick="aiAskToday()">Hôm nay bao nhiêu đơn?</div>
@@ -3201,6 +3212,97 @@ let dashLoadInterval=null;
 function showDashLoading(show,text="Đang tải dữ liệu..."){ const el=document.getElementById('dashLoading'); if(show){ el.style.display='flex'; document.getElementById('dashLoadingText').innerText=text; setDashProgress(0); clearInterval(dashLoadInterval); let p=0; dashLoadInterval=setInterval(()=>{ if(p<88){p+=Math.random()*6;setDashProgress(Math.min(p,88));} },250); }else{ clearInterval(dashLoadInterval); setDashProgress(100); setTimeout(()=>{el.style.display='none';setDashProgress(0)},350); } }
 function setDashProgress(p){ const pct=Math.floor(p); const circumference=175.93; const offset=circumference-(circumference*p/100); const circle=document.getElementById('dashProgressCircle'); const bar=document.getElementById('dashProgressBar'); const txt=document.getElementById('dashPctText'); if(circle)circle.style.strokeDashoffset=offset; if(bar)bar.style.width=pct+'%'; if(txt)txt.innerText=pct+'%'; }
 
+// ================================================================
+// KPI CARD AI EXPLAIN — bấm ⚡ trên card để AI giải thích số
+// ================================================================
+let _kpiAiCache = {}; // cache per card per month
+
+function kpiAiExplain(cardType) {
+  const m  = document.getElementById('monthSelect')?.value;
+  const mc = m ? _monthStatsCache[m] : null;
+  if (!mc?.currOrders) { showToast('warning','Chưa có dữ liệu','Vui lòng chờ tải xong'); return; }
+
+  // Đóng popup cũ nếu đang mở
+  document.querySelectorAll('.kpi-ai-popup').forEach(el => el.remove());
+
+  // Lấy vị trí nút để đặt popup
+  const btn = document.querySelector(`.kpi-ai-btn[onclick*="${cardType}"]`);
+  if (!btn) return;
+  const rect = btn.getBoundingClientRect();
+
+  // Tạo popup
+  const popup = document.createElement('div');
+  popup.className = 'kpi-ai-popup';
+  popup.style.cssText = `top:${Math.min(rect.top + window.scrollY - 10, window.innerHeight - 220)}px;left:${Math.min(rect.left, window.innerWidth - 320)}px`;
+
+  const cacheKey = cardType + '_' + m;
+  if (_kpiAiCache[cacheKey]) {
+    // Đã có cache → hiện ngay
+    popup.innerHTML = _buildKpiPopupHtml(cardType, _kpiAiCache[cacheKey]);
+    document.body.appendChild(popup);
+    return;
+  }
+
+  // Loading state
+  popup.innerHTML = `<button class="kpi-ai-popup-close" onclick="this.closest('.kpi-ai-popup').remove()">×</button>
+    <div class="kpi-ai-popup-title">✦ AI phân tích</div>
+    <div class="kpi-ai-popup-loading"><span style="animation:spin .8s linear infinite;display:inline-block">↻</span> Đang phân tích...</div>`;
+  document.body.appendChild(popup);
+
+  // Build context ngắn gọn
+  const orders = mc.currOrders;
+  const total  = orders.length;
+  const good   = orders.filter(o => o.status?.includes('Tốt')).length;
+  const error  = orders.filter(o => /tráo|thiếu/i.test(o.status||'')).length;
+  const dirty  = orders.filter(o => /bẩn|bị bẩn|lỗi/i.test(o.status||'')).length;
+  const [yr, mo] = (m||'').split('-');
+
+  // Prev month data nếu có
+  const prevOrders = mc.prevOrders || [];
+  const prevTotal  = prevOrders.length;
+
+  const prompts = {
+    total: `Kho giày dép XIXA tháng ${parseInt(mo)}/${yr}: ${total} đơn hoàn (T.trước: ${prevTotal}). ${total > prevTotal ? 'Tăng' : 'Giảm'} ${Math.abs(total-prevTotal)} đơn. Số này có bình thường không? Nguyên nhân có thể? Trả lời 2 câu ngắn.`,
+    good:  `Kho giày dép XIXA tháng ${parseInt(mo)}/${yr}: ${good}/${total} đơn tốt (${Math.round(good/total*100)}%). Đây là giày khách trả về còn nguyên vẹn. Tỷ lệ này tốt hay chưa tốt? Trả lời 2 câu ngắn.`,
+    error: `Kho giày dép XIXA tháng ${parseInt(mo)}/${yr}: ${error} đơn bị lỗi/thiếu hàng (${Math.round(error/total*100)}%). Đây là lỗi do shipper hoặc khách, không phải shop. Mức này có đáng lo không? Gợi ý 1 hành động. Trả lời 2 câu ngắn.`,
+    other: `Kho giày dép XIXA tháng ${parseInt(mo)}/${yr}: ${dirty} đơn bị bẩn hoặc bảo hành (${Math.round(dirty/total*100)}%). Lỗi do shipper/khách. Mức này có đáng lo không? Gợi ý 1 hành động. Trả lời 2 câu ngắn.`,
+  };
+
+  const question = prompts[cardType] || prompts.total;
+
+  fetch(WEB_APP_URL, {
+    method: 'POST',
+    body: JSON.stringify({ action:'gemini_chat', question, context:'', history:[] })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!document.body.contains(popup)) return; // đã đóng
+    if (data.usage) aiTokensUpdate(data.usage, 'chat');
+    const answer = data.result==='success' ? data.answer.trim() : '❌ Không thể phân tích lúc này.';
+    _kpiAiCache[cacheKey] = answer;
+    popup.innerHTML = _buildKpiPopupHtml(cardType, answer);
+  })
+  .catch(() => {
+    if (document.body.contains(popup))
+      popup.innerHTML = _buildKpiPopupHtml(cardType, '❌ Lỗi kết nối. Thử lại sau.');
+  });
+
+  // Click ngoài để đóng
+  setTimeout(() => {
+    document.addEventListener('click', function _close(e) {
+      if (!popup.contains(e.target)) { popup.remove(); document.removeEventListener('click', _close); }
+    });
+  }, 100);
+}
+
+function _buildKpiPopupHtml(cardType, answer) {
+  const labels = { total:'Tổng đơn hoàn', good:'Hàng tốt', error:'Lỗi / Thiếu', other:'Bẩn + Bảo hành' };
+  return `<button class="kpi-ai-popup-close" onclick="this.closest('.kpi-ai-popup').remove()">×</button>
+    <div class="kpi-ai-popup-title"><span>✦</span>${labels[cardType]||'Phân tích AI'}</div>
+    <div class="kpi-ai-popup-body">${answer.split('\n').join('<br>')}</div>`;
+}
+
+// ================================================================
 function analyzeTrends(currOrders, prevOrdersRaw, cutoffDay) {
   const container = document.getElementById('trendAnalysisContainer');
   if(!container || !currOrders || !prevOrdersRaw) return;
@@ -3212,26 +3314,13 @@ function analyzeTrends(currOrders, prevOrdersRaw, cutoffDay) {
   Object.keys(currStats).forEach(shop=>{ const cCount=currStats[shop]; const pCount=prevStats[shop]||0; if(cCount>=5){ const increasePct=pCount===0?100:Math.round(((cCount-pCount)/pCount)*100); if(increasePct>=40)spikes.push({shop,increasePct,cCount,pCount}); } });
   if(spikes.length===0){container.style.display='none';return;}
   spikes.sort((a,b)=>b.increasePct-a.increasePct);
-
-  // Hiện placeholder ngay lập tức trong khi đợi AI
   container.style.display='block';
-  container.innerHTML=`<div style="padding:12px 16px;border:1px dashed var(--orange);border-radius:var(--r);background:rgba(234,88,12,.05);display:flex;align-items:center;gap:10px">
-    <span class="material-icons-round" style="color:var(--orange);font-size:18px">trending_up</span>
-    <div style="flex:1">
-      <div style="font-size:12px;font-weight:800;color:var(--orange);margin-bottom:6px">Shop tăng đơn hoàn — ✦ AI đang phân tích...</div>
-      <div style="display:flex;flex-wrap:wrap;gap:6px">${spikes.map(s=>`<span style="font-size:11px;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(234,88,12,.12);color:var(--orange)">${s.shop.split(' ')[0]} +${s.increasePct}%</span>`).join('')}</div>
-    </div>
-  </div>`;
-
-  const alerts = spikes.map(s=>({
-    shop: s.shop,
-    currRate: s.increasePct,
-    prevRate: 0,
-    errorCount: s.cCount,
-    total: s.cCount
-  }));
-  // Gọi AI — kết quả sẽ thay thế placeholder trên
-  aiEarlyWarningCheck(alerts);
+  let html=`<div class="trend-banner"><span class="material-icons-round">trending_up</span><div class="trend-banner-content"><div class="trend-banner-title">Cảnh báo: Shop tăng tỷ lệ hoàn đột biến tháng này</div><div class="trend-spikes">`;
+  spikes.forEach(s=>{
+    html+=`<div class="trend-spike-item"><div style="font-size:12px;font-weight:700;color:var(--text);margin-bottom:2px">${s.shop}</div><div class="trend-spike-pct">+${s.increasePct}%</div><div style="font-size:10px;color:var(--text3);margin-top:2px">Tháng này: <b style="color:var(--text)">${s.cCount}</b> · Cùng kỳ: ${s.pCount}</div></div>`;
+  });
+  html+=`</div></div></div>`;
+  container.innerHTML=html;
 }
 
 // Cache tháng trong memory session — tránh fetch lại khi chuyển tab rồi quay lại
@@ -3519,7 +3608,7 @@ Yêu cầu: Viết 2–3 câu nhận xét ngắn gọn, súc tích bằng tiến
 function resetChartInsight() {
   const btn = document.getElementById('chartInsightBtn');
   const res = document.getElementById('chartInsightResult');
-  if (btn) { btn.style.display='flex'; btn.disabled=false; btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z" fill="url(#ig)" stroke="none"/><defs><linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a73e8"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg> ✦ AI nhận xét biểu đồ'; }
+  if (btn) { btn.style.display='flex'; btn.disabled=false; btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z" fill="url(#ig)" stroke="none"/><defs><linearGradient id="ig" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#1a73e8"/><stop offset="100%" stop-color="#7c3aed"/></linearGradient></defs></svg> ✦ AI XIXA nhận xét biểu đồ'; }
   if (res) { res.style.display='none'; res.innerHTML=''; }
 }
 
