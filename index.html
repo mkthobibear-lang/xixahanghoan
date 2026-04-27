@@ -1829,6 +1829,8 @@ select.input-field{cursor:pointer}
     <div class="ai-bubble ai-bubble-bot">Xin chào! Tôi có thể phân tích dữ liệu kho hàng tháng này. Bạn muốn hỏi gì?</div>
   </div>
   <div class="ai-chips" id="aiChips">
+    <div class="ai-chip" onclick="aiAskToday()">Hôm nay bao nhiêu đơn?</div>
+    <div class="ai-chip" onclick="aiAsk('Hôm qua nhập bao nhiêu đơn? Chi tiết tốt/bẩn/lỗi?')">Hôm qua</div>
     <div class="ai-chip" onclick="aiAsk('Shop nào có tỷ lệ lỗi cao nhất tháng này?')">Shop lỗi nhiều nhất</div>
     <div class="ai-chip" onclick="aiAsk('So sánh Shopee và TikTok tháng này')">Shopee vs TikTok</div>
     <div class="ai-chip" onclick="aiAsk('Tổng quan tháng này: tốt, bẩn, lỗi bao nhiêu?')">Tổng quan tháng</div>
@@ -2892,6 +2894,9 @@ let _monthStatsCache = {}; // { "2026-04": { currOrders, prevOrders, chartData, 
 function loadMonthlyStats(isSilent = false){ 
     const m=document.getElementById('monthSelect').value; 
     if(!m)return;
+    // Reset session flag khi đổi sang tháng mới (nhưng giữ cache localStorage)
+    // Chỉ reset nếu là tháng chưa từng check trong phiên này
+    // (không reset nếu chỉ refresh silent trong cùng tháng)
 
     // Dùng memory cache nếu còn mới (60 giây) và silent (background refresh)
     const mc = _monthStatsCache[m];
@@ -5588,7 +5593,56 @@ function backToMemberList() {
 .ai-typing span:nth-child(2){animation-delay:.18s}
 .ai-typing span:nth-child(3){animation-delay:.36s}
 @keyframes aiDot{0%,60%,100%{transform:translateY(0);opacity:.4}30%{transform:translateY(-4px);opacity:1}}
+
+/* AI THINKING INDICATOR */
+@keyframes ai-spin{0%{transform:rotate(0deg) scale(1);opacity:1}50%{transform:rotate(180deg) scale(1.15);opacity:.7}100%{transform:rotate(360deg) scale(1);opacity:1}}
+@keyframes ai-pulse-ring{0%{transform:scale(.8);opacity:.6}50%{transform:scale(1.2);opacity:.2}100%{transform:scale(.8);opacity:.6}}
+@keyframes ai-shimmer-text{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes ai-dot-fade{0%,80%,100%{opacity:.2;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.ai-thinking-wrap{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:13px;background:rgba(26,115,232,.07);border:1px solid rgba(26,115,232,.18);width:fit-content;max-width:260px}
+.ai-icon-wrap{position:relative;width:24px;height:24px;flex-shrink:0}
+.ai-pulse-ring{position:absolute;inset:-4px;border-radius:50%;border:1.5px solid rgba(26,115,232,.4);animation:ai-pulse-ring 1.8s ease-in-out infinite}
+.ai-icon-wrap svg{width:24px;height:24px;animation:ai-spin 2.2s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(26,115,232,.5))}
+.ai-thinking-text{font-size:12px;font-weight:700;background:linear-gradient(90deg,#1a73e8 0%,#7c3aed 30%,#38bdf8 50%,#7c3aed 70%,#1a73e8 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:ai-shimmer-text 2s linear infinite;white-space:nowrap}
+.ai-thinking-dots{display:flex;gap:3px;align-items:center}
+.ai-thinking-dots span{width:4px;height:4px;border-radius:50%;background:#7c3aed;animation:ai-dot-fade 1.2s ease-in-out infinite}
+.ai-thinking-dots span:nth-child(2){animation-delay:.2s}
+.ai-thinking-dots span:nth-child(3){animation-delay:.4s}
+
+/* ── AI THINKING INDICATOR ── */
+@keyframes ai-spin{0%{transform:rotate(0deg) scale(1);opacity:1}50%{transform:rotate(180deg) scale(1.15);opacity:.7}100%{transform:rotate(360deg) scale(1);opacity:1}}
+@keyframes ai-pulse-ring{0%{transform:scale(.8);opacity:.6}50%{transform:scale(1.2);opacity:.2}100%{transform:scale(.8);opacity:.6}}
+@keyframes ai-shimmer-text{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes ai-dot-fade{0%,80%,100%{opacity:.2;transform:translateY(0)}40%{opacity:1;transform:translateY(-3px)}}
+.ai-thinking-wrap{display:flex;align-items:center;gap:9px;padding:9px 13px;border-radius:13px;background:rgba(26,115,232,.07);border:1px solid rgba(26,115,232,.18);width:fit-content;max-width:260px}
+.ai-icon-wrap{position:relative;width:24px;height:24px;flex-shrink:0}
+.ai-pulse-ring{position:absolute;inset:-4px;border-radius:50%;border:1.5px solid rgba(26,115,232,.4);animation:ai-pulse-ring 1.8s ease-in-out infinite}
+.ai-icon-wrap svg{width:24px;height:24px;animation:ai-spin 2.2s ease-in-out infinite;filter:drop-shadow(0 0 4px rgba(26,115,232,.5))}
+.ai-thinking-text{font-size:12px;font-weight:700;background:linear-gradient(90deg,#1a73e8 0%,#7c3aed 30%,#38bdf8 50%,#7c3aed 70%,#1a73e8 100%);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;animation:ai-shimmer-text 2s linear infinite;white-space:nowrap}
+.ai-thinking-dots{display:flex;gap:3px;align-items:center}
+.ai-thinking-dots span{width:4px;height:4px;border-radius:50%;background:#7c3aed;animation:ai-dot-fade 1.2s ease-in-out infinite}
+.ai-thinking-dots span:nth-child(2){animation-delay:.2s}
+.ai-thinking-dots span:nth-child(3){animation-delay:.4s}
 .ai-ctx-badge{font-size:9.5px;color:var(--text3);text-align:center;padding:4px;font-weight:600}
+
+/* AI FOLLOW-UP ACTION BUTTONS */
+.ai-followup-wrap{display:flex;flex-direction:column;gap:6px;margin-top:8px;align-self:flex-start;max-width:92%;animation:fadeUp .22s ease}
+.ai-followup-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;padding-left:2px}
+.ai-followup-btns{display:flex;flex-wrap:wrap;gap:6px}
+.ai-followup-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:100px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid;transition:all .15s;font-family:'Plus Jakarta Sans',sans-serif;white-space:nowrap}
+.ai-followup-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(0,0,0,.1)}
+.ai-followup-btn:active{transform:scale(.97)}
+.ai-fb-yes{background:rgba(37,99,235,.08);border-color:var(--blue);color:var(--blue)}
+.ai-fb-yes:hover{background:rgba(37,99,235,.16)}
+.ai-fb-no{background:var(--surface2);border-color:var(--border-strong);color:var(--text3)}
+.ai-fb-no:hover{background:var(--bg);color:var(--text2)}
+.ai-fb-action{background:rgba(22,163,74,.07);border-color:var(--green);color:var(--green)}
+.ai-fb-action:hover{background:rgba(22,163,74,.15)}
+.ai-fb-warn{background:rgba(217,119,6,.07);border-color:var(--amber);color:var(--amber)}
+.ai-fb-warn:hover{background:rgba(217,119,6,.15)}
+.ai-fb-info{background:rgba(14,165,233,.07);border-color:var(--sky);color:var(--sky)}
+.ai-fb-info:hover{background:rgba(14,165,233,.15)}
+.ai-followup-btn .material-icons-round{font-size:13px}
 
 /* ============================================================
    AI COMPLAINT DRAFT + EARLY WARNING v17
@@ -6210,14 +6264,173 @@ function aiAddMsg(role, text) {
   box.scrollTop = box.scrollHeight;
 }
 
+const _AI_THINKING_STATES = [
+  'Đang phân tích',
+  'Đang suy nghĩ',
+  'Tổng hợp dữ liệu',
+  'Đang xử lý',
+  'Sắp có kết quả',
+];
+let _aiThinkingTimer = null;
+
+// ================================================================
+// AI DAILY DATA — fetch theo ngày, cache 5 phút
+// ================================================================
+const AI_DAILY_CACHE = {};   // { "2026-04-27": { data, ts } }
+const AI_DAILY_TTL   = 5 * 60 * 1000;
+
+// Trả về array đơn của 1 ngày (từ cache hoặc fetch server)
+async function aiGetDailyData(dateStr) {
+  const now = Date.now();
+  if (AI_DAILY_CACHE[dateStr] && (now - AI_DAILY_CACHE[dateStr].ts) < AI_DAILY_TTL) {
+    return AI_DAILY_CACHE[dateStr].data;
+  }
+  try {
+    const res  = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'get', date: dateStr })
+    });
+    const data = await res.json();
+    const orders = Array.isArray(data) ? data
+                 : (data && Array.isArray(data.data)) ? data.data : [];
+    AI_DAILY_CACHE[dateStr] = { data: orders, ts: Date.now() };
+    return orders;
+  } catch(e) { return null; }
+}
+
+// Phân tích thống kê 1 ngày → chuỗi context cho AI
+function aiBuildDailyContext(dateStr, orders) {
+  if (!orders || !orders.length) {
+    return `Ngày ${dateStr}: Không có đơn nào.`;
+  }
+  const total    = orders.length;
+  const good     = orders.filter(o => (o.status||'').includes('Tốt')).length;
+  const dirty    = orders.filter(o => (o.status||'').includes('bẩn')).length;
+  const error    = orders.filter(o => (o.status||'').includes('tráo') || (o.status||'').includes('Thiếu')).length;
+  const warranty = orders.filter(o => (o.status||'').includes('Bảo hành')).length;
+
+  // Theo kênh
+  const ch = {};
+  orders.forEach(o => {
+    const c = (o.channel||'').toLowerCase();
+    const name = c.includes('shopee') ? 'Shopee' : c.includes('tiktok') ? 'Tiktok'
+               : c.includes('vtp')||c.includes('viettel') ? 'Viettel' : c.includes('lazada') ? 'Lazada' : 'Khác';
+    ch[name] = (ch[name]||0) + 1;
+  });
+  const chLine = Object.entries(ch).map(([k,v])=>`${k}:${v}`).join(' | ');
+
+  // Theo shop
+  const sh = {};
+  orders.forEach(o => { const s=o.shop||'Không rõ'; sh[s]=(sh[s]||0)+1; });
+  const shLine = Object.entries(sh).sort((a,b)=>b[1]-a[1])
+    .slice(0,8).map(([k,v])=>`${k}:${v}`).join(', ');
+
+  // Theo nhân viên
+  const nv = {};
+  orders.forEach(o => { const s=o.staff||o.staffName||'?'; nv[s]=(nv[s]||0)+1; });
+  const nvLine = Object.entries(nv).sort((a,b)=>b[1]-a[1])
+    .map(([k,v])=>`${k}:${v}`).join(', ');
+
+  // Chi tiết đơn lỗi (tối đa 20)
+  const errOrders = orders.filter(o => !(o.status||'').includes('Tốt'))
+    .slice(0,20)
+    .map(o => `  [${o.code}] ${o.status} | ${o.shop||'?'} | ${o.channel||'?'} | ${o.product||''}`)
+    .join('\n');
+
+  return `DỮ LIỆU NGÀY ${dateStr}:
+TỔNG QUAN: ${total} đơn | Tốt:${good}(${total?Math.round(good/total*100):0}%) | Bẩn:${dirty} | Lỗi/Thiếu:${error} | Bảo hành:${warranty}
+THEO KÊNH: ${chLine}
+THEO SHOP (top): ${shLine}
+NHÂN VIÊN: ${nvLine}${errOrders ? '\nĐƠN KHÔNG TỐT:\n'+errOrders : ''}`;
+}
+
+// Phát hiện ngày trong câu hỏi → trả về "YYYY-MM-DD" hoặc null
+function aiDetectDate(question) {
+  const today = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+  const pad = n => String(n).padStart(2,'0');
+  const todayStr = `${today.getFullYear()}-${pad(today.getMonth()+1)}-${pad(today.getDate())}`;
+  const yesterdayD = new Date(today); yesterdayD.setDate(today.getDate()-1);
+  const yesterdayStr = `${yesterdayD.getFullYear()}-${pad(yesterdayD.getMonth()+1)}-${pad(yesterdayD.getDate())}`;
+
+  const q = question.toLowerCase();
+
+  // Từ khóa ngày tương đối
+  if (/hôm nay|today|ngày hôm nay/.test(q))   return todayStr;
+  if (/hôm qua|yesterday|ngày qua/.test(q))    return yesterdayStr;
+
+  // Pattern: DD/MM/YYYY hoặc DD/MM/YY hoặc DD/MM (năm hiện tại)
+  let m = question.match(/(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?/);
+  if (m) {
+    const d = parseInt(m[1]), mo = parseInt(m[2]);
+    const yr = m[3] ? (m[3].length===2 ? 2000+parseInt(m[3]) : parseInt(m[3])) : today.getFullYear();
+    if (d>=1&&d<=31&&mo>=1&&mo<=12) return `${yr}-${pad(mo)}-${pad(d)}`;
+  }
+
+  // Pattern: "ngày X tháng Y" hoặc "X/Y"
+  m = question.match(/ngày\s+(\d{1,2})\s+tháng\s+(\d{1,2})/);
+  if (m) {
+    const d=parseInt(m[1]),mo=parseInt(m[2]);
+    return `${today.getFullYear()}-${pad(mo)}-${pad(d)}`;
+  }
+
+  return null;
+}
+
+// Phát hiện 2 ngày để so sánh
+function aiDetectTwoDates(question) {
+  const allDates = [];
+  const pad = n => String(n).padStart(2,'0');
+  const today = new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'}));
+
+  // Tìm tất cả pattern DD/MM
+  const regex = /(\d{1,2})[\/\-\.](\d{1,2})(?:[\/\-\.](\d{2,4}))?/g;
+  let m;
+  while ((m = regex.exec(question)) !== null) {
+    const d=parseInt(m[1]),mo=parseInt(m[2]);
+    const yr = m[3]?(m[3].length===2?2000+parseInt(m[3]):parseInt(m[3])):today.getFullYear();
+    if(d>=1&&d<=31&&mo>=1&&mo<=12) allDates.push(`${yr}-${pad(mo)}-${pad(d)}`);
+  }
+  return allDates.length >= 2 ? allDates.slice(0,2) : null;
+}
+
+
+let _aiThinkingIdx  = 0;
+
 function aiShowTyping() {
   const box = document.getElementById('aiMsgs');
   const div = document.createElement('div');
   div.className = 'ai-bubble ai-bubble-bot'; div.id = 'aiTyping';
-  div.innerHTML = '<span class="ai-typing"><span></span><span></span><span></span></span>';
+  div.innerHTML = `<div class="ai-thinking-wrap">
+    <div class="ai-icon-wrap">
+      <div class="ai-pulse-ring"></div>
+      <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L13.09 8.26L19 6L14.74 10.91L21 12L14.74 13.09L19 18L13.09 15.74L12 22L10.91 15.74L5 18L9.26 13.09L3 12L9.26 10.91L5 6L10.91 8.26L12 2Z"
+          fill="url(#aiGradT)" stroke="url(#aiGradT)" stroke-width="0.5" stroke-linejoin="round"/>
+        <defs>
+          <linearGradient id="aiGradT" x1="3" y1="2" x2="21" y2="22" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="#1a73e8"/>
+            <stop offset="50%" stop-color="#7c3aed"/>
+            <stop offset="100%" stop-color="#38bdf8"/>
+          </linearGradient>
+        </defs>
+      </svg>
+    </div>
+    <span class="ai-thinking-text" id="aiThinkingLabel">Đang phân tích</span>
+    <div class="ai-thinking-dots"><span></span><span></span><span></span></div>
+  </div>`;
   box.appendChild(div); box.scrollTop = box.scrollHeight;
+  _aiThinkingIdx = 0;
+  _aiThinkingTimer = setInterval(() => {
+    _aiThinkingIdx = (_aiThinkingIdx + 1) % _AI_THINKING_STATES.length;
+    const el = document.getElementById('aiThinkingLabel');
+    if (el) el.textContent = _AI_THINKING_STATES[_aiThinkingIdx];
+  }, 1800);
 }
-function aiHideTyping() { document.getElementById('aiTyping')?.remove(); }
+function aiHideTyping() {
+  clearInterval(_aiThinkingTimer);
+  _aiThinkingTimer = null;
+  document.getElementById('aiTyping')?.remove();
+}
 
 // Hiện ảnh đính kèm của đơn sau khi AI trả lời
 function aiShowOrderImages(order) {
@@ -6286,7 +6499,201 @@ function aiRemoveImg() {
   document.getElementById('aiInput').placeholder = 'Hỏi về đơn hoàn, shop, kênh...';
 }
 
+
+// ================================================================
+// AI FOLLOW-UP ENGINE
+// ================================================================
+
+// State lưu context đơn hiện tại để follow-up dùng lại
+const AI_FU = {
+  orderCode: null,
+  orderStatus: null,
+  orderShop: null,
+  orderChannel: null,
+  pendingQuestion: null,  // câu hỏi tiếp theo nếu user chọn Yes
+  pendingLabel: null,     // nhãn ngắn hiển thị trong chat thay cho prompt dài
+};
+
+// Phân tích câu trả lời AI → quyết định follow-up buttons
+function aiDetectFollowUpContext(answer, question) {
+  const a = answer.toLowerCase();
+  const q = (question||'').toLowerCase();
+  const suggestions = [];
+
+  // Detect mã đơn trong câu hỏi hoặc trả lời
+  const codeMatch = (question + ' ' + answer).match(/\b([A-Z]{2,6}\d{8,20}|\d{10,20})\b/i);
+  if (codeMatch) AI_FU.orderCode = codeMatch[1];
+
+  // Detect trạng thái xấu
+  const hasBad = /bẩn|bị bẩn|tráo|thiếu hàng|bị tráo|lỗi|fraud|missing|dirty/i.test(answer + question);
+  const hasGood = /tốt|good|✨/.test(answer + question) && !hasBad;
+  const hasWarranty = /bảo hành|warranty/i.test(answer + question);
+
+  // Detect shop
+  const shopMatch = answer.match(/shop[:\s]+([^\n,\.]+)/i) || answer.match(/([A-Z]{2,}[\s\w]+ Official Store|XIXA[^,\n]*|HOBIBEAR[^,\n]*|Apakowa[^,\n]*|FERRONI[^,\n]*)/i);
+  if (shopMatch) AI_FU.orderShop = shopMatch[1].trim();
+
+  // Detect channel
+  if (/shopee/i.test(answer + question)) AI_FU.orderChannel = 'shopee';
+  else if (/tiktok/i.test(answer + question)) AI_FU.orderChannel = 'tiktok';
+  else if (/lazada/i.test(answer + question)) AI_FU.orderChannel = 'lazada';
+
+  // Có đơn bẩn/lỗi/tráo → gợi ý soạn khiếu nại
+  if (hasBad && AI_FU.orderCode) {
+    suggestions.push({
+      type: 'complaint',
+      label: `Soạn KN cho đơn ${AI_FU.orderCode}`,
+      icon: 'edit_note',
+      cls: 'ai-fb-yes',
+      question: `Soạn nội dung khiếu nại cho đơn hàng hoàn sau đây.
+Góc nhìn: TÔI LÀ CHỦ SHOP, khiếu nại lên sàn ${AI_FU.orderChannel||'thương mại điện tử'}.
+Lý do: Hàng hoàn về bị "${AI_FU.orderStatus||'lỗi'}" — do lỗi của KHÁCH HÀNG hoặc SHIPPER, không phải lỗi shop.
+Mục đích: Yêu cầu sàn bồi thường hoặc không trừ điểm/phí.
+THÔNG TIN ĐƠN: Mã vận đơn: ${AI_FU.orderCode}. Tình trạng: ${AI_FU.orderStatus||'?'}. Shop: ${AI_FU.orderShop||'?'}.
+Yêu cầu: Viết tiếng Việt, lịch sự, nêu mã đơn và yêu cầu cụ thể. Shop đã quay video khi đóng gói, hàng mới 100%. Với tình trạng bẩn/lỗi: nêu không thể bán lại. Với thiếu/tráo: nêu thiệt hại nặng. TỐI ĐA 256 KÝ TỰ. CHỈ trả về nội dung khiếu nại.`
+    });
+  }
+
+  // Có đơn bẩn/lỗi → gợi ý cập nhật trạng thái KN
+  if ((hasBad || hasWarranty) && AI_FU.orderCode) {
+    suggestions.push({
+      type: 'update_status',
+      label: 'Cập nhật trạng thái KN',
+      icon: 'update',
+      cls: 'ai-fb-action',
+      action: () => {
+        // Mở modal cập nhật KN
+        if (typeof openModal === 'function') {
+          document.getElementById('complaintOrderCode').value = AI_FU.orderCode;
+          document.getElementById('complaintStatusSelect').value = 'Đang xử lý';
+          openModal('updateComplaintModal');
+        }
+      }
+    });
+  }
+
+  // Có đơn → gợi ý xem ảnh
+  if (AI_FU.orderCode) {
+    suggestions.push({
+      type: 'view_images',
+      label: 'Xem ảnh đơn này',
+      icon: 'photo_library',
+      cls: 'ai-fb-info',
+      question: `Đơn ${AI_FU.orderCode} có ảnh đính kèm nào không? Hiển thị cho tôi xem.`
+    });
+  }
+
+  // Có nhiều đơn lỗi cùng 1 shop → gợi ý tìm đơn tương tự
+  const shopMentions = (answer.match(/shop/gi)||[]).length;
+  if (hasBad && shopMentions >= 1 && AI_FU.orderShop) {
+    suggestions.push({
+      type: 'similar_orders',
+      label: `Tìm đơn lỗi tương tự`,
+      icon: 'search',
+      cls: 'ai-fb-warn',
+      question: `Liệt kê tất cả đơn bị lỗi/bẩn/tráo từ shop ${AI_FU.orderShop} tháng này.`
+    });
+  }
+
+  // Có nhiều đơn trong 1 ngày → gợi ý xem ngày khác
+  const hasDate = /ngày|hôm nay|hôm qua|\d{1,2}\/\d{1,2}/i.test(question);
+  if (hasDate && !hasBad && !AI_FU.orderCode) {
+    suggestions.push({
+      type: 'compare_day',
+      label: 'So sánh với hôm qua',
+      icon: 'compare_arrows',
+      cls: 'ai-fb-info',
+      question: 'So sánh số đơn hôm nay và hôm qua. Kênh nào tăng/giảm nhiều nhất?'
+    });
+  }
+
+  // Lưu câu hỏi pending để intercept "có/không"
+  if (suggestions.length > 0 && suggestions[0].question) {
+    AI_FU.pendingQuestion = suggestions[0].question;
+    AI_FU.pendingLabel    = suggestions[0].label || null;
+  }
+  return suggestions.slice(0, 4); // tối đa 4 gợi ý
+}
+
+// Render follow-up buttons vào chat
+function aiShowFollowUp(suggestions, parentAnswer) {
+  if (!suggestions || !suggestions.length) return;
+  const box = document.getElementById('aiMsgs');
+
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-followup-wrap';
+  wrap.id = 'aiFollowUpWrap_' + Date.now();
+
+  const label = document.createElement('div');
+  label.className = 'ai-followup-label';
+  label.textContent = '✦ Gợi ý tiếp theo';
+  wrap.appendChild(label);
+
+  const btnRow = document.createElement('div');
+  btnRow.className = 'ai-followup-btns';
+
+  suggestions.forEach(s => {
+    const btn = document.createElement('button');
+    btn.className = `ai-followup-btn ${s.cls}`;
+    btn.innerHTML = `<span class="material-icons-round">${s.icon}</span>${s.label}`;
+
+    btn.onclick = () => {
+      // Xóa toàn bộ follow-up sau khi chọn
+      wrap.style.opacity = '0.5';
+      wrap.style.pointerEvents = 'none';
+      setTimeout(() => wrap.remove(), 300);
+
+      if (s.action) {
+        // Action trực tiếp (mở modal, etc.)
+        s.action();
+      } else if (s.question) {
+        // Gửi prompt đầy đủ đến AI nhưng chỉ hiển thị label ngắn trong chat
+        aiAsk(s.question, s.label);
+      }
+    };
+    btnRow.appendChild(btn);
+  });
+
+  // Nút bỏ qua
+  const noBtn = document.createElement('button');
+  noBtn.className = 'ai-followup-btn ai-fb-no';
+  noBtn.innerHTML = '<span class="material-icons-round">close</span>Bỏ qua';
+  noBtn.onclick = () => { wrap.style.opacity='0'; setTimeout(()=>wrap.remove(),200); };
+  btnRow.appendChild(noBtn);
+
+  wrap.appendChild(btnRow);
+  box.appendChild(wrap);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ================================================================
+
 async function aiSend() {
+
+  // ── Smart intercept: user trả lời có/không follow-up ──
+  const _rawInput = document.getElementById('aiInput').value.trim().toLowerCase();
+  const _isYes = /^(có|co|yes|y|oke|ok|đồng ý|muốn|soạn|soạn đi|làm đi|được)$/.test(_rawInput);
+  const _isNo  = /^(không|khong|no|n|thôi|bỏ qua|bỏ|skip)$/.test(_rawInput);
+
+  if (_isYes && AI_FU.pendingQuestion) {
+    const _pq = AI_FU.pendingQuestion;
+    const _pl = AI_FU.pendingLabel || _rawInput;
+    AI_FU.pendingQuestion = null;
+    AI_FU.pendingLabel = null;
+    document.getElementById('aiInput').value = '';
+    document.querySelectorAll('.ai-followup-wrap').forEach(el => el.remove());
+    // Gửi prompt đầy đủ, hiển thị label ngắn
+    aiAsk(_pq, _pl);
+    return;
+  } else if (_isNo && AI_FU.pendingQuestion) {
+    AI_FU.pendingQuestion = null;
+    document.getElementById('aiInput').value = '';
+    document.querySelectorAll('.ai-followup-wrap').forEach(el => el.remove());
+    aiAddMsg('user', 'Không');
+    aiAddMsg('bot', 'OK, bỏ qua! Bạn cần hỏi gì thêm không?');
+    return;
+  }
+  // ──────────────────────────────────────────────────────
   const input = document.getElementById('aiInput');
   const q = input.value.trim();
   if (!q || AI.loading) return;
@@ -6294,7 +6701,7 @@ async function aiSend() {
   await aiAsk(q);
 }
 
-async function aiAsk(question) {
+async function aiAsk(question, displayLabel) {
   if (AI.loading) return;
   document.getElementById('aiChips').style.display = 'none';
 
@@ -6313,20 +6720,53 @@ async function aiAsk(question) {
     if (question) {
       const qDiv = document.createElement('div');
       qDiv.className = 'ai-bubble ai-bubble-user';
-      qDiv.innerHTML = question.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+      qDiv.innerHTML = (displayLabel || question).replace(/&/g,'&amp;').replace(/</g,'&lt;');
       imgWrap.appendChild(qDiv);
     }
     box.appendChild(imgWrap);
     box.scrollTop = box.scrollHeight;
   } else {
-    aiAddMsg('user', question);
+    aiAddMsg('user', displayLabel || question);
   }
 
   // Clear image after showing
   if (hasImg) aiRemoveImg();
 
+  // ── Detect daily query ──────────────────────────────────
+  let dailyContext = '';
+  const twoDates = aiDetectTwoDates(question);
+  const oneDate  = !twoDates ? aiDetectDate(question) : null;
+
+  if (twoDates) {
+    // So sánh 2 ngày
+    aiAddMsg('bot', `<span style="color:var(--sky);font-weight:700">⏳ Đang tải dữ liệu ${twoDates[0]} và ${twoDates[1]}...</span>`);
+    const [d1orders, d2orders] = await Promise.all([
+      aiGetDailyData(twoDates[0]),
+      aiGetDailyData(twoDates[1])
+    ]);
+    document.getElementById('aiMsgs').lastChild?.remove(); // xóa thông báo loading
+    if (d1orders !== null && d2orders !== null) {
+      dailyContext = '\n\n' + aiBuildDailyContext(twoDates[0], d1orders)
+                  + '\n\n' + aiBuildDailyContext(twoDates[1], d2orders);
+    }
+  } else if (oneDate) {
+    // 1 ngày cụ thể
+    const loadMsg = document.createElement('div');
+    loadMsg.className = 'ai-bubble ai-bubble-bot';
+    loadMsg.innerHTML = `<span style="color:var(--sky);font-weight:700">⏳ Đang tải dữ liệu ngày ${oneDate}...</span>`;
+    document.getElementById('aiMsgs').appendChild(loadMsg);
+    document.getElementById('aiMsgs').scrollTop = 99999;
+    const dayOrders = await aiGetDailyData(oneDate);
+    loadMsg.remove();
+    if (dayOrders !== null) {
+      dailyContext = '\n\n' + aiBuildDailyContext(oneDate, dayOrders);
+    }
+  }
+  // ──────────────────────────────────────────────────────────
+
   let context = aiBuildContext();
   if (!context) context = 'Chưa có dữ liệu tháng — hãy phân tích ảnh trực tiếp.';
+  if (dailyContext) context += dailyContext;
 
   // Detect order code in question
   let foundOrder = null;
@@ -6370,7 +6810,19 @@ async function aiAsk(question) {
         AI.history.push({role:'user',  text: question});
         AI.history.push({role:'model', text: data.answer});
       }
-      if (foundOrder) aiShowOrderImages(foundOrder);
+      if (foundOrder) {
+        aiShowOrderImages(foundOrder);
+        // Cập nhật context đơn cho follow-up
+        AI_FU.orderCode    = foundOrder.code    || AI_FU.orderCode;
+        AI_FU.orderStatus  = foundOrder.status  || AI_FU.orderStatus;
+        AI_FU.orderShop    = foundOrder.shop    || AI_FU.orderShop;
+        AI_FU.orderChannel = foundOrder.channel || AI_FU.orderChannel;
+      }
+      // Phân tích → hiện follow-up buttons nếu phù hợp
+      setTimeout(() => {
+        const suggestions = aiDetectFollowUpContext(data.answer, question);
+        if (suggestions.length) aiShowFollowUp(suggestions, data.answer);
+      }, 400);
     } else {
       const msg = data.message || '';
       let friendly = '❌ Không thể kết nối AI. Thử lại sau nhé.';
@@ -6453,11 +6905,29 @@ async function aiGenerateDraft() {
   document.getElementById('aiDraftCopied').style.display = 'none';
 
   const platformGuide = {
-    shopee: 'Shopee — chủ shop gửi khiếu nại đến Shopee về đơn hoàn bị lỗi do khách hàng hoặc shipper làm hỏng/bẩn/mất hàng.',
-    tiktok: 'TikTok Shop — chủ shop gửi tranh chấp đến TikTok về đơn hoàn bị lỗi do khách hàng hoặc shipper.',
-    lazada: 'Lazada — chủ shop gửi báo cáo đến Lazada về đơn hoàn bị lỗi do khách hàng hoặc shipper.',
-    general: 'Nội dung khiếu nại chung — chủ shop gửi đến bộ phận hỗ trợ về đơn hoàn bị lỗi.'
+    shopee: 'Shopee (Trung tâm Giải quyết Tranh chấp Shopee)',
+    tiktok: 'TikTok Shop (Trung tâm Hỗ trợ Người bán TikTok)',
+    lazada: 'Lazada (Trung tâm Hỗ trợ Seller Lazada)',
+    general: 'bộ phận hỗ trợ sàn thương mại điện tử'
   };
+
+  // Phân loại tình trạng để điều chỉnh lập luận cho phù hợp
+  const _status = (order.status || '').toLowerCase();
+  const _isBan  = /bẩn|bị bẩn|bị bẩn|ẩm|ướt|mốc|bụi bẩn/.test(_status);
+  const _isLoi  = /lỗi|hỏng|vỡ|móp|trầy|rách|bị lỗi|biến dạng/.test(_status);
+  const _isThieu = /thiếu|mất hàng|thiếu hàng|không đủ/.test(_status);
+  const _isTrao = /tráo|hàng giả|không đúng|sai hàng|bị tráo/.test(_status);
+
+  // Lập luận thiệt hại tùy tình trạng
+  let _damageArg = '';
+  if (_isBan || _isLoi) {
+    _damageArg = 'Hàng hoàn về bị ' + order.status + ', shop không thể lưu kho hay bán lại được, phải xử lý hàng hỏng.';
+  } else if (_isThieu || _isTrao) {
+    _damageArg = 'Hàng hoàn về bị ' + order.status + ', shop bị thiệt hại nặng về hàng hóa và tài chính, yêu cầu bồi thường đầy đủ.';
+  } else {
+    // Trường hợp khác (bị từ chối, không nhận, v.v.)
+    _damageArg = 'Hàng hoàn về với tình trạng: ' + order.status + ', gây thiệt hại trực tiếp cho shop.';
+  }
 
   const prompt = `Soạn nội dung khiếu nại cho đơn hàng hoàn sau đây.
 Góc nhìn: TÔI LÀ CHỦ SHOP, khiếu nại lên ${platformGuide[_aiDraftPlatform]}
@@ -6471,6 +6941,9 @@ THÔNG TIN ĐƠN:
 - Shop: ${order.shop || '?'}
 - Kênh: ${order.channel || '?'}
 - Ngày nhận hàng hoàn: ${order.time ? new Date(order.time).toLocaleDateString('vi-VN') : '?'}
+
+Lập luận thiệt hại (BẮT BUỘC đưa vào nội dung):
+${_damageArg}
 
 Yêu cầu bắt buộc:
 - Viết bằng tiếng Việt, lịch sự nhưng rõ ràng
@@ -6493,9 +6966,19 @@ Yêu cầu bắt buộc:
     const data = await res.json();
     document.getElementById('aiDraftLoading').style.display = 'none';
     if (data.result === 'success') {
-      // Tự cắt bớt nếu vượt 256 ký tự
+      // Tự cắt thông minh: ưu tiên cắt tại cuối câu gần nhất
       let answer = data.answer.trim();
-      if (answer.length > 256) answer = answer.substring(0, 253) + '...';
+      if (answer.length > 256) {
+        // Tìm dấu câu gần nhất trước ký tự 253
+        const cutZone = answer.substring(0, 253);
+        const lastDot  = Math.max(cutZone.lastIndexOf('.'), cutZone.lastIndexOf('!'), cutZone.lastIndexOf('?'));
+        if (lastDot > 200) {
+          answer = answer.substring(0, lastDot + 1);
+        } else {
+          // Không tìm thấy câu phù hợp → cắt cứng
+          answer = answer.substring(0, 253) + '...';
+        }
+      }
       document.getElementById('aiDraftText').value = answer;
       document.getElementById('aiDraftContent').style.display = 'block';
       aiUpdateCharCount();
@@ -6569,18 +7052,30 @@ function _warnCacheSet(month, data) {
   } catch(e) {}
 }
 
+// ── Flag chặn race condition & re-run trong cùng phiên ──
+let _aiWarnInFlight = false;        // đang gọi AI → chặn gọi thêm
+let _aiWarnDoneSession = {};        // { "2026-04": true } → đã xử lý tháng này trong phiên
+
 async function aiEarlyWarningCheck() {
   // Chỉ chạy cho admin
   if (typeof userRole === 'undefined' || userRole !== 'admin') return;
   const m = document.getElementById('monthSelect')?.value;
   if (!m) return;
+
+  // ── CHẶN 1: đang có request AI đang bay → bỏ qua ──
+  if (_aiWarnInFlight) return;
+
+  // ── CHẶN 2: đã xử lý tháng này trong phiên đăng nhập → bỏ qua ──
+  if (_aiWarnDoneSession[m]) return;
+
   const mc = _monthStatsCache[m];
   if (!mc?.currOrders?.length || !mc?.prevOrders?.length) return;
 
-  // ── Thử lấy từ cache ngày hôm nay trước ──
+  // ── Thử lấy từ cache localStorage ngày hôm nay trước ──
   const cached = _warnCacheGet(m);
   if (cached) {
     // Đã có kết quả hôm nay → hiển thị lại, KHÔNG gọi AI
+    _aiWarnDoneSession[m] = true; // đánh dấu phiên
     if (cached.alerts?.length && cached.analysis) {
       aiShowEarlyWarning(cached.alerts, cached.analysis);
     }
@@ -6639,6 +7134,8 @@ async function aiEarlyWarningCheck() {
     `- ${a.shop}: tỷ lệ lỗi ${a.currRate}% (${a.errorCount}/${a.total} đơn), tháng trước ${a.prevRate}%`
   ).join('\n');
 
+  // Bật flag trước khi gọi → chặn mọi lần gọi song song
+  _aiWarnInFlight = true;
   try {
     const res = await fetch(WEB_APP_URL, {
       method: 'POST',
@@ -6653,13 +7150,19 @@ async function aiEarlyWarningCheck() {
     if (data.result === 'success') {
       // Lưu cache ngay lập tức — hôm nay sẽ không gọi lại nữa
       _warnCacheSet(m, { alerts, analysis: data.answer, ts: Date.now() });
+      _aiWarnDoneSession[m] = true; // đánh dấu phiên thành công
       aiShowEarlyWarning(alerts, data.answer);
     } else {
-      // Lưu cache lỗi (chỉ alerts, không có analysis) → không retry hôm nay
+      // Lưu cache lỗi → không retry hôm nay
       _warnCacheSet(m, { alerts, analysis: '', ts: Date.now() });
+      _aiWarnDoneSession[m] = true; // đánh dấu phiên dù lỗi
     }
   } catch(e) {
     // Lỗi mạng → KHÔNG cache → cho phép thử lại lần sau trong ngày
+    // Nhưng KHÔNG đánh dấu session → lần sau còn retry được
+  } finally {
+    // Luôn tắt flag dù thành công hay thất bại
+    _aiWarnInFlight = false;
   }
 }
 
