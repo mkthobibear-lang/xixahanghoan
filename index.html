@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>XIXA — Kho Hàng Hoàn vAI</title>
+<title>XIXA — Kho Hàng Hoàn AI</title>
 <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/679/679720.png" type="image/x-icon">
 <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
@@ -2004,8 +2004,9 @@ select.input-field{cursor:pointer}
       <span class="material-icons-round" style="font-size:16px">image</span>
       <input type="file" id="aiFileInput" accept="image/*" style="display:none" onchange="aiHandleImg(this)">
     </label>
-    <input class="ai-input" id="aiInput" placeholder="Hỏi về đơn hoàn, shop, kênh..."
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}">
+    <input class="ai-input" id="aiInput" placeholder="(Ctrl+V dán ảnh)"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}"
+      onpaste="aiHandlePaste(event)">
     <button class="ai-send" onclick="aiSend()">
       <span class="material-icons-round">send</span>
     </button>
@@ -3093,7 +3094,7 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
   e.preventDefault();
   const u=document.getElementById('loginUser').value;
   const p=document.getElementById('loginPass').value;
-  showLoading(true,"Đang đăng nhập...",true);
+  showLoading(true,"Đang thiết lập AI...",true);
   fetch(WEB_APP_URL,{method:"POST",body:JSON.stringify({action:"login",user:u,pass:p})})
     .then(r=>r.json()).then(res=>{
       showLoading(false);
@@ -4931,14 +4932,14 @@ async function pollOnlineStatus() {
 function _formatLastSeen(tsMs) {
   if (!tsMs) return '';
   const diff = Math.floor((Date.now() - tsMs) / 1000);
-  if (diff < 60) return 'vừa mới online';
-  if (diff < 3600) return 'online ' + Math.floor(diff / 60) + ' phút trước';
-  if (diff < 86400) return 'online ' + Math.floor(diff / 3600) + ' giờ trước';
+  if (diff < 60) return 'vừa mới hoạt động';
+  if (diff < 3600) return 'hoạt động ' + Math.floor(diff / 60) + ' phút trước';
+  if (diff < 86400) return 'hoạt động ' + Math.floor(diff / 3600) + ' giờ trước';
   return 'online ' + Math.floor(diff / 86400) + ' ngày trước';
 }
 
 function _getOnlineSubText(name) {
-  if (onlineStatusMap[name]) return 'Đang online';
+  if (onlineStatusMap[name]) return 'Đang hoạt động';
   const ts = lastSeenMap[name];
   if (!ts) return '';
   return _formatLastSeen(ts);
@@ -4951,13 +4952,13 @@ function _applyOnlineDots() {
     if (!dotEl) return;
     const on = !!onlineStatusMap[m.name];
     dotEl.className = 'online-dot ' + (on ? 'is-online' : 'is-offline');
-    dotEl.title     = on ? 'Đang online' : 'Offline';
+    dotEl.title     = on ? 'Đang hoạt động' : 'Offline';
   });
   if (chatCurrentTarget) {
     const hDot = document.getElementById('chatConvOnlineDot');
     const hSub = document.getElementById('chatConvSub');
     const on   = !!onlineStatusMap[chatCurrentTarget];
-    if (hDot) { hDot.className = 'online-dot ' + (on ? 'is-online' : 'is-offline'); hDot.title = on ? 'Đang online' : 'Offline'; }
+    if (hDot) { hDot.className = 'online-dot ' + (on ? 'is-online' : 'is-offline'); hDot.title = on ? 'Đang hoạt động' : 'Offline'; }
     if (hSub) {
       hSub.textContent = _getOnlineSubText(chatCurrentTarget);
       hSub.style.color = on ? '#22c55e' : 'var(--text3)';
@@ -6393,9 +6394,10 @@ body.dark .ai-bubble-bot::before{
         <button id="chatEmojiBtn" type="button" onclick="toggleEmojiPanel(event)" title="Biểu cảm">
           <span class="material-icons-round">mood</span>
         </button>
-        <textarea id="chatMsgInput" rows="1" placeholder="Nhắn tin..."
+        <textarea id="chatMsgInput" rows="1" placeholder="(Ctrl+V dán ảnh)"
           onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMsg()}"
-          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px'"></textarea>
+          oninput="this.style.height='auto';this.style.height=Math.min(this.scrollHeight,90)+'px'"
+          onpaste="chatHandlePaste(event)"></textarea>
         <button id="chatLikeBtn" type="button" onclick="sendLike()" title="Thả tim">👍</button>
         <button id="chatSendMsgBtn" onclick="sendMsg()">
           <span class="material-icons-round" style="font-size:18px">send</span>
@@ -7371,6 +7373,56 @@ function aiRemoveImg() {
   document.getElementById('aiFileInput').value = '';
   document.getElementById('aiImgPreviewWrap').style.display = 'none';
   document.getElementById('aiInput').placeholder = 'Hỏi về đơn hoàn, shop, kênh...';
+}
+
+
+// ── Paste ảnh vào AI Chat (Ctrl+V) ──────────────────────
+function aiHandlePaste(event) {
+  const items = event.clipboardData && event.clipboardData.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      event.preventDefault();
+      const file = items[i].getAsFile();
+      if (!file) return;
+      if (file.size > 4 * 1024 * 1024) {
+        showToast('warning', 'Ảnh quá lớn', 'Vui lòng dán ảnh dưới 4MB');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const dataUrl = e.target.result;
+        AI.imgBase64 = dataUrl.split(',')[1];
+        AI.imgMime   = file.type;
+        document.getElementById('aiImgPreview').src = dataUrl;
+        document.getElementById('aiImgPreviewWrap').style.display = 'flex';
+        document.getElementById('aiInput').placeholder = 'Hỏi về ảnh này... (mã đơn, tình trạng, so sánh...)';
+        showToast('success', 'Đã dán ảnh', 'Nhấn Gửi để AI phân tích');
+      };
+      reader.readAsDataURL(file);
+      return;
+    }
+  }
+}
+
+// ── Paste ảnh vào Messenger (Ctrl+V) ────────────────────
+function chatHandlePaste(event) {
+  const items = event.clipboardData && event.clipboardData.items;
+  if (!items) return;
+  for (let i = 0; i < items.length; i++) {
+    if (items[i].type.indexOf('image') !== -1) {
+      event.preventDefault();
+      const file = items[i].getAsFile();
+      if (!file) return;
+      chatImgFile = file;
+      const prev = document.getElementById('chatImgPrev');
+      prev.src = URL.createObjectURL(file);
+      prev.style.display = 'block';
+      document.getElementById('chatImgWrap').style.display = 'flex';
+      showToast('success', 'Đã dán ảnh', 'Nhấn Gửi để gửi ảnh');
+      return;
+    }
+  }
 }
 
 
