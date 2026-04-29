@@ -7599,7 +7599,7 @@ QUAN TRỌNG — prompt field phải dùng đúng template sau (thay [MÃ], [TÌ
 
 - complaint_good: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. Bắt đầu bằng 'Kính gửi [TÊN KÊNH],' — KHÔNG viết 'Tôi là chủ shop' hay tên shop. Đơn [MÃ] sản phẩm [SẢN PHẨM] gửi đúng đủ giống mô tả, hàng mới 100%, có video đóng gói. Khách hoàn vì không vừa size (lý do phổ biến với giày dép) hoặc không còn nhu cầu — không phải lỗi shop. Yêu cầu không đánh vi phạm, không trừ điểm uy tín. Tối đa 256 ký tự, chỉ trả về nội dung khiếu nại."
 
-- complaint_bad: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. Bắt đầu bằng 'Kính gửi [TÊN KÊNH],' — KHÔNG viết 'Tôi là chủ shop' hay tên shop. Đơn [MÃ] sản phẩm [SẢN PHẨM] hoàn về bị [TÌNH TRẠNG] do lỗi khách/shipper, shop đã quay video đóng gói hàng mới 100%. Hàng bẩn/lỗi không thể bán lại, shop chịu thiệt hại. Yêu cầu bồi thường hoặc không trừ điểm/phí. Tối đa 256 ký tự (đếm kỹ), chỉ trả về nội dung khiếu nại."
+- complaint_bad: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. Bắt đầu bằng 'Kính gửi [TÊN KÊNH],' — KHÔNG viết 'Tôi là chủ shop' hay tên shop. Đơn [MÃ] sản phẩm [SẢN PHẨM] hoàn về bị [TÌNH TRẠNG] do lỗi khách/shipper, shop đã quay video đóng gói hàng mới 100%. Hàng bẩn/lỗi không thể bán lại, shop chịu thiệt hại. Yêu cầu bồi thường, không trừ điểm và phí. Tối đa 256 ký tự (đếm kỹ), chỉ trả về nội dung khiếu nại."
 
 - Các loại khác (update_status, view_images, find_similar, compare_day, trend_analysis, detail_shop): dùng câu hỏi ngắn gọn tiếng Việt
 
@@ -7812,7 +7812,7 @@ function _aiFuOpenComplaintModal(type, aiPrompt) {
     } else {
       damage = `hàng hoàn về bị ${stat}, gây thiệt hại trực tiếp cho shop`;
     }
-    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. Bắt đầu bằng "Kính gửi ${_chDisplay}," — KHÔNG viết "Tôi là chủ shop" hay tên shop. Nội dung: Đơn ${code} sản phẩm ${prod} — shop đã gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. ${damage}. Yêu cầu bồi thường hoặc không trừ điểm/phí. BẮT BUỘC đề cập shop gửi đúng đủ và lập luận thiệt hại. Viết tiếng Việt, lịch sự, tối đa 256 ký tự (đếm kỹ, KHÔNG vượt quá), chỉ trả về nội dung khiếu nại.`;
+    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. Bắt đầu bằng "Kính gửi ${_chDisplay}," — KHÔNG viết "Tôi là chủ shop" hay tên shop. Nội dung: Đơn ${code} sản phẩm ${prod} — shop đã gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. ${damage}. Yêu cầu bồi thường, không trừ điểm và phí. BẮT BUỘC đề cập shop gửi đúng đủ và lập luận thiệt hại. Viết tiếng Việt, lịch sự, tối đa 256 ký tự (đếm kỹ, KHÔNG vượt quá), chỉ trả về nội dung khiếu nại.`;
   }
 
   // Đặt dữ liệu vào modal KN chuyên biệt và mở lên
@@ -8228,7 +8228,7 @@ Lý do: Shop đã gửi đúng đủ sản phẩm ${order.product||''} giống m
 Lập luận thiệt hại BẮT BUỘC đưa vào nội dung (không được bỏ qua):
 ${_damageArg}
 
-Yêu cầu bồi thường hoặc không trừ điểm/phí.
+Yêu cầu bồi thường, không trừ điểm và phí.
 
 Yêu cầu bắt buộc:
 - Viết tiếng Việt, lịch sự, nêu mã vận đơn và yêu cầu cụ thể
