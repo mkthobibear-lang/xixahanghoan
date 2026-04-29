@@ -428,10 +428,10 @@ select.input-field{cursor:pointer}
   display:flex;align-items:center;justify-content:center;
 }
 
-.loading-text{font-size:13px;font-weight:600;color:var(--text2)}
+.loading-text{font-size:13px;font-weight:800;background:linear-gradient(135deg,#1a73e8,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 .progress-track{width:200px;height:4px;background:var(--border);border-radius:100px;overflow:hidden}
-.progress-fill{height:100%;background:var(--text);width:0%;transition:width .3s ease;border-radius:100px}
-.progress-row{display:flex;justify-content:space-between;font-size:11px;font-weight:700;color:var(--text3);margin-top:6px}
+.progress-fill{height:100%;background:linear-gradient(90deg,#1a73e8,#7c3aed);width:0%;transition:width .3s ease;border-radius:100px}
+.progress-row{display:flex;justify-content:space-between;font-size:13px;font-weight:800;margin-top:6px;background:linear-gradient(135deg,#1a73e8,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
 
 #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px}
 .login-card{width:100%;max-width:360px;background:var(--surface);border:1px solid var(--border);border-radius:24px;padding:36px 32px;box-shadow:var(--shadow-lg)}
@@ -1261,7 +1261,7 @@ select.input-field{cursor:pointer}
   </g>
 </svg></div>
   <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-  <div class="progress-row"><span class="loading-text" id="statusText">Đang xử lý...</span><span style="font-size:11px;font-weight:700;color:var(--text3)" id="percentText">0%</span></div>
+  <div class="progress-row"><span class="loading-text" id="statusText">Đang xử lý...</span><span id="percentText">0%</span></div>
   <div id="ocr-status"></div>
 </div>
 
