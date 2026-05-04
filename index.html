@@ -1905,19 +1905,31 @@ select.input-field{cursor:pointer}
   <span id="chatFabDot"></span>
 </button>
 
-<!-- GEMINI AI CHAT FAB v17 -->
+<!-- GEMINI AI CHAT FAB v18 - GLASS MORPHISM -->
 <button id="aiFab" onclick="toggleAiChat()" title="Hỏi AI về kho hàng">
-  <span class="material-icons-round">auto_awesome</span>
+  <span class="ai-fab-orbit"></span>
+  <span class="ai-fab-orbit ai-fab-orbit-2"></span>
+  <span class="ai-fab-icon">
+    <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M12 3l1.5 4.5L18 9l-4.5 1.5L12 15l-1.5-4.5L6 9l4.5-1.5L12 3z"/>
+      <path d="M19 14l.75 2.25L22 17l-2.25.75L19 20l-.75-2.25L16 17l2.25-.75L19 14z"/>
+    </svg>
+  </span>
+  <span class="ai-fab-status" id="aiFabStatus" title="Online"></span>
+  <span class="ai-fab-badge" id="aiFabBadge" style="display:none">0</span>
 </button>
 
-<!-- GEMINI AI CHAT WINDOW v17 -->
+<!-- GEMINI AI CHAT WINDOW v18 -->
 <div id="aiChatWin">
   <div class="ai-topbar">
     <div class="ai-topbar-icon">✦</div>
     <div style="flex:1;min-width:0">
       <div class="ai-topbar-title">TRỢ LÝ ẢO XIXA</div>
-      <div class="ai-topbar-sub">AI · Hỏi đáp kho hàng</div>
+      <div class="ai-topbar-sub-live" id="aiTopbarSub">Sẵn sàng · llama-3.3-70b</div>
     </div>
+    <button class="ai-close-btn" onclick="openAiCmdPalette()" title="Lệnh nhanh (Ctrl+K)" style="margin-right:4px">
+      <span class="material-icons-round" style="font-size:14px">search</span>
+    </button>
     <button class="ai-close-btn" id="aiTokenBtn" onclick="toggleAiTokenPanel()" title="Quota token XIXA" style="margin-right:4px;position:relative">
       <span class="material-icons-round" style="font-size:14px">data_usage</span>
       <span id="aiTokenAlertDot" style="display:none;position:absolute;top:3px;right:3px;width:6px;height:6px;background:#ef4444;border-radius:50%;border:1.5px solid rgba(255,255,255,.3)"></span>
@@ -1928,6 +1940,20 @@ select.input-field{cursor:pointer}
     <button class="ai-close-btn" onclick="toggleAiChat()">
       <span class="material-icons-round" style="font-size:14px">close</span>
     </button>
+  </div>
+  <!-- SUB TOOLBAR: layout picker xuống đây để chừa chỗ cho title -->
+  <div class="ai-subtoolbar">
+    <div class="ai-layout-pick" title="Chế độ hiển thị">
+      <button class="ai-layout-btn active" data-mode="floating" onclick="aiSetLayoutMode('floating')" title="Floating">
+        <span class="material-icons-round">picture_in_picture</span>
+      </button>
+      <button class="ai-layout-btn" data-mode="side" onclick="aiSetLayoutMode('side')" title="Side panel">
+        <span class="material-icons-round">vertical_split</span>
+      </button>
+      <button class="ai-layout-btn" data-mode="full" onclick="aiSetLayoutMode('full')" title="Full screen">
+        <span class="material-icons-round">fullscreen</span>
+      </button>
+    </div>
   </div>
   <!-- TOKEN USAGE PANEL -->
   <div id="aiTokenPanel" style="display:none;background:var(--surface);border-bottom:1px solid var(--border);padding:14px 16px;flex-shrink:0">
@@ -1971,6 +1997,14 @@ select.input-field{cursor:pointer}
       </div>
     </div>
     <div id="aiTokenBreakdown" style="display:none;margin-top:8px;padding:6px 8px;background:var(--surface2);border-radius:6px;border:1px solid var(--border)"></div>
+    <!-- SPARKLINE 7 NGÀY GẦN NHẤT -->
+    <div style="margin-top:10px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+        <span style="font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">7 ngày gần nhất</span>
+        <span style="font-size:10px;color:var(--text3)" id="aiTokenSparkInfo">—</span>
+      </div>
+      <div class="ai-token-sparkline" id="aiTokenSparkline"></div>
+    </div>
     <div style="font-size:10px;color:var(--text3);margin-top:8px;text-align:center">
       * Daily quota từ Apps Script (nếu server forward) · Phút tính xấp xỉ
     </div>
@@ -1980,12 +2014,10 @@ select.input-field{cursor:pointer}
     <div class="ai-bubble ai-bubble-bot">Xin chào! Tôi có thể phân tích dữ liệu kho hàng tháng này. Bạn muốn hỏi gì? (Trợ lý là AI và có thể mắc sai sót)</div>
   </div>
   <div class="ai-chips" id="aiChips">
-    <div class="ai-chip" onclick="aiAskToday()">Hôm nay bao nhiêu đơn?</div>
-    <div class="ai-chip" onclick="aiAsk('Hôm qua nhập bao nhiêu đơn? Chi tiết tốt/bẩn/lỗi?')">Hôm qua</div>
-    <div class="ai-chip" onclick="aiAsk('Shop nào có tỷ lệ lỗi cao nhất tháng này?')">Shop lỗi nhiều nhất</div>
-    <div class="ai-chip" onclick="aiAsk('So sánh Shopee và TikTok tháng này')">Shopee vs TikTok</div>
-    <div class="ai-chip" onclick="aiAsk('Tổng quan tháng này: tốt, bẩn, lỗi bao nhiêu?')">Tổng quan tháng</div>
-    <div class="ai-chip" onclick="aiAsk('Liệt kê các đơn bị lỗi/tráo tháng này')">Đơn lỗi tháng này</div>
+    <div class="ai-chip" onclick="aiAskToday()">📅 Hôm nay</div>
+    <div class="ai-chip" onclick="aiAsk('Tổng quan tháng này: tốt, bẩn, lỗi bao nhiêu?')">📊 Tổng quan tháng</div>
+    <div class="ai-chip" onclick="aiAsk('Shop nào có tỷ lệ lỗi cao nhất tháng này?')">⚠️ Shop lỗi nhiều</div>
+    <div class="ai-chip" onclick="openAiCmdPalette()" style="border-color:#7c3aed;color:#7c3aed;background:rgba(124,58,237,.08)">⌘K Lệnh nhanh</div>
   </div>
   <div class="ai-ctx-badge" id="aiCtxBadge">Chưa có dữ liệu · Vào Dashboard chọn tháng trước</div>
 
@@ -1998,18 +2030,32 @@ select.input-field{cursor:pointer}
     <div style="font-size:11px;color:var(--text3);font-weight:600">Ảnh đính kèm · AI sẽ đọc và phân tích</div>
   </div>
 
-  <div class="ai-input-row">
+  <div class="ai-input-row" style="position:relative">
+    <!-- SLASH MENU POPUP -->
+    <div id="aiSlashMenu"></div>
     <!-- Upload ảnh button -->
     <label id="aiImgPickBtn" title="Đính kèm ảnh bill/sản phẩm" style="width:32px;height:32px;border-radius:50%;border:1px solid var(--border-strong);background:var(--surface2);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;color:var(--text2);transition:.15s" onmouseover="this.style.borderColor='#1a73e8';this.style.color='#1a73e8'" onmouseout="this.style.borderColor='var(--border-strong)';this.style.color='var(--text2)'">
       <span class="material-icons-round" style="font-size:16px">image</span>
       <input type="file" id="aiFileInput" accept="image/*" style="display:none" onchange="aiHandleImg(this)">
     </label>
-    <input class="ai-input" id="aiInput" placeholder="(Ctrl+V dán ảnh)"
-      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();aiSend()}"
+    <input class="ai-input" id="aiInput" placeholder="Hỏi gì đó hoặc gõ / để xem lệnh… (Ctrl+V dán ảnh)"
+      onkeydown="aiInputKeyDown(event)"
+      oninput="aiInputOnInput(event)"
       onpaste="aiHandlePaste(event)">
     <button class="ai-send" onclick="aiSend()">
       <span class="material-icons-round">send</span>
     </button>
+  </div>
+</div>
+
+<!-- COMMAND PALETTE (Ctrl+K) -->
+<div id="aiCmdPaletteBackdrop" onclick="if(event.target===this)closeAiCmdPalette()">
+  <div id="aiCmdPalette">
+    <div class="ai-cmd-search-wrap">
+      <span class="material-icons-round">search</span>
+      <input id="aiCmdSearch" placeholder="Tìm lệnh hoặc gõ câu hỏi…" oninput="aiCmdFilter()" onkeydown="aiCmdKey(event)" autocomplete="off">
+    </div>
+    <div class="ai-cmd-list" id="aiCmdList"></div>
   </div>
 </div>
 
@@ -2071,22 +2117,70 @@ select.input-field{cursor:pointer}
 
 <!-- AI COMPLAINT DRAFT MODAL -->
 <div id="aiComplaintDraftModal" class="overlay" style="z-index:4000">
-  <div class="modal" style="max-width:480px">
-    <div class="modal-head">
-      <h3 style="font-size:15px;font-weight:800;display:flex;align-items:center;gap:8px">
-        <span class="material-icons-round" style="color:var(--blue);font-size:18px">auto_awesome</span>
-        Nội dung khiếu nại — AI soạn thảo
-      </h3>
-      <button class="modal-close" onclick="closeModal('aiComplaintDraftModal')"><span class="material-icons-round">close</span></button>
-    </div>
-    <div class="modal-body">
-      <!-- Platform tabs -->
-      <div style="display:flex;gap:6px;margin-bottom:14px;flex-wrap:wrap" id="aiDraftPlatformTabs">
-        <button class="ai-draft-tab active" onclick="aiSelectPlatform('shopee',this)">🛒 Shopee</button>
-        <button class="ai-draft-tab" onclick="aiSelectPlatform('tiktok',this)">🎵 TikTok</button>
-        <button class="ai-draft-tab" onclick="aiSelectPlatform('lazada',this)">🟡 Lazada</button>
-        <button class="ai-draft-tab" onclick="aiSelectPlatform('general',this)">📝 Chung</button>
+  <div class="modal ai-draft-modal-v18" style="max-width:760px;padding:0;overflow:hidden">
+    <!-- HEADER với verified badge -->
+    <div class="ai-draft-head">
+      <div class="ai-draft-head-icon"><span class="material-icons-round">edit_note</span></div>
+      <div class="ai-draft-head-title">Soạn khiếu nại — AI Agent</div>
+      <div class="ai-draft-head-meta">
+        <span id="aiDraftTimeBadge" class="ai-draft-time"></span>
+        <span id="aiDraftVerifyBadge" class="ai-draft-verified" style="display:none">✓ Verified</span>
       </div>
+      <button class="ai-draft-close" onclick="closeModal('aiComplaintDraftModal')"><span class="material-icons-round">close</span></button>
+    </div>
+    <div class="ai-draft-body-v18">
+      <!-- Platform tabs -->
+      <div class="ai-draft-tabs-v18" id="aiDraftPlatformTabs">
+        <button class="ai-draft-tab-v18 active" onclick="aiSelectPlatform('shopee',this)">🛒 Shopee</button>
+        <button class="ai-draft-tab-v18" onclick="aiSelectPlatform('tiktok',this)">🎵 TikTok</button>
+        <button class="ai-draft-tab-v18" onclick="aiSelectPlatform('lazada',this)">🟡 Lazada</button>
+        <button class="ai-draft-tab-v18" onclick="aiSelectPlatform('general',this)">📝 Chung</button>
+      </div>
+      <!-- SPLIT VIEW: context (trái) | output (phải) -->
+      <div class="ai-draft-split-v18">
+        <!-- CỘT TRÁI: CONTEXT ĐƠN HÀNG -->
+        <div class="ai-draft-col-ctx">
+          <div class="ai-draft-col-label">
+            <span class="material-icons-round">info</span>
+            CONTEXT ĐƠN HÀNG
+          </div>
+          <div class="ai-draft-ctx-card" id="aiDraftCtxBox">
+            <div class="ai-draft-row-v18">
+              <span class="ai-draft-row-k">Mã VD</span>
+              <span class="ai-draft-row-v" id="aiDraftCtxCode" style="font-family:'JetBrains Mono',monospace;font-size:11px">—</span>
+            </div>
+            <div class="ai-draft-row-v18">
+              <span class="ai-draft-row-k">Sản phẩm</span>
+              <span class="ai-draft-row-v" id="aiDraftCtxProduct">—</span>
+            </div>
+            <div class="ai-draft-row-v18">
+              <span class="ai-draft-row-k">Tình trạng</span>
+              <span class="ai-draft-row-v ai-draft-row-status" id="aiDraftCtxKind">—</span>
+            </div>
+            <div class="ai-draft-row-v18">
+              <span class="ai-draft-row-k">Vision</span>
+              <span class="ai-draft-row-v ai-draft-row-vision" id="aiDraftCtxInsight">—</span>
+            </div>
+            <div class="ai-draft-row-v18">
+              <span class="ai-draft-row-k">Memory</span>
+              <span class="ai-draft-row-v ai-draft-row-memory" id="aiDraftCtxMemory">—</span>
+            </div>
+            <div id="aiDraftCtxInsightWrap" style="display:none"></div>
+          </div>
+          <div id="aiDraftCtxImagesWrap" style="display:none;margin-top:12px">
+            <div class="ai-draft-col-label" style="font-size:10px;margin-bottom:6px">
+              <span id="aiDraftCtxImageCount">0 ảnh đính kèm</span>
+            </div>
+            <div class="ai-draft-ctx-images" id="aiDraftCtxImages"></div>
+          </div>
+        </div>
+        <!-- CỘT PHẢI: NỘI DUNG KN -->
+        <div class="ai-draft-col-out">
+          <div class="ai-draft-col-label" style="display:flex;justify-content:space-between;align-items:center">
+            <span style="display:flex;align-items:center;gap:6px"><span class="material-icons-round">description</span> NỘI DUNG KN</span>
+            <span id="aiDraftCharCountTop" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--green);font-weight:700">0/256</span>
+          </div>
+          <div class="ai-draft-output">
       <!-- Loading state -->
       <div id="aiDraftLoading" style="display:none;text-align:center;padding:20px 24px;color:var(--text3)">
         <div class="ai-loading-star-wrap" style="margin-bottom:10px"><svg class="ai-star-spinner" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -2111,28 +2205,36 @@ select.input-field{cursor:pointer}
     <path d="M54 46 L54.5 47.5 L56 46 L54.9 47.7 L56.5 48 L54.9 48.3 L56 50 L54.5 48.5 L54 50 L53.5 48.5 L52 50 L53.1 48.3 L51.5 48 L53.1 47.7 L52 46 L53.5 47.5 Z" fill="#38bdf8" opacity="0.85"/>
   </g>
 </svg></div>
-        <div style="font-size:13px;font-weight:600;background:linear-gradient(135deg,#1a73e8,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">AI đang soạn thảo...</div>
+        <div id="aiDraftLoadingText" style="font-size:13px;font-weight:600;background:linear-gradient(135deg,#1a73e8,#7c3aed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">AI đang soạn thảo...</div>
       </div>
       <!-- Draft content -->
       <div id="aiDraftContent" style="display:none">
-        <textarea id="aiDraftText" class="input-field" style="min-height:180px;resize:vertical;font-size:13px;line-height:1.6;font-family:'Plus Jakarta Sans',sans-serif" oninput="aiUpdateCharCount()"></textarea>
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:5px;margin-bottom:8px">
-          <span style="font-size:11px;color:var(--text3)">Giới hạn: 256 ký tự</span>
-          <span id="aiDraftCharCount" style="font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--green)">0/256</span>
-        </div>
-        <div style="display:flex;gap:8px;margin-top:4px">
-          <button onclick="aiCopyDraft()" class="btn-primary" style="margin-top:0;flex:1;background:var(--blue);display:flex;align-items:center;justify-content:center;gap:6px">
-            <span class="material-icons-round" style="font-size:16px">content_copy</span>Copy nội dung
-          </button>
-          <button onclick="aiRegenerateDraft()" class="icon-btn" title="Soạn lại" style="width:42px;height:42px;flex-shrink:0">
-            <span class="material-icons-round" style="font-size:18px">refresh</span>
-          </button>
+        <textarea id="aiDraftText" class="ai-draft-textarea-v18" oninput="aiUpdateCharCount()"></textarea>
+        <div class="ai-draft-output-foot">
+          <span id="aiDraftCharCount" style="font-family:'JetBrains Mono',monospace;font-weight:700;color:var(--green)">0/256</span>
+          <span class="ai-draft-output-sep">·</span>
+          <span id="aiDraftCharRatio" style="color:var(--text3);font-size:11px">0% bồi</span>
         </div>
         <div id="aiDraftCopied" style="display:none;font-size:11px;color:var(--green);font-weight:700;text-align:center;margin-top:6px">✓ Đã copy! Dán vào trang khiếu nại của sàn.</div>
       </div>
       <!-- Error state -->
       <div id="aiDraftError" style="display:none;color:var(--red);font-size:13px;text-align:center;padding:16px"></div>
-    </div>
+        </div><!-- /ai-draft-output -->
+        </div><!-- /ai-draft-col-out -->
+      </div><!-- /ai-draft-split -->
+      <!-- ACTION BUTTONS FOOTER -->
+      <div class="ai-draft-actions-v18">
+        <button class="ai-draft-act-btn ai-draft-act-secondary" onclick="aiRegenerateDraft()">
+          <span class="material-icons-round">refresh</span> Soạn lại
+        </button>
+        <button class="ai-draft-act-btn ai-draft-act-secondary" onclick="aiDraftEditMode()">
+          <span class="material-icons-round">edit</span> Sửa tay
+        </button>
+        <button class="ai-draft-act-btn ai-draft-act-primary" onclick="aiCopyAndOpenChannel()">
+          <span class="material-icons-round">content_copy</span> <span id="aiDraftPrimaryLabel">Copy nội dung</span>
+        </button>
+      </div>
+    </div><!-- /ai-draft-body-v18 -->
   </div>
 </div>
 
@@ -6094,49 +6196,201 @@ function backToMemberList() {
 /* ============================================================
    GEMINI AI CHAT v17
    ============================================================ */
+/* ── AI FAB v18 — GLASS MORPHISM với BREATH + ORBIT + STATUS DOT + BADGE ── */
 #aiFab{
   position:fixed;bottom:24px;right:84px;
-  width:50px;height:50px;border-radius:50%;
-  background:linear-gradient(135deg,#1a73e8 0%,#0d47a1 100%);
+  width:54px;height:54px;border-radius:50%;
+  background:linear-gradient(135deg,rgba(124,58,237,.95) 0%,rgba(26,115,232,.95) 50%,rgba(56,189,248,.95) 100%);
+  background-size:200% 200%;
   border:none;cursor:pointer;
   display:none;align-items:center;justify-content:center;
   z-index:9499;
-  box-shadow:0 8px 24px rgba(26,115,232,.4),0 3px 10px rgba(26,115,232,.25);
-  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s;
-  color:#fff;font-size:22px;
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  box-shadow:
+    0 0 0 1.5px rgba(255,255,255,.12) inset,
+    0 8px 28px rgba(124,58,237,.45),
+    0 4px 14px rgba(26,115,232,.35),
+    0 1px 0 rgba(255,255,255,.18) inset;
+  transition:transform .3s cubic-bezier(.34,1.56,.64,1),box-shadow .3s;
+  color:#fff;
+  animation:aiFabBreath 3.6s ease-in-out infinite, aiFabHueShift 8s linear infinite;
+  overflow:visible;
 }
-#aiFab:hover{transform:scale(1.1) translateY(-2px);box-shadow:0 12px 30px rgba(26,115,232,.55)}
+@keyframes aiFabBreath{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.06)}
+}
+@keyframes aiFabHueShift{
+  0%{background-position:0% 50%}
+  50%{background-position:100% 50%}
+  100%{background-position:0% 50%}
+}
+#aiFab:hover{
+  transform:scale(1.12) translateY(-3px);
+  animation-play-state:paused;
+  box-shadow:
+    0 0 0 2px rgba(255,255,255,.2) inset,
+    0 14px 36px rgba(124,58,237,.6),
+    0 6px 18px rgba(26,115,232,.45);
+}
 #aiFab:active{transform:scale(.96)}
-@media(max-width:860px){#aiFab{bottom:74px;right:70px;width:46px;height:46px;font-size:20px}}
 
+.ai-fab-icon{
+  display:flex;align-items:center;justify-content:center;
+  width:100%;height:100%;
+  filter:drop-shadow(0 1px 3px rgba(0,0,0,.2));
+  z-index:2;position:relative;
+  animation:aiFabIconFloat 4s ease-in-out infinite;
+}
+@keyframes aiFabIconFloat{
+  0%,100%{transform:translateY(0) rotate(0deg)}
+  50%{transform:translateY(-1.5px) rotate(8deg)}
+}
+
+/* Vòng orbit xoay quanh */
+.ai-fab-orbit{
+  position:absolute;inset:-6px;
+  border-radius:50%;
+  border:1.5px solid transparent;
+  border-top-color:rgba(255,255,255,.55);
+  border-right-color:rgba(255,255,255,.18);
+  animation:aiFabOrbit 3.5s linear infinite;
+  pointer-events:none;
+  opacity:.7;
+}
+.ai-fab-orbit-2{
+  inset:-11px;
+  border-top-color:transparent;
+  border-bottom-color:rgba(124,58,237,.45);
+  border-left-color:rgba(56,189,248,.3);
+  animation:aiFabOrbit 5.2s linear infinite reverse;
+  opacity:.55;
+}
+@keyframes aiFabOrbit{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+
+/* Chấm trạng thái — góc dưới phải */
+.ai-fab-status{
+  position:absolute;bottom:2px;right:2px;
+  width:11px;height:11px;border-radius:50%;
+  background:#22c55e;
+  border:2px solid #fff;
+  box-shadow:0 0 0 1px rgba(0,0,0,.08), 0 0 8px rgba(34,197,94,.7);
+  z-index:3;
+  animation:aiFabStatusPulse 2s ease-in-out infinite;
+}
+.ai-fab-status[data-status="thinking"]{background:#f59e0b;box-shadow:0 0 0 1px rgba(0,0,0,.08), 0 0 8px rgba(245,158,11,.7)}
+.ai-fab-status[data-status="error"]{background:#ef4444;box-shadow:0 0 0 1px rgba(0,0,0,.08), 0 0 8px rgba(239,68,68,.7)}
+.ai-fab-status[data-status="offline"]{background:#9ca3af;box-shadow:0 0 0 1px rgba(0,0,0,.08)}
+@keyframes aiFabStatusPulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.2);opacity:.85}
+}
+
+/* Badge số task đang chạy — góc trên phải */
+.ai-fab-badge{
+  position:absolute;top:-4px;right:-4px;
+  min-width:18px;height:18px;padding:0 4px;
+  border-radius:9px;
+  background:linear-gradient(135deg,#ef4444,#dc2626);
+  color:#fff;
+  font-size:10px;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 2px 6px rgba(239,68,68,.5);
+  z-index:4;
+  border:1.5px solid #fff;
+  animation:aiFabBadgePop .3s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes aiFabBadgePop{
+  from{transform:scale(0)}
+  to{transform:scale(1)}
+}
+
+@media(max-width:860px){#aiFab{bottom:74px;right:70px;width:48px;height:48px}}
+
+/* ── CHAT WINDOW v18 — GLASS với ANIMATED GRADIENT BORDER + LAYOUT MODES ── */
 #aiChatWin{
   position:fixed;bottom:84px;right:24px;
-  width:340px;height:480px;
-  background:var(--surface);
-  border:none;
-  border-radius:20px;
+  width:380px;height:560px;
+  background:linear-gradient(180deg,rgba(255,255,255,.78) 0%,rgba(248,250,252,.85) 100%);
+  backdrop-filter:blur(24px) saturate(140%);
+  -webkit-backdrop-filter:blur(24px) saturate(140%);
+  border:1px solid rgba(255,255,255,.6);
+  border-radius:22px;
   box-shadow:
-    0 0 0 1.5px rgba(124,58,237,.25),
-    0 12px 40px rgba(26,115,232,.15),
-    0 4px 16px rgba(0,0,0,.1);
+    0 24px 60px rgba(15,23,42,.18),
+    0 8px 24px rgba(124,58,237,.12),
+    0 1px 0 rgba(255,255,255,.6) inset;
   display:none;flex-direction:column;
   z-index:9400;
   overflow:hidden;
-  animation:aiWinIn .22s cubic-bezier(.34,1.56,.64,1);
+  animation:aiWinIn .28s cubic-bezier(.34,1.56,.64,1);
+  position:fixed;
+}
+/* Animated gradient border (lớp ::before) */
+#aiChatWin::before{
+  content:'';
+  position:absolute;inset:-1.5px;
+  border-radius:23px;
+  padding:1.5px;
+  background:linear-gradient(120deg,
+    rgba(124,58,237,.7) 0%,
+    rgba(56,189,248,.5) 25%,
+    rgba(26,115,232,.7) 50%,
+    rgba(167,139,250,.6) 75%,
+    rgba(124,58,237,.7) 100%);
+  background-size:200% 200%;
+  animation:aiWinBorderFlow 6s linear infinite;
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask-composite:exclude;
+  pointer-events:none;z-index:1;
+}
+@keyframes aiWinBorderFlow{
+  0%{background-position:0% 50%}
+  100%{background-position:200% 50%}
 }
 body.dark #aiChatWin{
+  background:linear-gradient(180deg,rgba(15,23,42,.78) 0%,rgba(2,6,23,.85) 100%);
+  border-color:rgba(124,58,237,.25);
   box-shadow:
-    0 0 0 1.5px rgba(167,139,250,.3),
-    0 12px 40px rgba(124,58,237,.2),
-    0 4px 16px rgba(0,0,0,.4);
+    0 24px 60px rgba(0,0,0,.6),
+    0 8px 24px rgba(124,58,237,.2),
+    0 1px 0 rgba(255,255,255,.06) inset;
 }
-@keyframes aiWinIn{from{opacity:0;transform:scale(.93) translateY(12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes aiWinIn{from{opacity:0;transform:scale(.94) translateY(14px)}to{opacity:1;transform:scale(1) translateY(0)}}
 @media(max-width:860px){
-  #aiChatWin{left:8px;right:8px;bottom:130px;width:auto;height:calc(100vh - 180px);max-height:480px}
+  #aiChatWin{left:8px;right:8px;bottom:130px;width:auto;height:calc(100vh - 180px);max-height:560px}
 }
+
+/* ── LAYOUT MODES ── */
+#aiChatWin.ai-mode-side{
+  bottom:0;right:0;top:0;
+  width:420px;height:100vh;
+  border-radius:0;
+  border-left:1px solid rgba(124,58,237,.3);
+  border-top:none;border-bottom:none;border-right:none;
+  animation:aiWinSlideIn .3s cubic-bezier(.34,1.56,.64,1);
+}
+#aiChatWin.ai-mode-side::before{display:none}
+#aiChatWin.ai-mode-full{
+  inset:0;width:100vw;height:100vh;
+  border-radius:0;border:none;
+  animation:aiWinIn .3s ease;
+}
+#aiChatWin.ai-mode-full::before{display:none}
+#aiChatWin.ai-mode-full .ai-msgs{max-width:880px;margin:0 auto;width:100%;padding:24px}
+@keyframes aiWinSlideIn{from{transform:translateX(100%)}to{transform:translateX(0)}}
+
 .ai-topbar{
-  background:linear-gradient(135deg,#1a73e8 0%,#2d3cab 50%,#7c3aed 100%);
-  padding:12px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+  background:linear-gradient(135deg,rgba(26,115,232,.95) 0%,rgba(45,60,171,.95) 50%,rgba(124,58,237,.95) 100%);
+  backdrop-filter:blur(8px);
+  padding:13px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;
+  position:relative;z-index:2;
+  border-bottom:1px solid rgba(255,255,255,.1);
 }
 #aiTokenPanel{animation:fadeUp .15s ease}
 #aiTokenBtn.active{background:rgba(255,255,255,.3) !important}
@@ -6146,13 +6400,98 @@ body.dark #aiChatWin{
 .ai-close-btn{width:26px;height:26px;border-radius:50%;border:none;background:rgba(255,255,255,.15);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:.15s;flex-shrink:0}
 .ai-close-btn:hover{background:rgba(255,255,255,.3)}
 .ai-msgs{
-  flex:1;overflow-y:auto;padding:14px 12px;
-  display:flex;flex-direction:column;gap:10px;
+  flex:1;overflow-y:auto;padding:16px 14px;
+  display:flex;flex-direction:column;gap:14px;
   scroll-behavior:smooth;
-  background:var(--surface);
+  background:transparent;
+  position:relative;z-index:2;
 }
-.ai-msgs::-webkit-scrollbar{width:3px}
-.ai-msgs::-webkit-scrollbar-thumb{background:var(--border-strong);border-radius:3px}
+.ai-msgs::-webkit-scrollbar{width:4px}
+.ai-msgs::-webkit-scrollbar-thumb{background:rgba(124,58,237,.2);border-radius:4px}
+.ai-msgs::-webkit-scrollbar-thumb:hover{background:rgba(124,58,237,.4)}
+
+/* ── BUBBLE WRAP — chứa bubble + actions ── */
+.ai-bubble-wrap{
+  display:flex;flex-direction:column;gap:4px;
+  max-width:88%;
+}
+.ai-bubble-wrap.ai-wrap-user{align-self:flex-end;align-items:flex-end}
+.ai-bubble-wrap.ai-wrap-bot{align-self:flex-start;align-items:flex-start}
+
+/* ── INLINE MESSAGE ACTIONS ── */
+.ai-msg-actions{
+  display:flex;gap:3px;opacity:0;
+  transition:opacity .2s;
+  padding:2px 4px;
+}
+.ai-bubble-wrap:hover .ai-msg-actions{opacity:1}
+.ai-msg-act-btn{
+  width:24px;height:24px;border-radius:7px;
+  border:1px solid rgba(124,58,237,.18);
+  background:rgba(255,255,255,.7);
+  backdrop-filter:blur(8px);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--text2);
+  transition:all .15s;
+  font-size:11px;
+}
+.ai-msg-act-btn:hover{
+  background:rgba(124,58,237,.12);
+  border-color:rgba(124,58,237,.4);
+  color:#7c3aed;
+  transform:scale(1.08);
+}
+.ai-msg-act-btn .material-icons-round{font-size:13px}
+.ai-msg-act-btn.ai-msg-act-good.active{background:rgba(34,197,94,.15);border-color:#22c55e;color:#16a34a}
+.ai-msg-act-btn.ai-msg-act-bad.active{background:rgba(239,68,68,.15);border-color:#ef4444;color:#dc2626}
+body.dark .ai-msg-act-btn{background:rgba(15,23,42,.7);color:var(--text2);border-color:rgba(124,58,237,.3)}
+
+/* ── AGENT TRACE — multi-step thinking display ── */
+.ai-agent-trace{
+  align-self:flex-start;
+  width:fit-content;max-width:92%;
+  background:linear-gradient(135deg,rgba(124,58,237,.06),rgba(56,189,248,.04));
+  border:1px solid rgba(124,58,237,.18);
+  border-radius:12px;
+  padding:8px 10px;
+  font-size:11.5px;
+  margin-bottom:4px;
+  animation:fadeUp .25s ease;
+}
+.ai-agent-trace-head{
+  display:flex;align-items:center;gap:6px;
+  cursor:pointer;
+  font-weight:700;color:#7c3aed;
+}
+.ai-agent-trace-head .material-icons-round{font-size:14px;transition:transform .2s}
+.ai-agent-trace.collapsed .ai-agent-trace-body{display:none}
+.ai-agent-trace.collapsed .ai-agent-trace-head .material-icons-round{transform:rotate(-90deg)}
+.ai-agent-trace-body{margin-top:6px;padding-top:6px;border-top:1px dashed rgba(124,58,237,.18)}
+.ai-trace-step{
+  display:flex;align-items:flex-start;gap:7px;
+  padding:4px 0;
+  font-size:11px;color:var(--text2);
+  line-height:1.45;
+}
+.ai-trace-step::before{
+  content:'';flex-shrink:0;
+  width:6px;height:6px;border-radius:50%;
+  background:#7c3aed;
+  margin-top:6px;
+  box-shadow:0 0 0 3px rgba(124,58,237,.2);
+}
+.ai-trace-step.done::before{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
+.ai-trace-step.error::before{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2)}
+.ai-trace-step b{color:var(--text);font-weight:700}
+.ai-trace-step .ai-trace-tool{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;
+  background:rgba(124,58,237,.1);
+  color:#7c3aed;
+  padding:0 5px;border-radius:4px;
+  margin-left:4px;
+}
 
 /* ── Bubble base ── */
 .ai-bubble{
@@ -6336,6 +6675,524 @@ body.dark .ai-bubble-bot::before{
 .ai-warning-title{font-size:12px;font-weight:800;color:var(--red);margin-bottom:4px}
 .ai-warning-body{font-size:12px;color:var(--text);line-height:1.55}
 .ai-warning-body b{color:var(--red);font-weight:800}
+
+/* ============================================================
+   v18 — COMMAND PALETTE / SLASH MENU / TOKEN SPARKLINE / LAYOUT
+   ============================================================ */
+
+/* ── COMMAND PALETTE (Ctrl+K) ── */
+#aiCmdPaletteBackdrop{
+  position:fixed;inset:0;z-index:9700;
+  background:rgba(15,23,42,.55);
+  backdrop-filter:blur(6px);
+  display:none;align-items:flex-start;justify-content:center;
+  padding-top:14vh;
+  animation:fadeIn .15s ease;
+}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+#aiCmdPalette{
+  width:560px;max-width:92vw;max-height:60vh;
+  background:linear-gradient(180deg,rgba(255,255,255,.95) 0%,rgba(248,250,252,.95) 100%);
+  backdrop-filter:blur(24px);
+  border:1px solid rgba(124,58,237,.25);
+  border-radius:18px;
+  box-shadow:0 32px 80px rgba(15,23,42,.3),0 8px 24px rgba(124,58,237,.2);
+  overflow:hidden;
+  display:flex;flex-direction:column;
+  animation:aiCmdIn .22s cubic-bezier(.34,1.56,.64,1);
+}
+body.dark #aiCmdPalette{background:linear-gradient(180deg,rgba(15,23,42,.95) 0%,rgba(2,6,23,.95) 100%);border-color:rgba(167,139,250,.3)}
+@keyframes aiCmdIn{from{opacity:0;transform:scale(.95) translateY(-12px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.ai-cmd-search-wrap{
+  position:relative;
+  border-bottom:1px solid rgba(124,58,237,.15);
+}
+.ai-cmd-search-wrap .material-icons-round{
+  position:absolute;left:16px;top:50%;transform:translateY(-50%);
+  color:var(--text3);font-size:18px;
+}
+#aiCmdSearch{
+  width:100%;padding:18px 18px 18px 46px;
+  border:none;background:transparent;
+  font-size:15px;font-family:'Plus Jakarta Sans',sans-serif;
+  color:var(--text);outline:none;
+}
+.ai-cmd-list{
+  flex:1;overflow-y:auto;
+  padding:6px;
+}
+.ai-cmd-list::-webkit-scrollbar{width:5px}
+.ai-cmd-list::-webkit-scrollbar-thumb{background:rgba(124,58,237,.25);border-radius:5px}
+.ai-cmd-section{
+  padding:8px 14px 4px;
+  font-size:10px;font-weight:800;
+  color:var(--text3);
+  text-transform:uppercase;letter-spacing:.7px;
+}
+.ai-cmd-item{
+  display:flex;align-items:center;gap:12px;
+  padding:10px 12px;
+  border-radius:10px;
+  cursor:pointer;
+  transition:.12s;
+  font-size:13px;color:var(--text);
+}
+.ai-cmd-item:hover, .ai-cmd-item.active{
+  background:linear-gradient(90deg,rgba(124,58,237,.08),rgba(56,189,248,.04));
+  color:#7c3aed;
+}
+.ai-cmd-icon{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(56,189,248,.06));
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  color:#7c3aed;
+}
+.ai-cmd-icon .material-icons-round{font-size:17px}
+.ai-cmd-content{flex:1;min-width:0}
+.ai-cmd-title{font-weight:700;font-size:13px;color:var(--text)}
+.ai-cmd-desc{font-size:11px;color:var(--text3);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ai-cmd-shortcut{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;font-weight:700;
+  padding:3px 7px;border-radius:5px;
+  background:rgba(124,58,237,.1);color:#7c3aed;
+  border:1px solid rgba(124,58,237,.2);
+}
+.ai-cmd-empty{
+  padding:36px 16px;text-align:center;
+  color:var(--text3);font-size:12px;
+}
+
+/* ── SLASH MENU — popup over input ── */
+#aiSlashMenu{
+  position:absolute;bottom:48px;left:48px;right:48px;
+  background:linear-gradient(180deg,rgba(255,255,255,.96) 0%,rgba(248,250,252,.96) 100%);
+  backdrop-filter:blur(20px);
+  border:1px solid rgba(124,58,237,.25);
+  border-radius:12px;
+  box-shadow:0 12px 32px rgba(15,23,42,.18),0 4px 12px rgba(124,58,237,.15);
+  z-index:9410;display:none;
+  max-height:200px;overflow-y:auto;
+  padding:4px;
+  animation:aiCmdIn .15s ease;
+}
+body.dark #aiSlashMenu{background:linear-gradient(180deg,rgba(15,23,42,.96) 0%,rgba(2,6,23,.96) 100%);border-color:rgba(167,139,250,.3)}
+.ai-slash-item{
+  display:flex;align-items:center;gap:9px;
+  padding:7px 9px;border-radius:8px;
+  cursor:pointer;
+  font-size:12px;color:var(--text);
+}
+.ai-slash-item:hover, .ai-slash-item.active{background:rgba(124,58,237,.1);color:#7c3aed}
+.ai-slash-cmd{
+  font-family:'JetBrains Mono',monospace;font-weight:700;
+  color:#7c3aed;font-size:11.5px;
+  flex-shrink:0;min-width:60px;
+}
+.ai-slash-desc{font-size:11px;color:var(--text3);flex:1}
+
+/* ── TOKEN SPARKLINE ── */
+.ai-token-sparkline{
+  display:flex;align-items:flex-end;gap:1.5px;
+  height:24px;width:100%;
+  padding:2px 0;
+}
+.ai-spark-bar{
+  flex:1;
+  background:linear-gradient(180deg,#7c3aed,#1a73e8);
+  border-radius:1.5px 1.5px 0 0;
+  min-height:2px;
+  transition:height .3s, opacity .3s;
+  opacity:.85;
+}
+.ai-spark-bar:hover{opacity:1;filter:brightness(1.15)}
+.ai-spark-bar.today{background:linear-gradient(180deg,#22c55e,#16a34a)}
+
+/* ── LAYOUT MODE PICKER ── */
+.ai-layout-pick{
+  display:flex;gap:3px;
+  background:rgba(255,255,255,.08);
+  border-radius:8px;padding:2px;
+  margin-right:4px;
+}
+.ai-layout-btn{
+  width:22px;height:22px;border-radius:5px;
+  border:none;background:transparent;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:rgba(255,255,255,.6);transition:.15s;
+}
+.ai-layout-btn:hover{background:rgba(255,255,255,.15);color:#fff}
+.ai-layout-btn.active{background:rgba(255,255,255,.3);color:#fff}
+.ai-layout-btn .material-icons-round{font-size:13px}
+
+/* ── KN DRAFT MODAL — SPLIT VIEW ── */
+.ai-draft-split{
+  display:grid;grid-template-columns:1fr 1.2fr;
+  gap:14px;
+  margin-top:6px;
+}
+@media(max-width:720px){.ai-draft-split{grid-template-columns:1fr}}
+.ai-draft-context{
+  background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(56,189,248,.03));
+  border:1px solid rgba(124,58,237,.15);
+  border-radius:12px;
+  padding:12px;
+  font-size:12px;
+}
+.ai-draft-ctx-title{
+  font-size:10px;font-weight:800;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.6px;
+  margin-bottom:8px;
+  display:flex;align-items:center;gap:5px;
+}
+.ai-draft-ctx-row{
+  display:flex;justify-content:space-between;
+  padding:4px 0;font-size:11.5px;
+  border-bottom:1px dashed rgba(124,58,237,.1);
+}
+.ai-draft-ctx-row:last-child{border-bottom:none}
+.ai-draft-ctx-row b{color:var(--text);font-weight:700}
+.ai-draft-ctx-images{
+  display:flex;gap:5px;flex-wrap:wrap;
+  margin-top:6px;
+}
+.ai-draft-ctx-images img{
+  width:42px;height:42px;border-radius:6px;
+  object-fit:cover;
+  border:1px solid rgba(124,58,237,.2);
+}
+.ai-draft-ctx-insight{
+  margin-top:8px;
+  padding:7px 9px;
+  background:rgba(124,58,237,.08);
+  border-radius:7px;
+  font-size:11px;color:var(--text);
+  line-height:1.5;
+  border-left:2.5px solid #7c3aed;
+}
+.ai-draft-output{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:12px;
+  font-size:12px;
+  display:flex;flex-direction:column;
+}
+
+/* Topbar status sub - dynamic */
+.ai-topbar-sub-live{
+  display:flex;align-items:center;gap:4px;
+  font-size:10px;color:rgba(255,255,255,.7);margin-top:1px;
+}
+.ai-topbar-sub-live::before{
+  content:'';width:5px;height:5px;border-radius:50%;
+  background:#4ade80;
+  box-shadow:0 0 6px rgba(74,222,128,.7);
+  animation:aiFabStatusPulse 2s ease-in-out infinite;
+}
+
+/* ── SUB TOOLBAR (dưới topbar) — chứa layout picker ── */
+.ai-subtoolbar{
+  display:flex;justify-content:flex-end;align-items:center;gap:6px;
+  padding:4px 12px 4px;
+  background:linear-gradient(180deg,rgba(124,58,237,.04) 0%,transparent 100%);
+  border-bottom:1px solid rgba(124,58,237,.08);
+  flex-shrink:0;position:relative;z-index:2;
+}
+body.dark .ai-subtoolbar{background:linear-gradient(180deg,rgba(124,58,237,.1) 0%,transparent 100%);border-color:rgba(167,139,250,.12)}
+.ai-subtoolbar .ai-layout-pick{
+  background:rgba(124,58,237,.08);
+  border:1px solid rgba(124,58,237,.18);
+}
+.ai-subtoolbar .ai-layout-btn{color:var(--text3)}
+.ai-subtoolbar .ai-layout-btn:hover{background:rgba(124,58,237,.15);color:#7c3aed}
+.ai-subtoolbar .ai-layout-btn.active{background:linear-gradient(135deg,#7c3aed,#1a73e8);color:#fff}
+
+/* ── AGENT TRACE v2 — đẹp hơn ── */
+.ai-agent-trace{
+  align-self:stretch;
+  width:100%;max-width:none;
+  background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(56,189,248,.04));
+  border:1px solid rgba(124,58,237,.25);
+  border-radius:14px;
+  padding:12px 14px;
+  font-size:12px;
+  margin:2px 0;
+  position:relative;
+  overflow:hidden;
+}
+.ai-agent-trace::before{
+  content:'';
+  position:absolute;left:0;top:0;bottom:0;width:3px;
+  background:linear-gradient(180deg,#7c3aed,#1a73e8,#38bdf8);
+}
+body.dark .ai-agent-trace{
+  background:linear-gradient(135deg,rgba(124,58,237,.15),rgba(56,189,248,.06));
+  border-color:rgba(167,139,250,.3);
+}
+.ai-agent-trace-head{
+  display:flex;align-items:center;gap:8px;
+  cursor:pointer;
+  font-weight:800;color:#7c3aed;
+  font-size:12.5px;
+}
+.ai-agent-trace-head::before{
+  content:'';display:inline-block;
+  width:14px;height:14px;border-radius:50%;
+  background:radial-gradient(circle,#7c3aed 30%,transparent 70%);
+  animation:aiFabStatusPulse 1.6s ease-in-out infinite;
+}
+.ai-agent-trace-head .material-icons-round{
+  margin-left:auto;font-size:16px;
+  transition:transform .2s;
+  color:var(--text3);
+}
+.ai-agent-trace.collapsed .ai-agent-trace-body{display:none}
+.ai-agent-trace.collapsed .ai-agent-trace-head .material-icons-round{transform:rotate(-90deg)}
+.ai-agent-trace-body{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(124,58,237,.18)}
+.ai-trace-step{
+  display:flex;align-items:flex-start;gap:9px;
+  padding:4px 0;
+  font-size:11.5px;color:var(--text2);
+  line-height:1.5;
+}
+.ai-trace-step::before{
+  content:'';flex-shrink:0;
+  width:14px;height:14px;border-radius:50%;
+  background:transparent;
+  border:1.5px solid rgba(124,58,237,.4);
+  margin-top:2px;
+  position:relative;
+  animation:aiTracePending 1.5s ease-in-out infinite;
+}
+@keyframes aiTracePending{
+  0%,100%{opacity:.4}
+  50%{opacity:1}
+}
+.ai-trace-step.done::before{
+  background:#22c55e;
+  border-color:#22c55e;
+  animation:none;
+  opacity:1;
+}
+.ai-trace-step.done::after{
+  content:'';position:absolute;
+  width:6px;height:3px;
+  border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;
+  transform:rotate(-45deg);
+  margin-top:5px;margin-left:-11px;
+}
+.ai-trace-step.error::before{
+  background:#ef4444;border-color:#ef4444;
+  animation:none;
+}
+.ai-trace-step b{color:var(--text);font-weight:700}
+.ai-trace-step .ai-trace-tool{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10.5px;font-weight:700;
+  background:rgba(124,58,237,.12);
+  color:#7c3aed;
+  padding:1px 6px;border-radius:4px;
+  margin:0 4px;
+  white-space:nowrap;
+}
+.ai-trace-meta{
+  display:flex;align-items:center;gap:8px;
+  margin-top:8px;padding-top:8px;
+  border-top:1px dashed rgba(124,58,237,.12);
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px;color:var(--text3);
+  font-weight:600;
+}
+.ai-trace-meta-dot{
+  width:3px;height:3px;border-radius:50%;
+  background:var(--text3);
+}
+
+/* ── KN DRAFT MODAL v18 ── */
+.ai-draft-modal-v18{
+  background:linear-gradient(180deg,rgba(255,255,255,.98) 0%,rgba(248,250,252,.98) 100%);
+  border:1px solid rgba(124,58,237,.2);
+  border-radius:16px;
+  box-shadow:0 24px 80px rgba(15,23,42,.25);
+}
+body.dark .ai-draft-modal-v18{
+  background:linear-gradient(180deg,rgba(15,23,42,.98) 0%,rgba(2,6,23,.98) 100%);
+  border-color:rgba(167,139,250,.25);
+}
+.ai-draft-head{
+  display:flex;align-items:center;gap:10px;
+  padding:14px 18px;
+  background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(26,115,232,.05));
+  border-bottom:1px solid rgba(124,58,237,.15);
+  position:relative;
+}
+.ai-draft-head-icon{
+  width:32px;height:32px;border-radius:9px;
+  background:linear-gradient(135deg,#7c3aed,#1a73e8);
+  display:flex;align-items:center;justify-content:center;
+  color:#fff;flex-shrink:0;
+  box-shadow:0 4px 12px rgba(124,58,237,.3);
+}
+.ai-draft-head-icon .material-icons-round{font-size:17px}
+.ai-draft-head-title{
+  flex:1;font-size:15px;font-weight:800;
+  background:linear-gradient(135deg,#7c3aed,#1a73e8);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.ai-draft-head-meta{
+  display:flex;align-items:center;gap:8px;
+  font-family:'JetBrains Mono',monospace;
+  font-size:11px;
+}
+.ai-draft-time{color:var(--text3);font-weight:700}
+.ai-draft-verified{
+  display:inline-flex;align-items:center;gap:3px;
+  color:#16a34a;font-weight:800;
+  padding:2px 8px;border-radius:100px;
+  background:rgba(34,197,94,.1);
+  border:1px solid rgba(34,197,94,.3);
+}
+.ai-draft-close{
+  width:28px;height:28px;border-radius:8px;
+  border:1px solid rgba(124,58,237,.2);
+  background:rgba(255,255,255,.6);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  color:var(--text2);transition:.15s;
+}
+.ai-draft-close:hover{background:rgba(239,68,68,.1);border-color:#ef4444;color:#ef4444}
+body.dark .ai-draft-close{background:rgba(255,255,255,.05)}
+.ai-draft-body-v18{padding:14px 18px 18px}
+.ai-draft-tabs-v18{display:flex;gap:7px;margin-bottom:14px;flex-wrap:wrap}
+.ai-draft-tab-v18{
+  padding:7px 14px;border-radius:100px;
+  border:1px solid rgba(124,58,237,.2);
+  background:rgba(124,58,237,.04);
+  color:var(--text2);
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12px;font-weight:700;cursor:pointer;
+  transition:.15s;
+}
+.ai-draft-tab-v18:hover{border-color:#7c3aed;color:#7c3aed}
+.ai-draft-tab-v18.active{
+  background:linear-gradient(135deg,#7c3aed,#1a73e8);
+  color:#fff;
+  border-color:transparent;
+  box-shadow:0 3px 10px rgba(124,58,237,.35);
+}
+.ai-draft-split-v18{
+  display:grid;grid-template-columns:1fr 1.2fr;
+  gap:14px;
+  margin-bottom:16px;
+}
+@media(max-width:720px){.ai-draft-split-v18{grid-template-columns:1fr}}
+.ai-draft-col-label{
+  display:flex;align-items:center;gap:5px;
+  font-size:10.5px;font-weight:800;
+  color:var(--text3);text-transform:uppercase;letter-spacing:.6px;
+  margin-bottom:8px;
+}
+.ai-draft-col-label .material-icons-round{font-size:13px}
+.ai-draft-ctx-card{
+  background:linear-gradient(135deg,rgba(124,58,237,.04),rgba(56,189,248,.02));
+  border:1px solid rgba(124,58,237,.15);
+  border-radius:11px;
+  padding:10px 12px;
+  font-size:12px;
+}
+body.dark .ai-draft-ctx-card{
+  background:linear-gradient(135deg,rgba(124,58,237,.08),rgba(56,189,248,.04));
+  border-color:rgba(167,139,250,.2);
+}
+.ai-draft-row-v18{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:6px 0;
+  font-size:11.5px;
+  border-bottom:1px dashed rgba(124,58,237,.1);
+  gap:8px;
+}
+.ai-draft-row-v18:last-child{border-bottom:none}
+.ai-draft-row-k{color:var(--text3);font-weight:600;flex-shrink:0}
+.ai-draft-row-v{color:var(--text);font-weight:700;text-align:right;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:60%}
+.ai-draft-row-status{color:#dc2626 !important}
+.ai-draft-row-vision{color:#7c3aed !important;font-style:italic;font-weight:600 !important}
+.ai-draft-row-vision[data-empty="true"]{color:var(--text3) !important;font-style:normal;font-weight:600 !important}
+.ai-draft-row-memory{color:#16a34a !important;font-weight:700 !important}
+.ai-draft-row-memory[data-empty="true"]{color:var(--text3) !important;font-weight:600 !important}
+.ai-draft-ctx-images{
+  display:flex;gap:6px;flex-wrap:wrap;
+}
+.ai-draft-ctx-images img{
+  width:50px;height:50px;border-radius:8px;
+  object-fit:cover;
+  border:1px solid rgba(124,58,237,.3);
+  transition:.15s;
+}
+.ai-draft-ctx-images img:hover{transform:scale(1.08);border-color:#7c3aed;box-shadow:0 4px 12px rgba(124,58,237,.3)}
+.ai-draft-output{
+  background:rgba(255,255,255,.6);
+  border:1px solid rgba(124,58,237,.15);
+  border-radius:11px;
+  padding:0;
+  font-size:12px;
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+body.dark .ai-draft-output{background:rgba(0,0,0,.3);border-color:rgba(167,139,250,.2)}
+.ai-draft-textarea-v18{
+  width:100%;
+  min-height:160px;
+  resize:vertical;
+  padding:11px 13px;
+  border:none;background:transparent;
+  color:var(--text);
+  font-size:13px;line-height:1.6;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  outline:none;
+}
+.ai-draft-output-foot{
+  display:flex;align-items:center;gap:6px;
+  padding:8px 12px;
+  background:rgba(124,58,237,.04);
+  border-top:1px solid rgba(124,58,237,.1);
+  font-size:11.5px;
+  justify-content:flex-end;
+}
+.ai-draft-output-sep{color:var(--text3)}
+.ai-draft-actions-v18{
+  display:flex;justify-content:flex-end;gap:8px;
+  padding:10px 0 0;
+  border-top:1px solid rgba(124,58,237,.1);
+}
+.ai-draft-act-btn{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:9px 16px;
+  border-radius:10px;
+  font-family:'Plus Jakarta Sans',sans-serif;
+  font-size:12.5px;font-weight:700;
+  cursor:pointer;
+  transition:.15s;
+  border:1px solid;
+}
+.ai-draft-act-btn .material-icons-round{font-size:15px}
+.ai-draft-act-secondary{
+  background:rgba(124,58,237,.04);
+  border-color:rgba(124,58,237,.25);
+  color:var(--text);
+}
+.ai-draft-act-secondary:hover{
+  background:rgba(124,58,237,.1);
+  border-color:#7c3aed;
+  color:#7c3aed;
+}
+.ai-draft-act-primary{
+  background:linear-gradient(135deg,#7c3aed,#1a73e8);
+  border-color:transparent;
+  color:#fff;
+  box-shadow:0 4px 14px rgba(124,58,237,.4);
+}
+.ai-draft-act-primary:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,.55)}
 
 </style>
 <div id="chatWindow" style="display:none">
@@ -6796,7 +7653,15 @@ function toggleAiChat() {
   const win = document.getElementById('aiChatWin');
   AI.open = !AI.open;
   win.style.display = AI.open ? 'flex' : 'none';
-  if (AI.open) { aiUpdateCtxBadge(); document.getElementById('aiInput').focus(); aiTokensLoad(); aiTokensRender(); }
+  if (AI.open) {
+    aiUpdateCtxBadge();
+    document.getElementById('aiInput').focus();
+    aiTokensLoad();
+    aiTokensRender();
+    if (typeof aiRestoreLayoutMode==='function') aiRestoreLayoutMode();
+    if (typeof aiSparklineRender==='function') aiSparklineRender();
+    if (typeof aiFabSetStatus==='function') aiFabSetStatus('online');
+  }
 }
 
 // ================================================================
@@ -6929,7 +7794,7 @@ function toggleAiTokenPanel() {
   const isOpen = panel.style.display !== 'none';
   panel.style.display = isOpen ? 'none' : 'block';
   if (btn) btn.classList.toggle('active', !isOpen);
-  if (!isOpen) aiTokensRender();
+  if (!isOpen) { aiTokensRender(); if (typeof aiSparklineRender==='function') aiSparklineRender(); }
 }
 
 // ================================================================
@@ -7118,15 +7983,16 @@ function aiFindOrder(code) {
 
 function aiAddMsg(role, text) {
   const box = document.getElementById('aiMsgs');
+  // Wrapper để chứa bubble + actions (v18)
+  const wrap = document.createElement('div');
+  wrap.className = `ai-bubble-wrap ${role==='user'?'ai-wrap-user':'ai-wrap-bot'}`;
+
   const div = document.createElement('div');
   div.className = `ai-bubble ${role==='user'?'ai-bubble-user':'ai-bubble-bot'}`;
   if (role === 'user') {
-    // User: escape HTML toàn bộ
     div.innerHTML = String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   } else {
-    // Bot: cho phép <b><br> có sẵn, convert **bold** và \n→<br>
     const t = String(text||'');
-    // Nếu đã có HTML tags → render trực tiếp
     if (/<[a-z][\s\S]*>/i.test(t)) {
       div.innerHTML = t.replace(/\n/g,'<br>');
     } else {
@@ -7136,8 +8002,460 @@ function aiAddMsg(role, text) {
         .replace(/\n/g,'<br>');
     }
   }
-  box.appendChild(div);
+  // Lưu raw text để copy/regenerate
+  div.dataset.raw = String(text||'');
+  wrap.appendChild(div);
+
+  // Inline actions chỉ cho bot bubble
+  if (role !== 'user') {
+    const actions = document.createElement('div');
+    actions.className = 'ai-msg-actions';
+    actions.innerHTML = `
+      <button class="ai-msg-act-btn ai-msg-act-good" title="Hữu ích" onclick="aiMsgFeedback(this,1)"><span class="material-icons-round">thumb_up</span></button>
+      <button class="ai-msg-act-btn ai-msg-act-bad" title="Chưa đúng" onclick="aiMsgFeedback(this,-1)"><span class="material-icons-round">thumb_down</span></button>
+      <button class="ai-msg-act-btn" title="Sao chép" onclick="aiMsgCopy(this)"><span class="material-icons-round">content_copy</span></button>
+      <button class="ai-msg-act-btn" title="Lưu vào ghi nhớ" onclick="aiMsgSaveMemory(this)"><span class="material-icons-round">bookmark_add</span></button>
+      <button class="ai-msg-act-btn" title="Tạo lại" onclick="aiMsgRegenerate(this)"><span class="material-icons-round">refresh</span></button>
+    `;
+    wrap.appendChild(actions);
+  }
+
+  box.appendChild(wrap);
   box.scrollTop = box.scrollHeight;
+}
+
+// ─── Inline message actions (v18) ───
+function aiMsgCopy(btn){
+  const wrap = btn.closest('.ai-bubble-wrap');
+  const bubble = wrap && wrap.querySelector('.ai-bubble');
+  const text = bubble && (bubble.dataset.raw || bubble.innerText || '');
+  if (!text) return;
+  navigator.clipboard.writeText(text).then(()=>{
+    btn.querySelector('.material-icons-round').innerText = 'check';
+    setTimeout(()=>{ btn.querySelector('.material-icons-round').innerText = 'content_copy'; }, 1200);
+  }).catch(()=>{
+    if (typeof showToast==='function') showToast('error','Lỗi','Không sao chép được');
+  });
+}
+function aiMsgFeedback(btn, score){
+  const wrap = btn.closest('.ai-bubble-wrap');
+  // Toggle active state
+  wrap.querySelectorAll('.ai-msg-act-good, .ai-msg-act-bad').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  // Lưu vào localStorage để track về sau
+  try{
+    const log = JSON.parse(localStorage.getItem('xixa_ai_feedback')||'[]');
+    const bubble = wrap.querySelector('.ai-bubble');
+    log.push({ ts:Date.now(), score, text:(bubble && bubble.dataset.raw || '').slice(0,200) });
+    localStorage.setItem('xixa_ai_feedback', JSON.stringify(log.slice(-100)));
+  }catch(e){}
+  if (typeof showToast==='function') {
+    showToast(score>0?'success':'info', score>0?'Cảm ơn!':'Đã ghi nhận', score>0?'Đã đánh dấu hữu ích':'Sẽ cải thiện ở lần sau');
+  }
+}
+function aiMsgSaveMemory(btn){
+  const wrap = btn.closest('.ai-bubble-wrap');
+  const bubble = wrap && wrap.querySelector('.ai-bubble');
+  const text = bubble && (bubble.dataset.raw || bubble.innerText || '');
+  if (!text) return;
+  try{
+    const mem = JSON.parse(localStorage.getItem('xixa_ai_memory')||'[]');
+    mem.push({ ts:Date.now(), text:text.slice(0,500) });
+    localStorage.setItem('xixa_ai_memory', JSON.stringify(mem.slice(-50)));
+  }catch(e){}
+  btn.querySelector('.material-icons-round').innerText = 'bookmark_added';
+  btn.style.color = '#7c3aed';
+  if (typeof showToast==='function') showToast('success','Đã lưu','Câu trả lời đã được lưu vào bộ nhớ AI');
+}
+function aiMsgRegenerate(btn){
+  // Tìm tin nhắn user gần nhất → gửi lại
+  const wrap = btn.closest('.ai-bubble-wrap');
+  if (!wrap) return;
+  let prev = wrap.previousElementSibling;
+  while (prev && !prev.classList.contains('ai-wrap-user')){ prev = prev.previousElementSibling; }
+  if (!prev) { if (typeof showToast==='function') showToast('info','Không có','Không tìm thấy câu hỏi trước'); return; }
+  const userBubble = prev.querySelector('.ai-bubble-user');
+  const q = userBubble && (userBubble.dataset.raw || userBubble.innerText || '');
+  if (q && typeof aiAsk === 'function') aiAsk(q);
+}
+
+// ============================================================
+// FAB STATUS HELPER (v18)
+// ============================================================
+function aiFabSetStatus(s){
+  const dot = document.getElementById('aiFabStatus');
+  if (dot) dot.dataset.status = s || 'online';
+  const sub = document.getElementById('aiTopbarSub');
+  if (sub){
+    if (s==='thinking') sub.textContent = 'Đang xử lý…';
+    else if (s==='error') sub.textContent = 'Có lỗi · thử lại';
+    else if (s==='offline') sub.textContent = 'Không kết nối';
+    else sub.textContent = 'Sẵn sàng · Gemini Pro';
+  }
+}
+function aiFabSetTaskCount(n){
+  const b = document.getElementById('aiFabBadge');
+  if (!b) return;
+  if (!n || n<=0){ b.style.display='none'; return; }
+  b.style.display='flex';
+  b.textContent = n>99 ? '99+' : String(n);
+}
+
+// ============================================================
+// LAYOUT MODES (v18) — floating / side / full
+// ============================================================
+function aiSetLayoutMode(mode){
+  const win = document.getElementById('aiChatWin');
+  if (!win) return;
+  win.classList.remove('ai-mode-floating','ai-mode-side','ai-mode-full');
+  if (mode==='side') win.classList.add('ai-mode-side');
+  else if (mode==='full') win.classList.add('ai-mode-full');
+  // Update active button
+  document.querySelectorAll('.ai-layout-btn').forEach(b=>{
+    b.classList.toggle('active', b.dataset.mode === mode);
+  });
+  try{ localStorage.setItem('xixa_ai_layout', mode); }catch(e){}
+}
+function aiRestoreLayoutMode(){
+  try{
+    const m = localStorage.getItem('xixa_ai_layout') || 'floating';
+    aiSetLayoutMode(m);
+  }catch(e){ aiSetLayoutMode('floating'); }
+}
+
+// ============================================================
+// COMMAND PALETTE (v18) — Ctrl+K
+// ============================================================
+const AI_CMD_REGISTRY = [
+  // Truy vấn nhanh
+  { sec:'Truy vấn dữ liệu', icon:'today', title:'Hôm nay bao nhiêu đơn?', desc:'Tổng đơn nhập kho hôm nay', action:()=>aiAskToday() },
+  { sec:'Truy vấn dữ liệu', icon:'history', title:'Hôm qua', desc:'Chi tiết tốt/bẩn/lỗi hôm qua', action:()=>aiAsk('Hôm qua nhập bao nhiêu đơn? Chi tiết tốt/bẩn/lỗi?') },
+  { sec:'Truy vấn dữ liệu', icon:'calendar_month', title:'Tổng quan tháng này', desc:'Số liệu tổng hợp tháng', action:()=>aiAsk('Tổng quan tháng này: tốt, bẩn, lỗi bao nhiêu?') },
+  { sec:'Truy vấn dữ liệu', icon:'compare_arrows', title:'So sánh Shopee vs TikTok', desc:'Đối chiếu 2 nền tảng tháng này', action:()=>aiAsk('So sánh Shopee và TikTok tháng này') },
+  // Phân tích
+  { sec:'Phân tích', icon:'warning', title:'Shop lỗi nhiều nhất', desc:'Top shop tỷ lệ lỗi cao', action:()=>aiAsk('Shop nào có tỷ lệ lỗi cao nhất tháng này?') },
+  { sec:'Phân tích', icon:'list_alt', title:'Liệt kê đơn lỗi/tráo', desc:'Đơn có vấn đề tháng này', action:()=>aiAsk('Liệt kê các đơn bị lỗi/tráo tháng này') },
+  { sec:'Phân tích', icon:'trending_up', title:'Xu hướng 7 ngày', desc:'Biểu đồ đơn 7 ngày qua', action:()=>aiAsk('Xu hướng đơn nhập 7 ngày qua: tăng/giảm?') },
+  // Hành động
+  { sec:'Hành động', icon:'auto_awesome', title:'Soạn khiếu nại', desc:'Mở modal soạn nội dung KN', shortcut:'KN', action:()=>{ closeAiCmdPalette(); if(typeof showToast==='function') showToast('info','Mẹo','Nhấn nút "Soạn KN bằng AI" trong popup cập nhật khiếu nại'); } },
+  { sec:'Hành động', icon:'refresh', title:'Cuộc trò chuyện mới', desc:'Reset history', shortcut:'Esc', action:()=>{ closeAiCmdPalette(); if(typeof aiResetChat==='function') aiResetChat(); } },
+  { sec:'Hành động', icon:'data_usage', title:'Xem token quota', desc:'Mở panel theo dõi token', action:()=>{ closeAiCmdPalette(); if(typeof toggleAiTokenPanel==='function') toggleAiTokenPanel(); } },
+  // Hệ thống
+  { sec:'Hệ thống', icon:'picture_in_picture', title:'Layout: Floating', desc:'Cửa sổ nổi nhỏ', action:()=>{ aiSetLayoutMode('floating'); closeAiCmdPalette(); } },
+  { sec:'Hệ thống', icon:'vertical_split', title:'Layout: Side panel', desc:'Cố định bên phải', action:()=>{ aiSetLayoutMode('side'); closeAiCmdPalette(); } },
+  { sec:'Hệ thống', icon:'fullscreen', title:'Layout: Full screen', desc:'Toàn màn hình', action:()=>{ aiSetLayoutMode('full'); closeAiCmdPalette(); } },
+];
+let _aiCmdActive = 0;
+
+function openAiCmdPalette(){
+  const bd = document.getElementById('aiCmdPaletteBackdrop');
+  if (!bd) return;
+  bd.style.display='flex';
+  const inp = document.getElementById('aiCmdSearch');
+  if (inp){ inp.value=''; setTimeout(()=>inp.focus(),50); }
+  _aiCmdActive = 0;
+  aiCmdFilter();
+}
+function closeAiCmdPalette(){
+  const bd = document.getElementById('aiCmdPaletteBackdrop');
+  if (bd) bd.style.display='none';
+}
+function aiCmdFilter(){
+  const list = document.getElementById('aiCmdList');
+  const inp = document.getElementById('aiCmdSearch');
+  if (!list || !inp) return;
+  const q = (inp.value||'').trim().toLowerCase();
+  let items = AI_CMD_REGISTRY;
+  if (q){
+    items = items.filter(c =>
+      c.title.toLowerCase().includes(q) ||
+      (c.desc||'').toLowerCase().includes(q) ||
+      (c.sec||'').toLowerCase().includes(q)
+    );
+  }
+  list.innerHTML = '';
+  if (!items.length){
+    // Khi không có lệnh khớp → cho phép gửi câu hỏi tự do
+    list.innerHTML = `<div class="ai-cmd-empty">Không có lệnh khớp.</div>
+      <div class="ai-cmd-item active" onclick="aiCmdSendFree()">
+        <div class="ai-cmd-icon"><span class="material-icons-round">send</span></div>
+        <div class="ai-cmd-content">
+          <div class="ai-cmd-title">Hỏi: "${(inp.value||'').replace(/</g,'&lt;')}"</div>
+          <div class="ai-cmd-desc">Gửi trực tiếp đến AI</div>
+        </div>
+        <div class="ai-cmd-shortcut">Enter</div>
+      </div>`;
+    return;
+  }
+  // Group theo section
+  const sections = {};
+  items.forEach((c,i) => {
+    if (!sections[c.sec]) sections[c.sec] = [];
+    sections[c.sec].push({...c, _i:i});
+  });
+  let html = '';
+  let idx = 0;
+  Object.keys(sections).forEach(secName => {
+    html += `<div class="ai-cmd-section">${secName}</div>`;
+    sections[secName].forEach(c => {
+      const isActive = idx === _aiCmdActive;
+      html += `<div class="ai-cmd-item${isActive?' active':''}" data-i="${idx}" onclick="aiCmdRun(${idx})">
+        <div class="ai-cmd-icon"><span class="material-icons-round">${c.icon}</span></div>
+        <div class="ai-cmd-content">
+          <div class="ai-cmd-title">${c.title}</div>
+          <div class="ai-cmd-desc">${c.desc||''}</div>
+        </div>
+        ${c.shortcut?`<div class="ai-cmd-shortcut">${c.shortcut}</div>`:''}
+      </div>`;
+      idx++;
+    });
+  });
+  list.innerHTML = html;
+  // Lưu mảng phẳng để chạy
+  window._aiCmdFlat = items;
+}
+function aiCmdRun(i){
+  const c = (window._aiCmdFlat||[])[i];
+  if (!c) return;
+  closeAiCmdPalette();
+  setTimeout(()=>{ try{ c.action && c.action(); }catch(e){ console.error(e); } }, 120);
+}
+function aiCmdSendFree(){
+  const inp = document.getElementById('aiCmdSearch');
+  const q = inp && inp.value.trim();
+  if (!q) return;
+  closeAiCmdPalette();
+  if (typeof aiAsk==='function') aiAsk(q);
+}
+function aiCmdKey(e){
+  const list = document.getElementById('aiCmdList');
+  const items = list.querySelectorAll('.ai-cmd-item');
+  if (e.key === 'ArrowDown'){
+    e.preventDefault();
+    _aiCmdActive = Math.min(items.length-1, _aiCmdActive+1);
+    aiCmdFilter();
+  } else if (e.key === 'ArrowUp'){
+    e.preventDefault();
+    _aiCmdActive = Math.max(0, _aiCmdActive-1);
+    aiCmdFilter();
+  } else if (e.key === 'Enter'){
+    e.preventDefault();
+    if (window._aiCmdFlat && window._aiCmdFlat.length){
+      aiCmdRun(_aiCmdActive);
+    } else {
+      aiCmdSendFree();
+    }
+  } else if (e.key === 'Escape'){
+    e.preventDefault();
+    closeAiCmdPalette();
+  }
+}
+// Global Ctrl+K listener
+document.addEventListener('keydown', function(e){
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k'){
+    e.preventDefault();
+    // Mở chat nếu đang đóng
+    const win = document.getElementById('aiChatWin');
+    if (win && win.style.display !== 'flex' && typeof toggleAiChat==='function'){
+      toggleAiChat();
+    }
+    setTimeout(openAiCmdPalette, 50);
+  } else if (e.key === 'Escape'){
+    const bd = document.getElementById('aiCmdPaletteBackdrop');
+    if (bd && bd.style.display==='flex') closeAiCmdPalette();
+    const sm = document.getElementById('aiSlashMenu');
+    if (sm && sm.style.display==='block') sm.style.display='none';
+  }
+});
+
+// ============================================================
+// SLASH MENU (v18) — gõ / để hiện
+// ============================================================
+const AI_SLASH_CMDS = [
+  { cmd:'/draft',   desc:'Soạn khiếu nại — kèm mã đơn',  template:'/draft <mã đơn>' },
+  { cmd:'/status',  desc:'Tra trạng thái khiếu nại',     template:'/status <mã đơn>' },
+  { cmd:'/find',    desc:'Tìm đơn theo từ khóa',         template:'/find <từ khóa>' },
+  { cmd:'/today',   desc:'Tổng hợp hôm nay',             template:'/today' },
+  { cmd:'/month',   desc:'Tổng hợp tháng này',           template:'/month' },
+  { cmd:'/compare', desc:'So sánh các sàn',              template:'/compare shopee tiktok' },
+  { cmd:'/explain', desc:'Giải thích trạng thái/lỗi',    template:'/explain <vấn đề>' },
+  { cmd:'/clear',   desc:'Xóa cuộc trò chuyện',          template:'/clear' },
+];
+let _aiSlashActive = 0;
+
+function aiInputOnInput(e){
+  const inp = e.target;
+  const v = inp.value;
+  const menu = document.getElementById('aiSlashMenu');
+  if (!menu) return;
+  // Show menu khi giá trị bắt đầu bằng "/"
+  if (v.startsWith('/')){
+    const q = v.slice(1).toLowerCase();
+    const items = AI_SLASH_CMDS.filter(c => c.cmd.slice(1).startsWith(q));
+    if (!items.length){ menu.style.display='none'; return; }
+    _aiSlashActive = Math.min(_aiSlashActive, items.length-1);
+    menu.innerHTML = items.map((c,i) => `
+      <div class="ai-slash-item${i===_aiSlashActive?' active':''}" onclick="aiSlashPick('${c.cmd}')">
+        <span class="ai-slash-cmd">${c.cmd}</span>
+        <span class="ai-slash-desc">${c.desc}</span>
+      </div>
+    `).join('');
+    menu.style.display='block';
+    window._aiSlashList = items;
+  } else {
+    menu.style.display='none';
+  }
+}
+function aiInputKeyDown(e){
+  const menu = document.getElementById('aiSlashMenu');
+  const open = menu && menu.style.display==='block' && (window._aiSlashList||[]).length;
+  if (open){
+    if (e.key==='ArrowDown'){
+      e.preventDefault();
+      _aiSlashActive = Math.min(window._aiSlashList.length-1, _aiSlashActive+1);
+      aiInputOnInput({target: e.target});
+    } else if (e.key==='ArrowUp'){
+      e.preventDefault();
+      _aiSlashActive = Math.max(0, _aiSlashActive-1);
+      aiInputOnInput({target: e.target});
+    } else if (e.key==='Tab' || (e.key==='Enter' && !e.shiftKey)){
+      e.preventDefault();
+      const c = window._aiSlashList[_aiSlashActive];
+      if (c) aiSlashPick(c.cmd);
+      return;
+    } else if (e.key==='Escape'){
+      menu.style.display='none';
+      return;
+    }
+  }
+  if (e.key==='Enter' && !e.shiftKey){
+    e.preventDefault();
+    aiSend();
+  }
+}
+function aiSlashPick(cmd){
+  const inp = document.getElementById('aiInput');
+  if (!inp) return;
+  inp.value = cmd + ' ';
+  const menu = document.getElementById('aiSlashMenu');
+  if (menu) menu.style.display='none';
+  inp.focus();
+}
+
+// ============================================================
+// AGENT TRACE UI (v18) — multi-step thinking display
+// ============================================================
+const _aiTraceStart = {};
+
+function aiAddAgentTrace(steps, opts){
+  const box = document.getElementById('aiMsgs');
+  if (!box) return null;
+  const wrap = document.createElement('div');
+  wrap.className = 'ai-agent-trace';
+  const id = 'trace_' + Date.now() + '_' + Math.floor(Math.random()*999);
+  wrap.id = id;
+  wrap.innerHTML = `
+    <div class="ai-agent-trace-head" onclick="this.parentElement.classList.toggle('collapsed')">
+      <span class="ai-agent-trace-label">${(opts && opts.title) || 'Agent đang suy nghĩ…'}</span>
+      <span class="material-icons-round">expand_more</span>
+    </div>
+    <div class="ai-agent-trace-body"></div>
+    <div class="ai-trace-meta" style="display:none">
+      <span class="ai-trace-meta-time">—</span>
+      <span class="ai-trace-meta-dot"></span>
+      <span class="ai-trace-meta-tokens">—</span>
+    </div>
+  `;
+  box.appendChild(wrap);
+  _aiTraceStart[id] = Date.now();
+  if (steps && steps.length) steps.forEach(s => aiTraceStep(id, s));
+  box.scrollTop = box.scrollHeight;
+  return id;
+}
+function aiTraceStep(traceId, step){
+  // step = { text, tool?, status? ('pending'|'done'|'error'), html? }
+  const trace = document.getElementById(traceId);
+  if (!trace) return;
+  const body = trace.querySelector('.ai-agent-trace-body');
+  if (!body) return;
+  const div = document.createElement('div');
+  div.className = 'ai-trace-step ' + (step.status || 'pending');
+  const inner = step.html
+    ? step.html
+    : `<b>${step.text||''}</b>${step.tool?`<span class="ai-trace-tool">${step.tool}</span>`:''}${step.detail?`<span style="color:var(--text3);font-size:11px">${step.detail}</span>`:''}`;
+  div.innerHTML = `<span style="flex:1">${inner}</span>`;
+  body.appendChild(div);
+  // Scroll
+  const box = document.getElementById('aiMsgs');
+  if (box) box.scrollTop = box.scrollHeight;
+}
+function aiTraceUpdateLastStep(traceId, status, text){
+  const trace = document.getElementById(traceId);
+  if (!trace) return;
+  const steps = trace.querySelectorAll('.ai-trace-step');
+  const last = steps[steps.length-1];
+  if (last) {
+    last.classList.remove('pending','done','error');
+    last.classList.add(status||'done');
+    if (text) {
+      const span = last.querySelector('span');
+      if (span) span.innerHTML = text;
+    }
+  }
+}
+function aiTraceFinish(traceId, summary, meta){
+  const trace = document.getElementById(traceId);
+  if (!trace) return;
+  const labelEl = trace.querySelector('.ai-agent-trace-label');
+  if (labelEl) labelEl.textContent = summary || 'Hoàn tất';
+  // Mark all pending as done
+  trace.querySelectorAll('.ai-trace-step:not(.done):not(.error)').forEach(s=>s.classList.add('done'));
+  // Compute meta
+  const start = _aiTraceStart[traceId] || Date.now();
+  const sec = ((Date.now()-start)/1000).toFixed(1);
+  const metaEl = trace.querySelector('.ai-trace-meta');
+  if (metaEl){
+    const t = metaEl.querySelector('.ai-trace-meta-time');
+    const tk = metaEl.querySelector('.ai-trace-meta-tokens');
+    if (t) t.textContent = sec + 's';
+    if (tk) tk.textContent = (meta && meta.tokens) ? `${(meta.tokens/1000).toFixed(1)}k tokens` : '— tokens';
+    metaEl.style.display = 'flex';
+  }
+  // Auto collapse sau 2s
+  setTimeout(()=>trace.classList.add('collapsed'), 2000);
+}
+
+// ============================================================
+// TOKEN SPARKLINE (v18)
+// ============================================================
+function aiSparklineRender(){
+  const el = document.getElementById('aiTokenSparkline');
+  if (!el) return;
+  const days = 7;
+  const today = new Date();
+  const data = [];
+  for (let i=days-1; i>=0; i--){
+    const d = new Date(today); d.setDate(today.getDate()-i);
+    const key = 'groq_tokens_' + d.toISOString().slice(0,10);
+    let val = 0;
+    try{
+      const raw = localStorage.getItem(key);
+      if (raw){ const j = JSON.parse(raw); val = j.daily || 0; }
+    }catch(e){}
+    data.push({ date:d, val });
+  }
+  const max = Math.max(1, ...data.map(d=>d.val));
+  const info = document.getElementById('aiTokenSparkInfo');
+  if (info){
+    const total = data.reduce((s,d)=>s+d.val,0);
+    info.textContent = `Tổng ${total.toLocaleString()} tk`;
+  }
+  el.innerHTML = data.map((d,i) => {
+    const pct = (d.val/max) * 100;
+    const isToday = i === days-1;
+    const dt = d.date.toLocaleDateString('vi-VN', {day:'2-digit', month:'2-digit'});
+    return `<div class="ai-spark-bar${isToday?' today':''}" style="height:${Math.max(4,pct)}%" title="${dt}: ${d.val.toLocaleString()} tk"></div>`;
+  }).join('');
 }
 
 const _AI_THINKING_STATES = [
@@ -7301,11 +8619,19 @@ function aiShowTyping() {
     const el = document.getElementById('aiThinkingLabel');
     if (el) el.textContent = _AI_THINKING_STATES[_aiThinkingIdx];
   }, 1800);
+  // v18 — Cập nhật FAB status + badge
+  if (typeof aiFabSetStatus==='function') aiFabSetStatus('thinking');
+  window._aiTaskCount = (window._aiTaskCount||0) + 1;
+  if (typeof aiFabSetTaskCount==='function') aiFabSetTaskCount(window._aiTaskCount);
 }
 function aiHideTyping() {
   clearInterval(_aiThinkingTimer);
   _aiThinkingTimer = null;
   document.getElementById('aiTyping')?.remove();
+  // v18 — Reset FAB status + badge
+  window._aiTaskCount = Math.max(0, (window._aiTaskCount||1) - 1);
+  if (typeof aiFabSetTaskCount==='function') aiFabSetTaskCount(window._aiTaskCount);
+  if (typeof aiFabSetStatus==='function') aiFabSetStatus(window._aiTaskCount>0 ? 'thinking' : 'online');
 }
 
 // Hiện ảnh đính kèm của đơn sau khi AI trả lời
@@ -7432,13 +8758,21 @@ function chatHandlePaste(event) {
 // ================================================================
 
 // Map từ khóa → trạng thái hệ thống
+// ⚠️ THỨ TỰ QUAN TRỌNG: entry CỤ THỂ HƠN phải đặt LÊN TRƯỚC, vì vòng lặp dùng .includes() và break ngay khi match.
+//    'thành công' là substring của 'chưa thành công', 'bảo hành thành công'... nên phải để CUỐI CÙNG.
 const AI_STATUS_MAP = [
-  { keys: ['thành công', 'khiếu nại thành công', 'kn thành công', 'đã thành công', 'được bồi thường', 'đã bồi'], status: 'Đã khiếu nại thành công' },
-  { keys: ['đang xử lý', 'đang khiếu nại', 'đang kn', 'đã gửi kn', 'đã nộp', 'đã submit', 'đã gửi khiếu nại'], status: 'Đang xử lý' },
+  // 1) Phủ định — phải check TRƯỚC generic "thành công"
+  { keys: ['chưa thành công', 'không thành công', 'thất bại', 'bị từ chối', 'không được', 'kn fail', 'fail rồi'], status: 'Chưa thành công' },
+  // 2) Khiếu nại lần 2
   { keys: ['lần 2', 'khiếu nại lần 2', 'kn lần 2', 'escalate', 'leo thang'], status: 'Khiếu nại lần 2' },
-  { keys: ['không thành công', 'thất bại', 'bị từ chối', 'không được', 'chưa thành công'], status: 'Chưa thành công' },
+  // 3) Đang xử lý
+  { keys: ['đang xử lý', 'đang khiếu nại', 'đang kn', 'đã gửi kn', 'đã nộp', 'đã submit', 'đã gửi khiếu nại'], status: 'Đang xử lý' },
+  // 4) Đã bảo hành — phải TRƯỚC generic "thành công" vì có 'bảo hành thành công'
   { keys: ['bảo hành xong', 'đã bảo hành', 'bh xong', 'bảo hành thành công'], status: 'Đã bảo hành' },
-  { keys: ['chưa xử lý', 'mới', 'reset', 'chưa kn'], status: 'Chưa xử lý' },
+  // 5) Chưa xử lý / reset
+  { keys: ['chưa xử lý', 'reset', 'chưa kn', 'mới tạo', 'mới nhập'], status: 'Chưa xử lý' },
+  // 6) Đã khiếu nại thành công — ĐẶT CUỐI vì 'thành công' là từ khóa chung nhất
+  { keys: ['khiếu nại thành công', 'kn thành công', 'đã thành công', 'được bồi thường', 'đã bồi', 'thành công'], status: 'Đã khiếu nại thành công' },
 ];
 
 // Detect xem tin nhắn có phải lệnh update không
@@ -7821,11 +9155,19 @@ function _aiFuOpenComplaintModal(type, aiPrompt) {
   _aiDraftPlatform  = channel.includes('tiktok') ? 'tiktok'
                     : channel.includes('lazada')  ? 'lazada' : 'shopee';
 
-  // Reset tabs UI
-  document.querySelectorAll('.ai-draft-tab').forEach((t,i) => {
+  // Reset tabs UI (hỗ trợ cả tab cũ + v18)
+  document.querySelectorAll('.ai-draft-tab, .ai-draft-tab-v18').forEach((t,i) => {
     const platforms = ['shopee','tiktok','lazada','general'];
-    t.classList.toggle('active', platforms[i] === _aiDraftPlatform);
+    t.classList.toggle('active', platforms[i % 4] === _aiDraftPlatform);
   });
+  // v18 — Set label nút chính (chỉ copy, không mở sàn)
+  try {
+    const lbl = document.getElementById('aiDraftPrimaryLabel');
+    if (lbl) lbl.textContent = 'Copy nội dung';
+  } catch(e){}
+
+  // v18 — Fill context cột trái (Mã VD, Sản phẩm, Tình trạng, Memory, ảnh đính kèm)
+  try { aiDraftFillContext(_aiDraftOrderData); } catch(e) { console.warn('[aiDraftFillContext]', e); }
 
   openModal('aiComplaintDraftModal');
 
@@ -8154,8 +9496,12 @@ let _aiDraftOrderData = null;
 
 function aiSelectPlatform(platform, btn) {
   _aiDraftPlatform = platform;
-  document.querySelectorAll('.ai-draft-tab').forEach(t => t.classList.remove('active'));
-  btn.classList.add('active');
+  // Hỗ trợ cả tab cũ (.ai-draft-tab) lẫn v18 (.ai-draft-tab-v18)
+  document.querySelectorAll('.ai-draft-tab, .ai-draft-tab-v18').forEach(t => t.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  // v18 — Label nút chính: chỉ copy
+  const lbl = document.getElementById('aiDraftPrimaryLabel');
+  if (lbl) lbl.textContent = 'Copy nội dung';
   // Soạn lại cho platform mới
   if (_aiDraftOrderData) aiGenerateDraft();
 }
@@ -8173,20 +9519,254 @@ function aiDraftComplaint() {
   if (!order) { showToast('warning','Không tìm thấy đơn','Vui lòng thử lại'); return; }
   _aiDraftOrderData = order;
   _aiDraftPlatform = 'shopee';
-  // Reset tabs
-  document.querySelectorAll('.ai-draft-tab').forEach((t,i) => t.classList.toggle('active', i===0));
+  // Reset tabs (hỗ trợ cả tab cũ + v18)
+  document.querySelectorAll('.ai-draft-tab, .ai-draft-tab-v18').forEach((t,i) => t.classList.toggle('active', i===0));
+  // v18 — Reset label primary (chỉ copy)
+  try {
+    const lbl = document.getElementById('aiDraftPrimaryLabel');
+    if (lbl) lbl.textContent = 'Copy nội dung';
+  } catch(e){}
+  // v18 — Fill context cột trái
+  try { aiDraftFillContext(order); } catch(e) { console.warn('[aiDraftFillContext]', e); }
   openModal('aiComplaintDraftModal');
   aiGenerateDraft();
+}
+
+// v18 — Fill context vào split-view cột trái
+function aiDraftFillContext(order){
+  if (!order) return;
+  const set = (id, val) => { const el = document.getElementById(id); if (el) el.textContent = (val===undefined||val===null||val==='') ? '—' : val; };
+  set('aiDraftCtxCode', order.code);
+  set('aiDraftCtxChannel', order.channel || order.shop || '—');
+  set('aiDraftCtxShop', order.shop || '—');
+  // Loại lỗi
+  let kind = order.status || '—';
+  const s = String(order.status||'').toLowerCase();
+  if (s.includes('bẩn') || s.includes('ban')) kind = '🟡 Bị bẩn';
+  else if (s.includes('lỗi') || s.includes('loi')) kind = '🔴 Bị lỗi';
+  else if (s.includes('tráo') || s.includes('trao')) kind = '⚠️ Bị tráo';
+  else if (s.includes('thiếu') || s.includes('thieu')) kind = '➖ Bị thiếu';
+  set('aiDraftCtxKind', kind);
+  set('aiDraftCtxProduct', order.product || order.productName || '—');
+  set('aiDraftCtxStatus', order.complaintStatus || order.status_kn || 'Chưa xử lý');
+  // Ảnh đính kèm — imageLinks là STRING phân tách bằng newline
+  const wrap = document.getElementById('aiDraftCtxImagesWrap');
+  const imgBox = document.getElementById('aiDraftCtxImages');
+  const imgCount = document.getElementById('aiDraftCtxImageCount');
+  let arr = [];
+  const raw = order.imageLinks;
+  if (typeof raw === 'string') {
+    arr = raw.split(/[\n,]/).map(s => s.trim()).filter(s => s.length > 5);
+  } else if (Array.isArray(raw)) {
+    arr = raw.filter(x => x && String(x).trim().length > 5);
+  } else if (Array.isArray(order.images)) {
+    arr = order.images.filter(x => x && String(x).trim().length > 5);
+  }
+  if (wrap && imgBox) {
+    if (arr.length){
+      imgBox.innerHTML = arr.slice(0,4).map(u =>
+        `<img src="${String(u).replace(/"/g,'&quot;')}" loading="lazy" onerror="this.style.opacity=.3" style="cursor:pointer" onclick="window.open('${String(u).replace(/'/g,'')}','_blank')">`
+      ).join('');
+      wrap.style.display = 'block';
+      if (imgCount) imgCount.textContent = arr.length + ' ảnh đính kèm';
+    } else {
+      wrap.style.display = 'none';
+      imgBox.innerHTML = '';
+      if (imgCount) imgCount.textContent = '';
+    }
+  }
+  // Reset insight + memory
+  const insightEl = document.getElementById('aiDraftCtxInsight');
+  const insightWrap = document.getElementById('aiDraftCtxInsightWrap');
+  if (insightEl) insightEl.textContent = '';
+  if (insightWrap) insightWrap.style.display = 'none';
+  const memEl = document.getElementById('aiDraftCtxMemory');
+  if (memEl) memEl.textContent = '—';
+  // Reset verify badge
+  const verifyEl = document.getElementById('aiDraftVerifyBadge');
+  if (verifyEl) verifyEl.style.display = 'none';
+  const timeEl = document.getElementById('aiDraftTimeBadge');
+  if (timeEl) timeEl.textContent = '';
+  // Reset ratio
+  const ratioEl = document.getElementById('aiDraftCharRatio');
+  if (ratioEl) ratioEl.textContent = '0% bồi';
+}
+// Hook để aiAnalyzeDamageFromImages cập nhật vào panel
+function aiDraftSetInsight(text){
+  const el = document.getElementById('aiDraftCtxInsight');
+  const wrap = document.getElementById('aiDraftCtxInsightWrap');
+  if (!el || !wrap) return;
+  if (!text){ wrap.style.display='none'; return; }
+  el.textContent = '🔍 ' + text;
+  wrap.style.display = 'block';
+}
+
+// ── Helper: tải ảnh từ URL về dạng base64 (cho Gemini Vision) ──
+// Drive thường chặn fetch() vì CORS → ưu tiên dùng <img>+canvas (bypass CORS render),
+// canvas chỉ đọc được nếu server gửi ACAO (Drive lh3.* và uc?export=view thường OK).
+// Trả về { base64, mime } hoặc null nếu cả 2 cách đều fail.
+async function aiUrlToBase64(url) {
+  // === Method 1: <img crossOrigin=anonymous> + canvas.toDataURL (best for Drive) ===
+  const viaCanvas = await new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    let done = false;
+    const finish = (val) => { if (done) return; done = true; resolve(val); };
+    img.onload = () => {
+      try {
+        // Resize tối đa 1024px để giảm payload (Vision API thường khuyến nghị)
+        const MAX = 1024;
+        let w = img.naturalWidth || 800, h = img.naturalHeight || 800;
+        if (w > MAX || h > MAX) {
+          const r = Math.min(MAX / w, MAX / h);
+          w = Math.round(w * r); h = Math.round(h * r);
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = w; canvas.height = h;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, w, h);
+        // toDataURL sẽ throw SecurityError nếu canvas bị tainted (CORS không cho)
+        const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+        const base64  = (dataUrl || '').split(',')[1] || '';
+        finish(base64 ? { base64, mime: 'image/jpeg' } : null);
+      } catch (e) {
+        console.warn('[aiUrlToBase64] canvas tainted (CORS):', url, e.message);
+        finish(null);
+      }
+    };
+    img.onerror = () => { console.warn('[aiUrlToBase64] img load error:', url); finish(null); };
+    // Timeout an toàn 10s
+    setTimeout(() => finish(null), 10000);
+    img.src = url;
+  });
+  if (viaCanvas) return viaCanvas;
+
+  // === Method 2: fetch() làm fallback nếu <img> fail ===
+  try {
+    const res = await fetch(url, { mode: 'cors' });
+    if (!res.ok) return null;
+    const blob = await res.blob();
+    if (!blob.type.startsWith('image/')) return null;
+    if (blob.size > 4 * 1024 * 1024) return null;
+    return await new Promise((resolve) => {
+      const rd = new FileReader();
+      rd.onload  = () => {
+        const dataUrl = rd.result || '';
+        const base64  = String(dataUrl).split(',')[1] || '';
+        resolve(base64 ? { base64, mime: blob.type } : null);
+      };
+      rd.onerror = () => resolve(null);
+      rd.readAsDataURL(blob);
+    });
+  } catch (e) {
+    console.warn('[aiUrlToBase64] fetch failed:', url, e.message);
+    return null;
+  }
+}
+
+// ── Helper: AI phân tích ảnh đơn để mô tả CHÍNH XÁC bẩn/lỗi ở đâu ──
+// Chỉ gọi cho đơn BẨN hoặc LỖI, lấy ảnh đầu tiên của order.imageLinks.
+// Trả về string mô tả ("Vùng mũi giày bên phải có vết bẩn nâu...") hoặc '' nếu không phân tích được.
+async function aiAnalyzeDamageFromImages(order, kind) {
+  // kind = 'ban' | 'loi'
+  const links = (order.imageLinks || '')
+    .split('\n').map(s => s.trim()).filter(s => s.length > 5);
+  console.log('[aiAnalyzeDamage] start, kind:', kind, 'links:', links.length);
+  if (!links.length) return '';
+
+  // Thử lần lượt vài ảnh đầu cho đến khi có ảnh tải được
+  let imgData = null;
+  for (let i = 0; i < Math.min(links.length, 3); i++) {
+    console.log('[aiAnalyzeDamage] thử ảnh', i+1, '/', links.length);
+    imgData = await aiUrlToBase64(links[i]);
+    if (imgData) {
+      console.log('[aiAnalyzeDamage] ảnh', i+1, 'OK, base64 length:', imgData.base64.length);
+      break;
+    }
+  }
+  if (!imgData) {
+    console.warn('[aiAnalyzeDamage] KHÔNG tải được ảnh nào — bỏ qua vision');
+    showToast('warning', 'Không tải được ảnh đính kèm', 'KN sẽ không có chi tiết bẩn/lỗi (CORS Drive)');
+    return '';
+  }
+
+  const focusWord = kind === 'ban' ? 'vết bẩn' : 'lỗi/hỏng';
+  const visionPrompt =
+    `Bạn là chuyên gia kiểm hàng. Đây là ảnh sản phẩm "${order.product || 'sản phẩm'}" hoàn về với tình trạng "${order.status || ''}".\n\n` +
+    `BƯỚC 1 — XÁC ĐỊNH GÓC CHỤP TRƯỚC KHI MÔ TẢ:\n` +
+    `Nhìn kỹ ảnh để biết đang chụp góc nào của sản phẩm. Đối với GIÀY/DÉP/SANDAL:\n` +
+    `• Thấy rãnh/hoa văn chống trượt, tem size, đáy phẳng → ĐẾ GIÀY (lật ngược)\n` +
+    `• Thấy phần dây/quai đan, lỗ xỏ → MẶT TRÊN (thân giày)\n` +
+    `• Thấy mũi nhọn ở 1 đầu → MŨI GIÀY\n` +
+    `• Thấy phần dày cao ở 1 đầu → GÓT GIÀY\n` +
+    `• Thấy đường viền dày bao quanh → CẠNH BÊN (thành giày)\n` +
+    `Đối với QUẦN ÁO: cổ, tay, ngực, lưng, gấu, túi.\n` +
+    `Đối với HỘP/TÚI: mặt trước/sau/đáy/nắp/cạnh.\n` +
+    `Đối với ĐỒ ĐIỆN TỬ: màn hình, vỏ, cạnh, cổng cắm.\n\n` +
+    `BƯỚC 2 — MÔ TẢ ${focusWord.toUpperCase()}:\n` +
+    `1. VỊ TRÍ chính xác — phải dùng ĐÚNG tên bộ phận (vd: "đế giày trái", "gót sau giày phải", "cổ áo bên phải")\n` +
+    `2. TÍNH CHẤT (màu sắc, hình dạng, vd: "vết nâu loang lổ", "trầy xước dài 3cm", "lỗ thủng nhỏ")\n` +
+    `3. MỨC ĐỘ (nhẹ/vừa/nặng — còn bán lại được không)\n\n` +
+    `YÊU CẦU TRẢ LỜI:\n` +
+    `- Tiếng Việt, NGẮN GỌN 1 câu (tối đa 100 ký tự)\n` +
+    `- KHÔNG mở đầu bằng "Trong ảnh", "Tôi thấy", "Theo hình"... vào thẳng nội dung\n` +
+    `- KHÔNG dùng markdown / bullet / xuống dòng\n` +
+    `- TUYỆT ĐỐI KHÔNG nhầm đế giày thành "mặt trước" — phải xác định đúng góc chụp ở Bước 1\n` +
+    `- Nếu thực sự không thấy ${focusWord}, trả về CHÍNH XÁC chữ "KHÔNG_RÕ"`;
+
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        action: 'gemini_vision',
+        question: visionPrompt,
+        context: 'Phân tích ảnh đơn hoàn để soạn khiếu nại',
+        imageBase64:    imgData.base64,
+        imageMimeType:  imgData.mime,
+      }),
+    });
+    const data = await res.json();
+    console.log('[aiAnalyzeDamage] vision response:', data.result, data.message || '');
+    if (data.result !== 'success') {
+      showToast('warning', 'Vision API lỗi', data.message || 'Bỏ qua chi tiết ảnh');
+      return '';
+    }
+    let txt = String(data.answer || '').trim();
+    // Token usage tracking (cùng nhóm complaint)
+    if (data.usage) aiTokensUpdate(data.usage, 'complaint');
+    // Bỏ markdown / quote / xuống dòng
+    txt = txt.replace(/[*_`>#]/g, '').replace(/\s+/g, ' ').trim();
+    console.log('[aiAnalyzeDamage] vision answer:', txt);
+    if (!txt || /KHÔNG_RÕ/i.test(txt)) {
+      console.warn('[aiAnalyzeDamage] AI không nhìn rõ bẩn/lỗi → bỏ qua');
+      return '';
+    }
+    // Cắt bớt nếu dài quá
+    if (txt.length > 120) txt = txt.slice(0, 117) + '...';
+    return txt;
+  } catch (e) {
+    console.error('[aiAnalyzeDamage] exception:', e);
+    return '';
+  }
 }
 
 async function aiGenerateDraft() {
   const order = _aiDraftOrderData;
   if (!order) return;
+  // v18 — Track time + reset verified badge
+  const _draftStartT = Date.now();
+  const verifyEl = document.getElementById('aiDraftVerifyBadge');
+  const timeEl = document.getElementById('aiDraftTimeBadge');
+  if (verifyEl) verifyEl.style.display = 'none';
+  if (timeEl) timeEl.textContent = '';
   // Show loading
   document.getElementById('aiDraftLoading').style.display = 'block';
   document.getElementById('aiDraftContent').style.display = 'none';
   document.getElementById('aiDraftError').style.display = 'none';
   document.getElementById('aiDraftCopied').style.display = 'none';
+  // Reset loading text về mặc định
+  const _loadEl = document.getElementById('aiDraftLoadingText');
+  if (_loadEl) _loadEl.innerText = 'AI đang soạn thảo...';
 
   const platformGuide = {
     shopee: 'Shopee',
@@ -8204,8 +9784,28 @@ async function aiGenerateDraft() {
 
   // Lập luận thiệt hại tùy tình trạng
   let _damageArg = '';
+  // 🔍 CHỈ với BẨN hoặc LỖI: AI nhìn ảnh đính kèm để mô tả CHÍNH XÁC bẩn/lỗi ở đâu
+  let _imageInsight = '';
+  if ((_isBan || _isLoi) && order && (order.imageLinks || '').trim()) {
+    if (_loadEl) _loadEl.innerText = 'AI đang phân tích ảnh đính kèm...';
+    try {
+      _imageInsight = await aiAnalyzeDamageFromImages(order, _isBan ? 'ban' : 'loi');
+    } catch (e) { _imageInsight = ''; }
+    if (_loadEl) _loadEl.innerText = 'AI đang soạn thảo...';
+    // v18 — Hiển thị insight vào split-view cột trái
+    try { if (typeof aiDraftSetInsight==='function') aiDraftSetInsight(_imageInsight); } catch(e){}
+  }
+
   if (_isBan || _isLoi) {
-    _damageArg = 'Hàng hoàn về bị ' + order.status + ', không thể lưu kho hay bán lại được, shop phải chịu thiệt hại trực tiếp. BẮT BUỘC đưa câu này vào nội dung.';
+    // Mặc định (không có insight từ ảnh): câu generic về tình trạng
+    if (!_imageInsight) {
+      _damageArg = 'Hàng hoàn về bị ' + order.status + ', không thể lưu kho hay bán lại được, shop phải chịu thiệt hại trực tiếp. BẮT BUỘC đưa câu này vào nội dung.';
+    } else {
+      // Có insight từ ảnh: THAY THẾ hoàn toàn câu generic bằng câu cụ thể.
+      // Quan trọng: KHÔNG ghép thêm — vì 256 ký tự không đủ chỗ. AI phải chọn 1 trong 2.
+      _damageArg = 'Hàng hoàn về với chi tiết cụ thể: "' + _imageInsight + '" — không thể lưu kho hay bán lại được, shop chịu thiệt hại trực tiếp.\n' +
+                   '⚠️ BẮT BUỘC: dùng CHÍNH XÁC chi tiết ở trên (vị trí + mô tả vết bẩn/lỗi) thay cho câu generic "hàng hoàn về bị ' + order.status + '". KHÔNG được viết chung chung — phải nêu vị trí cụ thể trên sản phẩm.';
+    }
   } else if (_isTrao) {
     _damageArg = 'Hàng hoàn về bị tráo — shop đã gửi đúng sản phẩm ' + (order.product||'') + ' khách đặt và đúng với mô tả, có video bằng chứng, nhưng nhận lại hàng khác hoàn toàn. Shop bị thiệt hại nặng. BẮT BUỘC đưa câu này vào nội dung.';
   } else if (_isThieu) {
@@ -8233,7 +9833,10 @@ Yêu cầu bồi thường, không trừ điểm và phí.
 Yêu cầu bắt buộc:
 - Viết tiếng Việt, lịch sự, nêu mã vận đơn và yêu cầu cụ thể
 - BẮT BUỘC đề cập: shop gửi đúng đủ, hàng mới 100%, có video bằng chứng
-- BẮT BUỘC đề cập lập luận thiệt hại ở trên
+- BẮT BUỘC đề cập lập luận thiệt hại ở trên${_imageInsight ? `
+- ⚠️ ƯU TIÊN CAO NHẤT: phải nêu vị trí + mô tả CỤ THỂ bẩn/lỗi (lấy từ "${_imageInsight}"), KHÔNG được viết chung chung "hàng bị bẩn"
+- Nếu phải cắt bớt để đủ 256 ký tự, hãy bỏ "yêu cầu bồi thường" — KHÔNG bỏ chi tiết bẩn/lỗi
+- KHÔNG nhắc cụm "theo ảnh" / "trong ảnh" / "theo hình" — viết như shop tự kiểm tra hàng hoàn về và mô tả lại` : ''}
 - TỔNG ĐỘ DÀI TỐI ĐA 256 KÝ TỰ (đếm kỹ, không được vượt quá)
 - CHỈ trả về nội dung khiếu nại, không thêm gì khác`;
 
@@ -8266,6 +9869,12 @@ Yêu cầu bắt buộc:
           answer = answer.substring(0, 253) + '...';
         }
       }
+      // v18 — Set time + verified badge
+      try {
+        const sec = ((Date.now() - _draftStartT)/1000).toFixed(1);
+        if (timeEl) timeEl.textContent = sec + 's';
+        if (verifyEl) verifyEl.style.display = 'inline-flex';
+      } catch(e) {}
       // Typewriter effect
       aiTypewriterEffect(answer);
     } else {
@@ -8314,17 +9923,23 @@ function aiTypewriterEffect(text, callback) {
 }
 
 function aiUpdateCharCount() {
-  const text = document.getElementById('aiDraftText').value;
+  const ta = document.getElementById('aiDraftText');
+  if (!ta) return;
+  const text = ta.value;
   const len = text.length;
-  const el = document.getElementById('aiDraftCharCount');
-  if (!el) return;
-  el.innerText = `${len}/256`;
-  if (len > 256) {
-    el.style.color = 'var(--red)';
-  } else if (len > 220) {
-    el.style.color = 'var(--amber)';
-  } else {
-    el.style.color = 'var(--green)';
+  const el     = document.getElementById('aiDraftCharCount');
+  const elTop  = document.getElementById('aiDraftCharCountTop');
+  const elRat  = document.getElementById('aiDraftCharRatio');
+  let color = 'var(--green)';
+  if (len > 256) color = 'var(--red)';
+  else if (len > 220) color = 'var(--amber)';
+  const txt = `${len}/256`;
+  if (el)    { el.innerText    = txt; el.style.color    = color; }
+  if (elTop) { elTop.innerText = txt; elTop.style.color = color; }
+  if (elRat) {
+    const pct = Math.min(100, Math.round(len / 256 * 100));
+    elRat.innerText = `${pct}% bồi`;
+    elRat.style.color = color;
   }
 }
 
@@ -8335,6 +9950,41 @@ function aiCopyDraft() {
     const copied = document.getElementById('aiDraftCopied');
     copied.style.display = 'block';
     setTimeout(() => copied.style.display = 'none', 2500);
+  });
+}
+
+// v18 — Đưa textarea vào chế độ chỉnh sửa
+function aiDraftEditMode() {
+  const ta = document.getElementById('aiDraftText');
+  if (!ta) return;
+  ta.removeAttribute('readonly');
+  ta.removeAttribute('disabled');
+  ta.focus();
+  // Đặt con trỏ ở cuối nội dung
+  try { ta.setSelectionRange(ta.value.length, ta.value.length); } catch(e) {}
+  ta.classList.add('ai-draft-textarea-editing');
+  showToast && showToast('info', 'Chế độ chỉnh sửa', 'Bạn có thể tự sửa nội dung khiếu nại');
+}
+
+// v18 — Copy nội dung KN (không mở trang sàn — user tự paste)
+function aiCopyAndOpenChannel() {
+  const text = (document.getElementById('aiDraftText') || {}).value || '';
+  if (!text.trim()) {
+    showToast && showToast('warning', 'Chưa có nội dung', 'Vui lòng đợi AI soạn xong');
+    return;
+  }
+  const copy = (navigator.clipboard && navigator.clipboard.writeText)
+    ? navigator.clipboard.writeText(text)
+    : Promise.resolve();
+  copy.then(() => {
+    const copied = document.getElementById('aiDraftCopied');
+    if (copied) {
+      copied.style.display = 'block';
+      setTimeout(() => copied.style.display = 'none', 2500);
+    }
+    showToast && showToast('success', 'Đã copy', 'Bạn có thể paste vào kênh hỗ trợ');
+  }).catch(() => {
+    showToast && showToast('warning', 'Không copy được', 'Vui lòng bấm Ctrl+C để copy thủ công');
   });
 }
 
