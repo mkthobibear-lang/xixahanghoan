@@ -1802,7 +1802,7 @@ button[onclick*="export"]{
       <div class="ver">Kho Hàng Hoàn · AI</div>
     </div>
     <div class="nav-section">
-      <div class="nav-label">Menu</div>
+      <div class="nav-label">Workspace</div>
       <div class="nav-item staff-only" id="nav-form" onclick="switchView('form')">
         <span class="material-icons-round">add_box</span>Nhập đơn hoàn
       </div>
@@ -1816,7 +1816,7 @@ button[onclick*="export"]{
         <span class="material-icons-round">inventory_2</span>Sản phẩm
       </div>
 
-      <div class="nav-label admin-only" style="margin-top:14px">Trí tuệ</div>
+      <div class="nav-label admin-only" style="margin-top:14px">Trí tuệ AI</div>
       <div class="nav-item admin-only" onclick="document.getElementById('chartInsightBtn')?.click()" title="AI nhận xét tháng">
         <span class="material-icons-round">auto_awesome</span>AI Insights
       </div>
@@ -4787,11 +4787,12 @@ function buildKpiSparklines(orders) {
     const d = new Date(o.time);
     if (isNaN(d)) return;
     const day = d.getDate();
-    if (!days[day]) days[day] = { total:0, good:0, error:0, other:0, piship:0 };
+    if (!days[day]) days[day] = { total:0, good:0, error:0, other:0, piship:0, shopee:0 };
     days[day].total++;
     if (o.status && o.status.includes('Tốt')) days[day].good++;
     else if (o.status && (o.status.includes('tráo') || o.status.includes('Thiếu'))) days[day].error++;
     else days[day].other++;
+    if (o.channel && o.channel.toLowerCase().includes('shopee')) days[day].shopee++;
     if (o.piship) days[day].piship += (parseFloat(String(o.piship).replace(/[^0-9.]/g,''))||0);
   });
 
@@ -4827,7 +4828,8 @@ function buildKpiSparklines(orders) {
   const goodVals   = sortedDays.map(d => days[d].good);
   const errorVals  = sortedDays.map(d => days[d].error);
   const otherVals  = sortedDays.map(d => days[d].other);
-  const pishipVals = sortedDays.map(d => days[d].piship);
+  // Nếu dữ liệu có field piship dùng trực tiếp, không thì tính từ số đơn Shopee * 1620
+  const pishipVals = sortedDays.map(d => days[d].piship > 0 ? days[d].piship : days[d].shopee * 1620);
 
   drawSparkSvg('spk-total',  'spkR_total',  totalVals,  'var(--sky)');
   drawSparkSvg('spk-good',   'spkR_good',   goodVals,   'var(--green)');
