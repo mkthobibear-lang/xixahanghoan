@@ -1475,7 +1475,7 @@ button[onclick*="addProduct"]{
 }
 
 /* ---------- AI FEATURES (sub-block compatibility) ---------- */
-#aiCtxBadge{font-size:9.5px;font-weight:600;color:var(--text3);text-align:center;padding:4px 12px;display:block;margin-top:auto;background:transparent;border:none;border-radius:0}
+#aiCtxBadge{font-size:9.5px;font-weight:600;color:var(--text3);text-align:center;padding:4px 12px;display:block;background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- MOBILE FIXES ---------- */
 @media(max-width:600px){
@@ -2814,9 +2814,9 @@ button[onclick*="export"]{
 
   <div class="ai-msgs" id="aiMsgs">
     <div class="ai-bubble ai-bubble-bot">Xin chào! Tôi có thể phân tích dữ liệu kho hàng tháng này. Bạn muốn hỏi gì? (Trợ lý là AI và có thể mắc sai sót)</div>
-    <div class="ai-ctx-badge" id="aiCtxBadge" style="text-align:center;padding-top:8px">Chưa có dữ liệu · Vào Dashboard chọn tháng trước</div>
     <div id="aiMsgsEnd" style="height:1px;flex-shrink:0"></div>
   </div>
+  <div id="aiCtxBadge" style="text-align:center;padding:4px 12px;font-size:9.5px;font-weight:600;color:var(--text3);background:var(--surface);border-top:1px solid var(--border);flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Chưa có dữ liệu · Vào Dashboard chọn tháng trước</div>
   <div class="ai-chips" id="aiChips">
     <div class="ai-chip" onclick="aiAskToday()">📅 Hôm nay</div>
     <div class="ai-chip" onclick="aiAsk('Tổng quan tháng này: tốt, bẩn, lỗi bao nhiêu?')">📊 Tổng quan tháng</div>
@@ -3351,6 +3351,17 @@ button[onclick*="export"]{
         <button class="ai-draft-tab-v18" onclick="aiSelectPlatform('tiktok',this)"><img src="https://www.google.com/s2/favicons?sz=64&domain=tiktok.com" style="width:16px;height:16px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:5px;flex-shrink:0">TikTok</button>
         <button class="ai-draft-tab-v18" onclick="aiSelectPlatform('lazada',this)"><img src="https://www.google.com/s2/favicons?sz=64&domain=lazada.vn" style="width:16px;height:16px;border-radius:3px;object-fit:cover;vertical-align:middle;margin-right:5px;flex-shrink:0">Lazada</button>
         <button class="ai-draft-tab-v18" onclick="aiSelectPlatform('general',this)"><span class="material-icons-round" style="font-size:14px;vertical-align:middle;margin-right:3px">edit_note</span>Chung</button>
+      </div>
+      <!-- AGENT TRACE PANEL -->
+      <div id="agentTracePanelWrap" style="display:none">
+        <div class="agent-trace-wrap">
+          <div class="agent-trace-header">
+            <div class="agent-trace-dot" id="agentTraceDot"></div>
+            <div class="agent-trace-label">Agent đang suy nghĩ…</div>
+            <div class="agent-trace-meta" id="agentTraceMeta"></div>
+          </div>
+          <div class="agent-trace-steps" id="agentTraceSteps"></div>
+        </div>
       </div>
       <!-- SPLIT VIEW: context (trái) | output (phải) -->
       <div class="ai-draft-split-v18">
@@ -8811,6 +8822,70 @@ body.dark .ai-draft-modal-v18{
   background:rgba(34,197,94,.1);
   border:1px solid rgba(34,197,94,.3);
 }
+/* ── AGENT TRACE ── */
+.agent-trace-wrap{
+  margin:0 18px 12px;
+  border-radius:12px;
+  background:rgba(15,23,42,.72);
+  border:1px solid rgba(124,58,237,.25);
+  overflow:hidden;
+  animation:fadeUp .25s ease;
+}
+body:not(.dark) .agent-trace-wrap{
+  background:rgba(15,23,42,.82);
+}
+.agent-trace-header{
+  display:flex;align-items:center;gap:8px;
+  padding:9px 14px 8px;
+  border-bottom:1px solid rgba(255,255,255,.07);
+}
+.agent-trace-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:#7c3aed;
+  box-shadow:0 0 8px #7c3aed;
+  animation:traceDotPulse 1.2s ease-in-out infinite;
+  flex-shrink:0;
+}
+.agent-trace-dot.done{background:#10b981;box-shadow:0 0 6px #10b981;animation:none}
+@keyframes traceDotPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.7)}}
+.agent-trace-label{
+  font-size:10px;font-weight:800;letter-spacing:.8px;
+  color:#a78bfa;text-transform:uppercase;flex:1
+}
+.agent-trace-meta{font-size:10px;font-weight:600;color:rgba(255,255,255,.3);font-family:'JetBrains Mono',monospace}
+.agent-trace-steps{padding:8px 14px 10px;display:flex;flex-direction:column;gap:5px}
+.agent-trace-step{
+  display:flex;align-items:flex-start;gap:8px;
+  font-size:11.5px;color:rgba(255,255,255,.45);
+  font-weight:500;line-height:1.4;
+  transition:color .2s;
+}
+.agent-trace-step.active{color:rgba(255,255,255,.9)}
+.agent-trace-step.done{color:rgba(255,255,255,.55)}
+.agent-trace-step-icon{
+  width:16px;height:16px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;margin-top:1px;
+  font-size:9px;
+}
+.agent-trace-step.pending .agent-trace-step-icon{
+  border:1.5px solid rgba(255,255,255,.2);
+  background:transparent;
+}
+.agent-trace-step.active .agent-trace-step-icon{
+  border:1.5px solid #7c3aed;
+  background:rgba(124,58,237,.2);
+  animation:traceIconSpin 1.5s linear infinite;
+}
+.agent-trace-step.done .agent-trace-step-icon{
+  border:1.5px solid #10b981;
+  background:rgba(16,185,129,.15);
+  color:#10b981;
+}
+@keyframes traceIconSpin{0%{box-shadow:0 0 0 0 rgba(124,58,237,.6)}70%{box-shadow:0 0 0 5px rgba(124,58,237,0)}100%{box-shadow:0 0 0 0 rgba(124,58,237,0)}}
+.agent-trace-step-text strong{color:#e2e8f0;font-weight:700}
+.agent-trace-step-text em{color:#7dd3fc;font-style:normal;font-weight:600}
+/* ── END AGENT TRACE ── */
 .ai-draft-close{
   width:28px;height:28px;border-radius:8px;
   border:1px solid rgba(124,58,237,.2);
@@ -12602,10 +12677,93 @@ async function aiAnalyzeDamageFromImages(order, kind) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+//  AGENT TRACE — hiển thị các bước AI trong modal soạn KN
+// ══════════════════════════════════════════════════════════════
+const _agentTrace = {
+  steps: [],
+  startT: 0,
+  timerHandle: null,
+
+  reset() {
+    this.steps = [];
+    this.startT = Date.now();
+    clearInterval(this.timerHandle);
+    const wrap = document.getElementById('agentTracePanelWrap');
+    const dot  = document.getElementById('agentTraceDot');
+    const meta = document.getElementById('agentTraceMeta');
+    const stepsEl = document.getElementById('agentTraceSteps');
+    if (!wrap) return;
+    wrap.style.display = 'block';
+    if (dot)  { dot.className = 'agent-trace-dot'; }
+    if (meta) meta.textContent = '';
+    if (stepsEl) stepsEl.innerHTML = '';
+    // Live timer
+    this.timerHandle = setInterval(() => {
+      const s = ((Date.now() - this.startT)/1000).toFixed(1);
+      const tokEl = document.getElementById('agentTraceMeta');
+      if (tokEl) {
+        const tokCount = this._lastTokens ? ` · ${this._lastTokens} tokens` : '';
+        tokEl.textContent = s + 's' + tokCount;
+      }
+    }, 100);
+    this._lastTokens = 0;
+  },
+
+  addStep(id, text) {
+    this.steps.push({ id, text, state: 'pending' });
+    this._render();
+  },
+
+  setActive(id) {
+    this.steps.forEach(s => { if (s.id === id) s.state = 'active'; });
+    this._render();
+  },
+
+  setDone(id, detailText) {
+    this.steps.forEach(s => {
+      if (s.id === id) { s.state = 'done'; if (detailText) s.detail = detailText; }
+    });
+    this._render();
+  },
+
+  finish(tokens) {
+    clearInterval(this.timerHandle);
+    this._lastTokens = tokens || 0;
+    const dot = document.getElementById('agentTraceDot');
+    const label = document.querySelector('#agentTracePanelWrap .agent-trace-label');
+    if (dot)   dot.className = 'agent-trace-dot done';
+    if (label) label.textContent = 'Hoàn thành';
+    const sec = ((Date.now() - this.startT)/1000).toFixed(1);
+    const meta = document.getElementById('agentTraceMeta');
+    if (meta) meta.textContent = sec + 's' + (tokens ? ' · ' + tokens + ' tokens' : '');
+    this.steps.forEach(s => { if (s.state !== 'done') s.state = 'done'; });
+    this._render();
+  },
+
+  hide() {
+    clearInterval(this.timerHandle);
+    const wrap = document.getElementById('agentTracePanelWrap');
+    if (wrap) wrap.style.display = 'none';
+  },
+
+  _render() {
+    const container = document.getElementById('agentTraceSteps');
+    if (!container) return;
+    container.innerHTML = this.steps.map(s => {
+      const icon = s.state === 'done' ? '✓' : s.state === 'active' ? '' : '';
+      const detailHtml = s.detail ? ` <em>"${s.detail}"</em>` : '';
+      return `<div class="agent-trace-step ${s.state}">
+        <div class="agent-trace-step-icon">${s.state === 'done' ? '✓' : ''}</div>
+        <div class="agent-trace-step-text">${s.text}${detailHtml}</div>
+      </div>`;
+    }).join('');
+  }
+};
+
 async function aiGenerateDraft() {
   const order = _aiDraftOrderData;
   if (!order) return;
-  // v18 — Track time + reset verified badge
   const _draftStartT = Date.now();
   const verifyEl = document.getElementById('aiDraftVerifyBadge');
   const timeEl = document.getElementById('aiDraftTimeBadge');
@@ -12619,6 +12777,14 @@ async function aiGenerateDraft() {
   // Reset loading text về mặc định
   const _loadEl = document.getElementById('aiDraftLoadingText');
   if (_loadEl) _loadEl.innerText = 'AI đang soạn thảo...';
+
+  // ── AGENT TRACE: khởi động ──
+  _agentTrace.reset();
+  const _orderCode = order.code || '—';
+  const _product   = order.product || '?';
+  _agentTrace.addStep('find',   `Tìm thấy đơn <strong>${_orderCode}</strong> — ${_product}`);
+  _agentTrace.setDone('find');
+
 
   const platformGuide = {
     shopee: 'Shopee',
@@ -12640,9 +12806,14 @@ async function aiGenerateDraft() {
   let _imageInsight = '';
   if ((_isBan || _isLoi) && order && (order.imageLinks || '').trim()) {
     if (_loadEl) _loadEl.innerText = 'AI đang phân tích tất cả ảnh đính kèm...';
+    // ── TRACE: vision ──
+    const _imgCount = (order.imageLinks||'').trim().split('\n').filter(Boolean).length;
+    _agentTrace.addStep('vision', `Đọc ${_imgCount} ảnh đính kèm · Vision phân tích…`);
+    _agentTrace.setActive('vision');
     try {
       _imageInsight = await aiAnalyzeDamageFromImages(order, _isBan ? 'ban' : 'loi');
     } catch (e) { _imageInsight = ''; }
+    _agentTrace.setDone('vision', _imageInsight || 'Không đọc được ảnh');
     if (_loadEl) _loadEl.innerText = 'AI đang soạn thảo...';
     // v18 — Hiển thị insight vào split-view cột trái
     try { if (typeof aiDraftSetInsight==='function') aiDraftSetInsight(_imageInsight); } catch(e){}
@@ -12680,7 +12851,7 @@ Lý do: Shop đã gửi đúng đủ sản phẩm ${order.product||''} giống m
 Lập luận thiệt hại BẮT BUỘC đưa vào nội dung (không được bỏ qua):
 ${_damageArg}
 
-Yêu cầu bồi thường, không trừ điểm và phí.
+Yêu cầu bồi thường.
 
 Sản phẩm không thể lưu kho bán lại.
 
@@ -12692,9 +12863,22 @@ Yêu cầu bắt buộc:
 - BẮT BUỘC nhấn mạnh mức độ RẤT BẨN, RẤT NẶNG, KHÔNG THỂ LÀM SẠCH — không được dùng từ "nhẹ/ít/hơi/mờ"
 - Nếu phải cắt bớt để đủ 256 ký tự, hãy bỏ "sản phẩm không thể lưu kho bán lại" — KHÔNG bỏ chi tiết bẩn/lỗi
 - KHÔNG nhắc cụm "theo ảnh" / "trong ảnh" / "theo hình" — viết như shop tự kiểm tra hàng hoàn về và mô tả lại` : ''}
-- Yêu cầu bồi thường, không trừ điểm và phí.
+- Yêu cầu bồi thường.
 - TỔNG ĐỘ DÀI TỐI ĐA 256 KÝ TỰ (đếm kỹ, không được vượt quá)
 - CHỈ trả về nội dung khiếu nại, không thêm gì khác`;
+
+  // ── TRACE: memory ──
+  const _memEl2 = document.getElementById('aiDraftCtxMemory');
+  const _memText = (_memEl2 && _memEl2.textContent && _memEl2.textContent.trim() !== '—' && _memEl2.textContent.trim() !== '') ? _memEl2.textContent.trim().substring(0, 60) : null;
+  if (_memText) {
+    _agentTrace.addStep('memory', `Truy vấn memory shop: <em>${_memText}${_memText.length>=60?'…':''}</em>`);
+    _agentTrace.setDone('memory');
+  }
+
+  // ── TRACE: drafting step ──
+  const _platLabel = {shopee:'Shopee',tiktok:'TikTok Shop',lazada:'Lazada',general:'Chung'}[_aiDraftPlatform] || _aiDraftPlatform;
+  _agentTrace.addStep('draft', `Đang soạn KN cho <strong>${_platLabel}</strong> (template ${_aiDraftPlatform}_v3)…`);
+  _agentTrace.setActive('draft');
 
   try {
     const res = await fetch(WEB_APP_URL, {
@@ -12710,21 +12894,23 @@ Yêu cầu bắt buộc:
     document.getElementById('aiDraftLoading').style.display = 'none';
     if (data.result === 'success') {
       // Track token usage
+      const _tokensUsed = data.usage ? (data.usage.total_tokens || data.usage.prompt_tokens + data.usage.completion_tokens) : Math.round((prompt.length + (data.answer||'').length)/4);
       if (data.usage) aiTokensUpdate(data.usage, 'complaint');
       else aiTokensUpdate({ prompt_tokens: Math.round(prompt.length/4), completion_tokens: Math.round((data.answer||'').length/4) }, 'complaint');
       // Tự cắt thông minh: ưu tiên cắt tại cuối câu gần nhất
       let answer = data.answer.trim();
       if (answer.length > 256) {
-        // Tìm dấu câu gần nhất trước ký tự 253
         const cutZone = answer.substring(0, 253);
         const lastDot  = Math.max(cutZone.lastIndexOf('.'), cutZone.lastIndexOf('!'), cutZone.lastIndexOf('?'));
         if (lastDot > 200) {
           answer = answer.substring(0, lastDot + 1);
         } else {
-          // Không tìm thấy câu phù hợp → cắt cứng
           answer = answer.substring(0, 253) + '...';
         }
       }
+      // ── TRACE: finish ──
+      _agentTrace.setDone('draft');
+      _agentTrace.finish(_tokensUsed);
       // v18 — Set time + verified badge
       try {
         const sec = ((Date.now() - _draftStartT)/1000).toFixed(1);
@@ -12734,10 +12920,12 @@ Yêu cầu bắt buộc:
       // Typewriter effect
       aiTypewriterEffect(answer);
     } else {
+      _agentTrace.hide();
       document.getElementById('aiDraftError').innerText = '❌ ' + (data.message || 'Lỗi kết nối AI');
       document.getElementById('aiDraftError').style.display = 'block';
     }
   } catch(e) {
+    _agentTrace.hide();
     document.getElementById('aiDraftLoading').style.display = 'none';
     document.getElementById('aiDraftError').innerText = '❌ Lỗi kết nối. Kiểm tra Apps Script.';
     document.getElementById('aiDraftError').style.display = 'block';
