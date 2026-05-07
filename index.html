@@ -87,6 +87,7 @@ body::after{
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes fadeUp{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@keyframes badgePulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.25);opacity:.85}}
 @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
 @keyframes ripple{0%{opacity:.7;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
 
@@ -1963,7 +1964,7 @@ button[onclick*="export"]{
           <span class="material-icons-round" style="font-size:19px">notifications_active</span>
           <span class="noti-dot" id="notiDot"></span>
         </div>
-        <div id="displayDateBar" onclick="openCalendarPopup()" title="Xem lịch tháng" style="font-size:12px;font-weight:700;color:var(--text3);font-family:'JetBrains Mono',monospace;cursor:pointer;padding:4px 10px;border-radius:8px;transition:.15s" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--text3)'"></div>
+        <div id="displayDateBar" onclick="openCalendarPopup()" title="Xem lịch tháng" style="position:relative;font-size:12px;font-weight:700;color:var(--text3);font-family:'JetBrains Mono',monospace;cursor:pointer;padding:4px 10px;border-radius:8px;transition:.15s" onmouseover="this.style.background='var(--surface2)';this.style.color='var(--text)'" onmouseout="this.style.background='';this.style.color='var(--text3)'"><span id="displayDateBarText"></span><span id="displayDateBarBadge" title="Có ghi chú chưa xem" style="display:none;position:absolute;top:1px;right:1px;width:8px;height:8px;border-radius:50%;background:#ef4444;box-shadow:0 0 0 2px var(--surface-solid);animation:badgePulse 1.6s ease-in-out infinite"></span></div>
       </div>
     </div>
 
@@ -5666,7 +5667,7 @@ function stopScanner(){ document.getElementById('scannerModal').classList.remove
 
 // FORM PRELOAD
 function preloadImages(){ const urls=Object.values(CHANNEL_ICONS).concat(Object.values(SHOP_LOGOS)); urls.forEach(u=>{const i=new Image();i.src=u}); }
-window.onload=function(){ preloadImages(); initTheme(); const t=getTodayString(); const vnNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'})); document.getElementById('displayDate').innerText=vnNow.toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}); document.getElementById('displayDateBar').innerText=vnNow.toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',weekday:'short',day:'numeric',month:'short'}); document.getElementById('historyDate').value=t; document.getElementById('reportStart').value=t; document.getElementById('reportEnd').value=t; addProductRowV2();addMissingRow(); };
+window.onload=function(){ preloadImages(); initTheme(); const t=getTodayString(); const vnNow=new Date(new Date().toLocaleString('en-US',{timeZone:'Asia/Ho_Chi_Minh'})); document.getElementById('displayDate').innerText=vnNow.toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh'}); document.getElementById('displayDateBarText').innerText=vnNow.toLocaleDateString('vi-VN',{timeZone:'Asia/Ho_Chi_Minh',weekday:'short',day:'numeric',month:'short'}); if(typeof _calUpdateBadge==='function') _calUpdateBadge(); document.getElementById('historyDate').value=t; document.getElementById('reportStart').value=t; document.getElementById('reportEnd').value=t; addProductRowV2();addMissingRow(); };
 function addProductRow(){ const d=document.createElement('div');d.className='product-row'; d.innerHTML=`<div class="autocomplete-wrapper"><input type="text" class="input-field p-name" placeholder="Chọn sản phẩm..." onfocus="showAutocomplete(this)" oninput="filterAutocomplete(this)" onblur="validateAutocomplete(this)" autocomplete="off"><div class="autocomplete-list"></div></div><div style="flex:1;min-width:80px"><select class="input-field p-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`; document.getElementById('productList').appendChild(d); }
 function addMissingRow(){ const d=document.createElement('div');d.className='missing-row'; d.innerHTML=`<div class="autocomplete-wrapper"><input type="text" class="input-field m-note" placeholder="Chọn sản phẩm thiếu..." onfocus="showAutocomplete(this)" oninput="filterAutocomplete(this)" onblur="validateAutocomplete(this)" autocomplete="off"><div class="autocomplete-list"></div></div><div style="flex:1;min-width:80px"><select class="input-field m-size"><option value="" disabled selected>Size</option>${genSizes()}</select></div><button type="button" class="btn-remove" onclick="this.parentElement.remove()"><span class="material-icons-round">remove</span></button>`; document.getElementById('missingList').appendChild(d); }
 function genSizes(){let o='';for(let i=1;i<=50;i++)o+=`<option value="${i}">${i}</option>`;return o}
@@ -10087,6 +10088,7 @@ let _calCurrent = null; // {year, month} đang xem (month: 0-11)
 let _calSelected = null; // 'YYYY-MM-DD' đang chọn
 
 const CAL_NOTES_KEY = 'xixa_calendar_notes_v1';
+const CAL_SEEN_KEY  = 'xixa_calendar_seen_v1';
 
 function _calLoadNotes(){
   try {
@@ -10097,15 +10099,55 @@ function _calLoadNotes(){
 function _calSaveNotes(obj){
   try { localStorage.setItem(CAL_NOTES_KEY, JSON.stringify(obj)); } catch(e){}
 }
+function _calLoadSeen(){
+  try {
+    const s = localStorage.getItem(CAL_SEEN_KEY);
+    return s ? JSON.parse(s) : {};
+  } catch(e){ return {}; }
+}
+function _calSaveSeen(obj){
+  try { localStorage.setItem(CAL_SEEN_KEY, JSON.stringify(obj)); } catch(e){}
+}
+function _calMarkSeen(dateKey){
+  const seen = _calLoadSeen();
+  seen[dateKey] = Date.now();
+  _calSaveSeen(seen);
+}
+function _calClearSeen(dateKey){
+  const seen = _calLoadSeen();
+  delete seen[dateKey];
+  _calSaveSeen(seen);
+}
+// Đếm số ngày có ghi chú nhưng chưa xem
+function _calCountUnseen(){
+  const notes = _calLoadNotes();
+  const seen = _calLoadSeen();
+  let n = 0;
+  Object.keys(notes).forEach(k => { if (!seen[k]) n++; });
+  return n;
+}
+// Cập nhật chấm đỏ trên displayDateBar
+function _calUpdateBadge(){
+  const badge = document.getElementById('displayDateBarBadge');
+  if (!badge) return;
+  badge.style.display = _calCountUnseen() > 0 ? 'block' : 'none';
+}
 function _calGetNote(dateKey){
   const notes = _calLoadNotes();
   return notes[dateKey] || '';
 }
 function _calSetNote(dateKey, text){
   const notes = _calLoadNotes();
-  if (text && text.trim()) notes[dateKey] = text.trim();
-  else delete notes[dateKey];
+  if (text && text.trim()) {
+    notes[dateKey] = text.trim();
+    // Ghi chú mới → bỏ trạng thái đã xem (để hiện chấm đỏ lại)
+    _calClearSeen(dateKey);
+  } else {
+    delete notes[dateKey];
+    _calClearSeen(dateKey);
+  }
   _calSaveNotes(notes);
+  _calUpdateBadge();
 }
 
 // ============================================================
@@ -10421,12 +10463,23 @@ function _calSelectDay(dateKey, d, month, year, weekday, lunar){
   const note = _calGetNote(dateKey);
   document.getElementById('calDetailNote').value = note;
   document.getElementById('calDetailDeleteBtn').style.display = note ? 'flex' : 'none';
+
+  // Click vào ngày có ghi chú → đánh dấu đã xem
+  if (note) {
+    _calMarkSeen(dateKey);
+    _calUpdateBadge();
+  }
 }
 
 function calSaveNote(){
   if (!_calSelected) return;
   const txt = document.getElementById('calDetailNote').value;
   _calSetNote(_calSelected, txt);
+  // Người dùng vừa lưu xong = đang xem ngày này, đánh dấu đã xem
+  if (txt.trim()) {
+    _calMarkSeen(_calSelected);
+    _calUpdateBadge();
+  }
   if (typeof showToast === 'function') {
     showToast('success', 'Đã lưu', txt.trim() ? 'Ghi chú đã được lưu' : 'Ghi chú trống đã được xóa');
   }
