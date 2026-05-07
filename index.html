@@ -5018,6 +5018,22 @@ function updateTopProductUI() {
     let rank = idx + 1; 
     let rankCls = rank === 1 ? 'rank-1' : rank === 2 ? 'rank-2' : rank === 3 ? 'rank-3' : 'rank-other'; 
     let safeName = item.name.replace(/'/g, "\\'"); 
+    // Build sparkline path from daily data
+    const SPARK_COLORS_INLINE=['var(--red)','var(--amber)','var(--sky)','var(--green)','var(--green)','var(--text3)','var(--text3)','var(--text3)'];
+    const sparkColor = SPARK_COLORS_INLINE[idx] || 'var(--text3)';
+    const daily = item.daily || {};
+    const daysArr = Object.keys(daily).map(Number).sort((a,b)=>a-b);
+    let sparkPath = 'M0 11 L8 11 L16 11 L24 11 L32 11 L40 11 L48 11';
+    if(daysArr.length >= 2){
+      let vals = daysArr.slice(-7).map(d=>daily[d]||0);
+      while(vals.length<7) vals.unshift(0);
+      const maxV = Math.max(...vals)||1;
+      const pts = vals.map(v=>(22-(v/maxV)*18).toFixed(1));
+      sparkPath = 'M0 '+pts[0]+pts.slice(1).map((p,i)=>' L'+((i+1)*8)+' '+p).join('');
+    } else if(daysArr.length === 1){
+      // Single day — show a rising line ending at value
+      sparkPath = 'M0 18 L8 16 L16 14 L24 12 L32 10 L40 8 L48 6';
+    }
     return `<div class="top-prod-row" onclick="openProductOrders('${safeName}')">
       <div class="top-prod-rank ${rankCls}">${rank}</div>
       <img class="top-prod-img" src="${img}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1524/1524855.png'">
@@ -5029,6 +5045,7 @@ function updateTopProductUI() {
         <div class="top-prod-qty">${item.curr}</div>
         <div class="top-prod-lbl">đơn hoàn</div>
       </div>
+      <svg class="tp-spark" viewBox="0 0 48 22" preserveAspectRatio="none"><path d="${sparkPath}" stroke="${sparkColor}" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
     </div>`; 
   }).join(''); 
   if(sortedProductStats.length > 8) { btn.style.display = 'flex'; btn.innerText = isShowingAllProducts ? 'Thu gọn' : `Xem tất cả (${sortedProductStats.length})`; } 
