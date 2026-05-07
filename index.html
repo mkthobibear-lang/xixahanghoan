@@ -1652,10 +1652,10 @@ button[onclick*="export"]{
 
 /* ============ TOP PRODUCTS SPARKLINE ============ */
 .tp-spark{
-  width:48px;height:22px;flex-shrink:0;opacity:.85;
-  margin-left:4px;
+  width:48px;height:24px;flex-shrink:0;opacity:.9;
+  margin-left:4px;overflow:visible;
 }
-.tp-spark path{stroke-width:1.6;fill:none;stroke-linecap:round}
+.tp-spark path{stroke-linecap:round}
 
 
 
@@ -5020,7 +5020,10 @@ function updateTopProductUI() {
     let safeName = item.name.replace(/'/g, "\\'"); 
     // Build sparkline path from daily data
     const SPARK_COLORS_INLINE=['var(--red)','var(--amber)','var(--sky)','var(--green)','var(--green)','var(--text3)','var(--text3)','var(--text3)'];
+    const SPARK_COLORS_SOLID=['#ef4444','#f59e0b','#0ea5e9','#10b981','#10b981','#8b8b95','#8b8b95','#8b8b95'];
     const sparkColor = SPARK_COLORS_INLINE[idx] || 'var(--text3)';
+    const sparkColorSolid = SPARK_COLORS_SOLID[idx] || '#8b8b95';
+    const sparkUID = 'sp'+idx;
     const daily = item.daily || {};
     const daysArr = Object.keys(daily).map(Number).sort((a,b)=>a-b);
     let sparkPath = 'M0 11 L8 11 L16 11 L24 11 L32 11 L40 11 L48 11';
@@ -5045,7 +5048,22 @@ function updateTopProductUI() {
         <div class="top-prod-qty">${item.curr}</div>
         <div class="top-prod-lbl">đơn hoàn</div>
       </div>
-      <svg class="tp-spark" viewBox="0 0 48 22" preserveAspectRatio="none"><path d="${sparkPath}" stroke="${sparkColor}" stroke-width="1.6" fill="none" stroke-linecap="round"/></svg>
+      <svg class="tp-spark" viewBox="0 0 48 24" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="g_${sparkUID}" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="${sparkColorSolid}" stop-opacity="0.30"/>
+            <stop offset="100%" stop-color="${sparkColorSolid}" stop-opacity="0"/>
+          </linearGradient>
+          <filter id="f_${sparkUID}" x="-20%" y="-60%" width="140%" height="220%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+            <feFlood flood-color="${sparkColorSolid}" flood-opacity="0.5" result="color"/>
+            <feComposite in="color" in2="blur" operator="in" result="glow"/>
+            <feMerge><feMergeNode in="glow"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+        </defs>
+        <path d="${sparkPath} L48 24 L0 24 Z" fill="url(#g_${sparkUID})" stroke="none"/>
+        <path d="${sparkPath}" stroke="${sparkColor}" stroke-width="1.6" fill="none" stroke-linecap="round" filter="url(#f_${sparkUID})"/>
+      </svg>
     </div>`; 
   }).join(''); 
   if(sortedProductStats.length > 8) { btn.style.display = 'flex'; btn.innerText = isShowingAllProducts ? 'Thu gọn' : `Xem tất cả (${sortedProductStats.length})`; } 
@@ -12664,7 +12682,7 @@ ${_damageArg}
 
 Yêu cầu bồi thường, không trừ điểm và phí.
 
-Không thể lưu kho bán lại.
+Sản phẩm không thể lưu kho bán lại.
 
 Yêu cầu bắt buộc:
 - Viết tiếng Việt, lịch sự, nêu mã vận đơn và yêu cầu cụ thể
@@ -12672,9 +12690,9 @@ Yêu cầu bắt buộc:
 - BẮT BUỘC đề cập lập luận thiệt hại ở trên${_imageInsight ? `
 - ⚠️ ƯU TIÊN CAO NHẤT: phải nêu vị trí + mô tả CỤ THỂ bẩn/lỗi (lấy từ "${_imageInsight}"), KHÔNG được viết chung chung "hàng bị bẩn"
 - BẮT BUỘC nhấn mạnh mức độ RẤT BẨN, RẤT NẶNG, KHÔNG THỂ LÀM SẠCH — không được dùng từ "nhẹ/ít/hơi/mờ"
-- Nếu phải cắt bớt để đủ 256 ký tự, hãy bỏ "không thể lưu kho bán lại" — KHÔNG bỏ chi tiết bẩn/lỗi
+- Nếu phải cắt bớt để đủ 256 ký tự, hãy bỏ "sản phẩm không thể lưu kho bán lại" — KHÔNG bỏ chi tiết bẩn/lỗi
 - KHÔNG nhắc cụm "theo ảnh" / "trong ảnh" / "theo hình" — viết như shop tự kiểm tra hàng hoàn về và mô tả lại` : ''}
-- Yêu cầu bồi thường đơn hàng
+- Yêu cầu bồi thường, không trừ điểm và phí.
 - TỔNG ĐỘ DÀI TỐI ĐA 256 KÝ TỰ (đếm kỹ, không được vượt quá)
 - CHỈ trả về nội dung khiếu nại, không thêm gì khác`;
 
@@ -13755,11 +13773,13 @@ function qcCopy() {
     for(var i=1;i<pts.length;i++){ d+=' L'+(i*8)+' '+pts[i]; }
     return d;
   }
+  var SPARK_COLORS_SOLID=['#ef4444','#f59e0b','#0ea5e9','#10b981','#8b8b95','#8b8b95'];
   function injectSparklines(){
     var rows=document.querySelectorAll('.top-prod-row');
     rows.forEach(function(r,i){
       if(r.querySelector('.tp-spark')) return;
       var color=SPARK_COLORS[i] || 'var(--text3)';
+      var colorSolid=SPARK_COLORS_SOLID[i] || '#8b8b95';
       // Get real daily data from sortedProductStats
       var daily = (window.sortedProductStats && window.sortedProductStats[i] && window.sortedProductStats[i].daily) || {};
       var svgNS='http://www.w3.org/2000/svg';
@@ -13767,12 +13787,70 @@ function qcCopy() {
       svg.setAttribute('class','tp-spark');
       svg.setAttribute('viewBox','0 0 48 22');
       svg.setAttribute('preserveAspectRatio','none');
+
+      // Unique IDs for gradient and filter per row
+      var uid='tps'+i+'_'+Date.now();
+
+      // Defs: gradient fill + drop shadow filter
+      var defs=document.createElementNS(svgNS,'defs');
+
+      var grad=document.createElementNS(svgNS,'linearGradient');
+      grad.setAttribute('id','grad_'+uid);
+      grad.setAttribute('x1','0');grad.setAttribute('y1','0');
+      grad.setAttribute('x2','0');grad.setAttribute('y2','1');
+      var stop1=document.createElementNS(svgNS,'stop');
+      stop1.setAttribute('offset','0%');
+      stop1.setAttribute('stop-color',colorSolid);
+      stop1.setAttribute('stop-opacity','0.28');
+      var stop2=document.createElementNS(svgNS,'stop');
+      stop2.setAttribute('offset','100%');
+      stop2.setAttribute('stop-color',colorSolid);
+      stop2.setAttribute('stop-opacity','0');
+      grad.appendChild(stop1);grad.appendChild(stop2);
+
+      var filter=document.createElementNS(svgNS,'filter');
+      filter.setAttribute('id','shd_'+uid);
+      filter.setAttribute('x','-20%');filter.setAttribute('y','-40%');
+      filter.setAttribute('width','140%');filter.setAttribute('height','180%');
+      var feGauss=document.createElementNS(svgNS,'feGaussianBlur');
+      feGauss.setAttribute('in','SourceGraphic');
+      feGauss.setAttribute('stdDeviation','1.2');
+      feGauss.setAttribute('result','blur');
+      var feFlood=document.createElementNS(svgNS,'feFlood');
+      feFlood.setAttribute('flood-color',colorSolid);
+      feFlood.setAttribute('flood-opacity','0.45');
+      feFlood.setAttribute('result','color');
+      var feComp=document.createElementNS(svgNS,'feComposite');
+      feComp.setAttribute('in','color');feComp.setAttribute('in2','blur');
+      feComp.setAttribute('operator','in');feComp.setAttribute('result','shadow');
+      var feMerge=document.createElementNS(svgNS,'feMerge');
+      var feMergeN1=document.createElementNS(svgNS,'feMergeNode');
+      feMergeN1.setAttribute('in','shadow');
+      var feMergeN2=document.createElementNS(svgNS,'feMergeNode');
+      feMergeN2.setAttribute('in','SourceGraphic');
+      feMerge.appendChild(feMergeN1);feMerge.appendChild(feMergeN2);
+      filter.appendChild(feGauss);filter.appendChild(feFlood);filter.appendChild(feComp);filter.appendChild(feMerge);
+
+      defs.appendChild(grad);defs.appendChild(filter);
+      svg.appendChild(defs);
+
+      // Area fill path (close to bottom)
+      var pathD=makePathFromData(daily);
+      var area=document.createElementNS(svgNS,'path');
+      var areaD=pathD+' L48 22 L0 22 Z';
+      area.setAttribute('d',areaD);
+      area.setAttribute('fill','url(#grad_'+uid+')');
+      area.setAttribute('stroke','none');
+      svg.appendChild(area);
+
+      // Stroke line with glow filter
       var p=document.createElementNS(svgNS,'path');
-      p.setAttribute('d',makePathFromData(daily));
+      p.setAttribute('d',pathD);
       p.setAttribute('stroke',color);
       p.setAttribute('stroke-width','1.6');
       p.setAttribute('fill','none');
       p.setAttribute('stroke-linecap','round');
+      p.setAttribute('filter','url(#shd_'+uid+')');
       svg.appendChild(p);
       r.appendChild(svg);
     });
