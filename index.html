@@ -417,12 +417,15 @@ body.dark .sib-btn-ghost{background:rgba(255,255,255,.07)}
 .trend-spike-pct{font-size:15px;font-weight:800;color:var(--red);font-family:'JetBrains Mono',monospace;margin-left:4px}
 
 /* ===== DASH GRID ===== */
-.dash-main-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:18px}
+.dash-main-grid{display:grid;grid-template-columns:1.6fr 1fr;gap:14px;margin-bottom:18px;align-items:stretch}
 .dash-chart-card,.dash-section-card,.dash-ch-card,.dash-report-card{
   background:var(--surface);backdrop-filter:blur(14px);
   border:1px solid var(--border);border-radius:var(--r-lg);
   padding:18px 20px;position:relative;
 }
+/* Chart card: dọc xếp, canvas wrap tự giãn cao để lấp khoảng trống */
+.dash-main-grid > .dash-chart-card{display:flex;flex-direction:column;height:100%}
+.dash-main-grid > .dash-chart-card > .dash-chart-canvas-wrap{flex:1 1 auto;min-height:200px}
 .dash-chart-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px}
 .dash-chart-title,.dash-section-title{font-size:14px;font-weight:800;color:var(--text);display:flex;align-items:center;gap:8px}
 .dash-chart-title::before,.dash-section-title::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--grad-ai);box-shadow:0 0 12px rgba(124,58,237,.6)}
@@ -457,7 +460,18 @@ body.dark .sib-btn-ghost{background:rgba(255,255,255,.07)}
 .ch-progress-fill{height:100%;border-radius:100px;transition:width .8s ease}
 
 /* ===== SHOP STATS / TOP PRODUCTS ===== */
-.dash-bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px}
+.dash-bot-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px;align-items:stretch}
+/* Cả 2 card trong bot grid đều flex column, full height */
+.dash-bot-grid > .dash-section-card{display:flex;flex-direction:column;height:100%;min-height:0}
+.dash-bot-grid > .dash-section-card > .dash-section-header{flex-shrink:0}
+/* Container nội dung tự giãn lấp đầy phần còn lại của card, có scroll khi tràn */
+#shopStatsContainer{flex:1 1 auto;min-height:0;overflow-y:auto;padding-right:4px}
+#topProductsContainer{flex:1 1 auto;min-height:0}
+/* Custom scrollbar gọn cho shopStatsContainer */
+#shopStatsContainer::-webkit-scrollbar{width:6px}
+#shopStatsContainer::-webkit-scrollbar-track{background:transparent}
+#shopStatsContainer::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#shopStatsContainer::-webkit-scrollbar-thumb:hover{background:var(--border-strong,var(--text3))}
 
 .shop-ch-group-v2{margin-bottom:14px;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:var(--surface2)}
 .shop-ch-group-v2:last-child{margin-bottom:0}
@@ -1574,6 +1588,44 @@ button[onclick*="export"]{
   width:70px;height:48px;opacity:.85;pointer-events:none;
 }
 
+/* ============ SHOP DISTRIBUTION BLOCK (kế thừa style phân bổ kênh) ============ */
+.shop-dist-block{
+  margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);
+}
+.shop-dist-title{
+  font-size:14px;font-weight:800;color:var(--text);letter-spacing:-.1px;margin-bottom:6px;
+}
+.shop-dist-bar-item{margin-bottom:7px}
+.shop-dist-bar-item:last-child{margin-bottom:0}
+.shop-dist-bar-row{
+  display:flex;align-items:center;gap:8px;padding:3px 0;cursor:pointer;
+  transition:transform .15s;
+}
+.shop-dist-bar-row:hover{transform:translateX(2px)}
+.shop-dist-name{
+  flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.shop-dist-name .ch-tag{
+  color:var(--text3);font-weight:600;font-size:12px;margin-left:3px;
+}
+.shop-dist-pct{
+  font-size:12px;font-weight:800;min-width:36px;text-align:right;
+  font-family:'JetBrains Mono',monospace;
+}
+.shop-dist-progress{
+  height:4px;background:var(--surface2);border-radius:3px;overflow:hidden;
+  margin-top:2px;
+}
+.shop-dist-progress-fill{
+  height:100%;border-radius:3px;
+  transition:width .8s cubic-bezier(.4,0,.2,1);
+}
+.shop-dist-empty{
+  text-align:center;color:var(--text3);font-size:11.5px;
+  padding:14px 8px;font-style:italic;
+}
+
 /* ============ QUICK ACTIONS BLOCK ============ */
 .quick-actions-block{
   margin-top:16px;padding-top:14px;border-top:1px dashed var(--border);
@@ -2154,7 +2206,7 @@ button[onclick*="export"]{
                 <button id="chartViewMonth" onclick="switchChartView('month')" style="padding:5px 12px;border-radius:8px;border:none;font-size:11.5px;font-weight:700;font-family:inherit;cursor:pointer;transition:.15s;background:transparent;color:var(--text2)">Tháng</button>
               </div>
             </div>
-            <div style="position:relative;height:200px"><canvas id="monthlyChart"></canvas></div>
+            <div class="dash-chart-canvas-wrap" style="position:relative;flex:1 1 auto;min-height:200px"><canvas id="monthlyChart"></canvas></div>
 
             <!-- AI Chart Insight -->
             <div id="chartInsightWrap" style="margin:10px 0 6px">
@@ -2224,7 +2276,7 @@ button[onclick*="export"]{
                   <circle id="chArcLazada" cx="60" cy="60" r="46" fill="none" stroke="#38bdf8" stroke-width="13" stroke-dasharray="0 289" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 60 60)" style="transition:stroke-dasharray .9s ease,stroke-dashoffset .9s ease"/>
                 </svg>
                 <div class="ch-donut-center">
-                  <div class="ch-donut-num" id="chDonutTotal">0</div>
+                  <div class="ch-donut-num" id="chDonutTotal">0%</div>
                   <div class="ch-donut-lbl">TỔNG ĐƠN</div>
                 </div>
               </div>
@@ -2270,14 +2322,11 @@ button[onclick*="export"]{
               </div>
             </div>
 
-            <!-- QUICK ACTIONS (v2) -->
-            <div class="quick-actions-block">
-              <div class="quick-actions-title">QUICK ACTIONS</div>
-              <div class="quick-actions-grid">
-                <button class="qa-btn" onclick="(window.openScanner||function(){})()"><span class="material-icons-round" style="font-size:15px">qr_code_scanner</span>Scan QR</button>
-                <button class="qa-btn" onclick="switchView('form')"><span class="material-icons-round" style="font-size:15px">add_box</span>Nhập đơn</button>
-                <button class="qa-btn" onclick="(window.openOcr||function(){})()"><span class="material-icons-round" style="font-size:15px">document_scanner</span>OCR ảnh</button>
-                <button class="qa-btn" onclick="(window.toggleCsDropdown||function(){})()"><span class="material-icons-round" style="font-size:15px">support_agent</span>Khiếu nại</button>
+            <!-- PHÂN BỔ THEO SHOP (v2) -->
+            <div class="shop-dist-block">
+              <div class="shop-dist-title" style="display:flex;align-items:center;gap:8px"><span class="dot-pulse"></span>Phân bổ theo shop</div>
+              <div id="shopDistBars" style="margin-top:10px">
+                <!-- bars sẽ được render bằng JS -->
               </div>
             </div>
           </div>
@@ -2296,7 +2345,7 @@ button[onclick*="export"]{
                 <span class="spill spill-b" style="font-size:10px;padding:2px 7px">BH</span>
               </div>
             </div>
-            <div id="shopStatsContainer" style="max-height:440px;overflow-y:auto">
+            <div id="shopStatsContainer">
               <div style="text-align:center;color:var(--text3);padding:30px;font-size:13px">Chọn tháng để xem dữ liệu</div>
             </div>
           </div>
@@ -12754,7 +12803,7 @@ function aiSearchFocus(){
     }
     var total=s+t+v+l;
     var totalEl=document.getElementById('chDonutTotal');
-    if(totalEl) totalEl.innerText = total;
+    if(totalEl) totalEl.innerText = total>0 ? '100%' : '0%';
     if(total<=0) return;
     var offset=0;
     var segs=[['Shopee',s],['Tiktok',t],['VTP',v],['Lazada',l]];
@@ -12773,6 +12822,119 @@ function aiSearchFocus(){
   }
   setInterval(update, 700);
   setTimeout(update, 400);
+})();
+</script>
+
+<script>
+// XIXA v2 — Shop distribution bars (phân bổ theo shop)
+(function(){
+  // Màu theo kênh (đồng bộ với phân bổ kênh)
+  function chKey(ch){
+    var s=(ch||'').toLowerCase();
+    if(s.indexOf('shopee')>-1) return 'Shopee';
+    if(s.indexOf('tiktok')>-1) return 'Tiktok';
+    if(s.indexOf('lazada')>-1) return 'Lazada';
+    if(s.indexOf('viettel')>-1 || s.indexOf('vtp')>-1) return 'VTP';
+    return 'Khác';
+  }
+  function chDisplay(k){
+    return k==='VTP' ? 'Viettel' : (k==='Khác' ? 'Khác' : k);
+  }
+  var CH_COLORS = {
+    Shopee: {bar:'#ff7a45', text:'var(--orange)'},
+    Tiktok: {bar:'#1a1a18', text:'var(--text2)'},
+    VTP:    {bar:'#ff4d6d', text:'var(--red)'},
+    Lazada: {bar:'#38bdf8', text:'var(--blue)'},
+    'Khác': {bar:'#94a3b8', text:'var(--text3)'}
+  };
+
+  function escapeHtml(s){
+    return String(s||'').replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  var lastHash = '';
+
+  function update(){
+    var container = document.getElementById('shopDistBars');
+    if(!container) return;
+
+    var orders = window.currentMonthOrders || [];
+    if(!orders.length){
+      // Tránh re-render khi không có dữ liệu
+      if(lastHash !== 'empty'){
+        container.innerHTML = '<div class="shop-dist-empty">Chưa có dữ liệu</div>';
+        lastHash = 'empty';
+      }
+      return;
+    }
+
+    // Gộp đơn theo shop (mỗi shop gắn với 1 kênh chủ đạo dựa theo lần xuất hiện gần nhất)
+    var shopMap = {}; // key = shopName + '||' + channelKey
+    orders.forEach(function(o){
+      var shop = (o.shop && o.shop.trim() !== '') ? o.shop.trim() : 'Không rõ';
+      var ck = chKey(o.channel);
+      var k = shop + '||' + ck;
+      if(!shopMap[k]) shopMap[k] = { shop: shop, ch: ck, total: 0 };
+      shopMap[k].total++;
+    });
+
+    var items = Object.keys(shopMap).map(function(k){ return shopMap[k]; });
+    var total = items.reduce(function(a,b){ return a + b.total; }, 0);
+    if(total <= 0){
+      if(lastHash !== 'empty'){
+        container.innerHTML = '<div class="shop-dist-empty">Chưa có dữ liệu</div>';
+        lastHash = 'empty';
+      }
+      return;
+    }
+
+    // Sort giảm dần theo số đơn
+    items.sort(function(a,b){ return b.total - a.total; });
+
+    // Hash để chỉ re-render khi cần
+    var hash = items.map(function(it){ return it.shop+'|'+it.ch+'|'+it.total; }).join(';');
+    if(hash === lastHash) return;
+    lastHash = hash;
+
+    var html = items.map(function(it){
+      var pct = (it.total/total*100);
+      var pctRound = Math.round(pct);
+      // Hiển thị 0% nếu round = 0 nhưng có đơn
+      if(pctRound === 0 && it.total > 0) pctRound = pct < 0.5 ? 0 : 1;
+      var col = CH_COLORS[it.ch] || CH_COLORS['Khác'];
+      var chDisp = chDisplay(it.ch);
+      var chKeyAttr = it.ch === 'VTP' ? 'VTP' : it.ch;
+      return ''
+        + '<div class="shop-dist-bar-item">'
+        +   '<div class="shop-dist-bar-row" data-shop="'+escapeHtml(it.shop)+'" data-ch="'+escapeHtml(chKeyAttr)+'">'
+        +     '<span style="width:10px;height:10px;border-radius:50%;background:'+col.bar+';flex-shrink:0;display:inline-block"></span>'
+        +     '<span class="shop-dist-name">'+escapeHtml(it.shop)+' <span class="ch-tag">('+escapeHtml(chDisp)+')</span></span>'
+        +     '<span class="shop-dist-pct" style="color:'+col.text+'">'+pctRound+'%</span>'
+        +   '</div>'
+        +   '<div class="shop-dist-progress"><div class="shop-dist-progress-fill" style="background:'+col.bar+';width:'+pct.toFixed(2)+'%"></div></div>'
+        + '</div>';
+    }).join('');
+
+    container.innerHTML = html;
+
+    // Click vào hàng để mở popup chi tiết shop (nếu hàm tồn tại)
+    container.querySelectorAll('.shop-dist-bar-row').forEach(function(row){
+      row.addEventListener('click', function(){
+        var shop = row.getAttribute('data-shop');
+        var ch = row.getAttribute('data-ch');
+        if(typeof window.openShopChannelPopup === 'function'){
+          window.openShopChannelPopup(shop, ch);
+        } else if(typeof window.openChannelPopup === 'function'){
+          window.openChannelPopup(ch);
+        }
+      });
+    });
+  }
+
+  setInterval(update, 900);
+  setTimeout(update, 500);
 })();
 </script>
 
