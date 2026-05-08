@@ -2134,6 +2134,7 @@ button[onclick*="export"]{
               <div class="kpi-data">
                 <div class="kpi-val" id="m-piship" style="color:var(--orange);font-size:20px">0đ</div>
                 <div class="kpi-sub">Shopee × 1.620đ</div>
+                <div class="kpi-cmp" id="m-piship-cmp"></div>
               </div>
               <svg class="kpi-sparkline" id="spk-piship" viewBox="0 0 80 30" preserveAspectRatio="none"><defs>
       <linearGradient id="spkG_5ff311" x1="0" y1="0" x2="0" y2="1">
@@ -5151,6 +5152,7 @@ function updateAdminMetrics(orders,prevOrdersRaw,cutoffDay){ if(!orders||!orders
   const piship = shopeeOrders * 1620;
   const pishipEl = document.getElementById('m-piship');
   if(pishipEl) pishipEl.innerText = piship.toLocaleString('vi-VN') + 'đ';
+  if(prevOrdersRaw){ const pShopeeOrders=(prevOrdersRaw.filter(o=>{ if(!o.time)return false; const d=new Date(o.time); return !isNaN(d)&&d.getDate()<=cutoffDay; })).filter(o=>o.channel.toLowerCase().includes('shopee')).length; makeCmp(piship, pShopeeOrders*1620, 'm-piship-cmp', cutoffDay); }
  buildKpiSparklines(orders); }
 function cmpText(curr,prev){ if(prev===0&&curr===0)return{text:'=',cls:'flat'}; if(prev===0)return{text:'▲ mới',cls:'up'}; const d=Math.round((curr-prev)/prev*100); if(d===0)return{text:'= không đổi',cls:'flat'}; if(d>0)return{text:`▲ +${d}%`,cls:'up'}; return{text:`▼ ${d}%`,cls:'down'}; }
 function updateChannelCmp(currOrders,prevOrders,cutoffDay){ 
@@ -9327,10 +9329,12 @@ function rtRenderMetricsAnimated(orders, prevOrdersRaw, cutoffDay) {
     const pGood  = p.filter(o => o.status.includes('Tốt')).length;
     const pErr   = p.filter(o => o.status.includes('tráo') || o.status.includes('Thiếu')).length;
     const pOther = pTotal - pGood - pErr;
+    const pPiship = p.filter(o => o.channel.toLowerCase().includes('shopee')).length * 1620;
     makeCmp(total, pTotal, 'm-total-cmp', cutoffDay);
     makeCmp(good,  pGood,  'm-good-cmp',  cutoffDay);
     makeCmp(error, pErr,   'm-error-cmp', cutoffDay);
     makeCmp(other, pOther, 'm-other-cmp', cutoffDay);
+    makeCmp(piship, pPiship, 'm-piship-cmp', cutoffDay);
   }
 }
 
@@ -14814,7 +14818,7 @@ function aiSearchFocus(){
 <script>
 // XIXA v2 — Shorten KPI cmp text once via MutationObserver (no blink)
 (function(){
-  var ids=['m-total-cmp','m-good-cmp','m-error-cmp','m-other-cmp'];
+  var ids=['m-total-cmp','m-good-cmp','m-error-cmp','m-other-cmp','m-piship-cmp'];
   var rx=/\s+so v[ớo]i.*?(t\.tr[ưu][ớo]c|tr[ưu][ớo]c)\.?$/i;
   function cleanEl(el){
     if(!el) return;
