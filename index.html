@@ -2004,11 +2004,12 @@ button[onclick*="export"]{
               <button class="ai-chip" onclick="document.getElementById('chartInsightBtn')?.click()"><span class="material-icons-round" style="font-size:14px">visibility</span>Phân tích sâu</button>
               <button class="ai-chip" onclick="openExportModal()"><span class="material-icons-round" style="font-size:14px">download</span>Xuất</button>
             </div>
+            <button onclick="document.getElementById('aiHeroWrap').style.display='none'" title="Ẩn" style="position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.12);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;padding:0;flex-shrink:0;transition:background .15s" onmouseover="this.style.background='rgba(0,0,0,.22)'" onmouseout="this.style.background='rgba(0,0,0,.12)'">✕</button>
           </div>
         </div>
 
         <!-- SMART INSIGHT BAR -->
-        <div id="smartInsightBar" style="display:none;margin-bottom:14px">
+        <div id="smartInsightBar" style="display:none;margin-bottom:14px;position:relative">
           <div class="sib-wrap">
             <div class="sib-icon"><span class="material-icons-round">auto_awesome</span></div>
             <div class="sib-left">
@@ -2030,6 +2031,7 @@ button[onclick*="export"]{
               </div>
             </div>
           </div>
+          <button onclick="document.getElementById('smartInsightBar').style.display='none'" title="Ẩn" style="position:absolute;top:8px;right:8px;width:20px;height:20px;border-radius:50%;border:none;background:rgba(0,0,0,.12);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:13px;line-height:1;padding:0;flex-shrink:0;transition:background .15s" onmouseover="this.style.background='rgba(0,0,0,.22)'" onmouseout="this.style.background='rgba(0,0,0,.12)'">✕</button>
         </div>
 
         <!-- TREND ALERT (legacy, hidden) -->
