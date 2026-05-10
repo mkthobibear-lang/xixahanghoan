@@ -117,6 +117,23 @@ body::after{
 .sidebar-logo .ver::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
 
 .nav-section{padding:16px 12px;flex:1;overflow-y:auto}
+
+/* ── Train AI ── */
+.train-type-pill{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit;backdrop-filter:blur(6px)}
+.train-type-pill:hover{background:rgba(255,255,255,.22);color:#fff}
+.train-type-pill.active{background:#fff;color:#7c3aed;border-color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.train-chip{cursor:pointer;user-select:none}
+.train-chip input[type=radio]{display:none}
+.train-chip span{display:inline-block;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--border);background:var(--surface2);color:var(--text3);transition:.15s}
+.train-chip input:checked + span{background:var(--grad-ai-soft);border-color:rgba(124,58,237,.4);color:var(--ai-1)}
+.train-card{border:1px solid var(--border);border-radius:14px;padding:12px 14px;margin-bottom:8px;background:var(--surface2);transition:.2s;position:relative}
+.train-card:hover{border-color:var(--border-strong);background:var(--surface);transform:translateX(2px)}
+.train-card-type{font-size:9.5px;font-weight:800;padding:2px 8px;border-radius:6px;letter-spacing:.5px;text-transform:uppercase}
+.train-card-del{position:absolute;top:10px;right:10px;width:26px;height:26px;border-radius:8px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);opacity:0;transition:.15s}
+.train-card:hover .train-card-del{opacity:1}
+.train-card-del:hover{background:rgba(239,68,68,.12);color:var(--red)}
+.train-card-del[onclick*="editTrainPrompt"]:hover{background:rgba(59,130,246,.12);color:var(--blue)}
+@media(max-width:860px){#trainGrid{grid-template-columns:1fr!important}}
 .nav-label{font-size:10px;font-weight:800;color:var(--text3);letter-spacing:1.4px;padding:0 10px 10px;text-transform:uppercase}
 .nav-item{
   display:flex;align-items:center;gap:11px;padding:10px 12px;
@@ -1876,6 +1893,9 @@ button[onclick*="export"]{
       <div class="nav-item admin-only" onclick="openQuickComplaint()" title="Soạn khiếu nại nhanh">
         <span class="material-icons-round">forum</span>Khiếu nại
       </div>
+      <div class="nav-item admin-only" id="nav-trainai" onclick="switchView('trainai')" title="Train AI - Thêm prompt/yêu cầu mới">
+        <span class="material-icons-round">model_training</span>Train AI
+      </div>
 
     </div>
     <div class="sidebar-footer">
@@ -2688,6 +2708,178 @@ button[onclick*="export"]{
 
       </div>
 
+      <!-- ===== TRAIN AI VIEW ===== -->
+      <div id="trainAIView" style="display:none">
+
+        <!-- Hero header -->
+        <div style="position:relative;background:var(--grad-ai);border-radius:20px;padding:24px 24px 20px;margin-bottom:20px;overflow:hidden">
+          <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
+          <div style="position:absolute;bottom:-40px;right:40px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none"></div>
+          <div style="position:absolute;top:10px;left:50%;width:1px;height:80%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.08),transparent);pointer-events:none"></div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:relative">
+            <div>
+              <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;color:#fff;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px;backdrop-filter:blur(8px)">
+                <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;flex-shrink:0"></span>XIXA AI ENGINE
+              </div>
+              <div style="font-size:22px;font-weight:900;color:#fff;line-height:1.2;letter-spacing:-.3px">Train AI XIXA</div>
+              <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:5px;font-weight:500">Dạy AI hiểu nghiệp vụ kho hoàn — prompt được học ngay lập tức</div>
+            </div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
+              <div id="trainStatBadge" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 14px;text-align:center;backdrop-filter:blur(8px)">
+                <div style="font-size:22px;font-weight:900;color:#fff;line-height:1" id="trainCountNum">–</div>
+                <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:700;margin-top:2px">PROMPTS</div>
+              </div>
+            </div>
+          </div>
+          <!-- Type pills -->
+          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;position:relative">
+            <button class="train-type-pill active" data-type="" onclick="setTrainTypeFilter(this,'')">Tất cả</button>
+            <button class="train-type-pill" data-type="system" onclick="setTrainTypeFilter(this,'system')">⚙ System</button>
+            <button class="train-type-pill" data-type="qa" onclick="setTrainTypeFilter(this,'qa')">💬 Q&amp;A</button>
+            <button class="train-type-pill" data-type="rule" onclick="setTrainTypeFilter(this,'rule')">📋 Quy tắc</button>
+            <button class="train-type-pill" data-type="product" onclick="setTrainTypeFilter(this,'product')">📦 Sản phẩm</button>
+            <button class="train-type-pill" data-type="complaint" onclick="setTrainTypeFilter(this,'complaint')">🛡 Khiếu nại</button>
+          </div>
+        </div>
+
+        <!-- 2-col layout on desktop -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="trainGrid">
+
+          <!-- LEFT: Composer -->
+          <div style="display:flex;flex-direction:column;gap:12px">
+            <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;backdrop-filter:blur(16px);position:relative;overflow:hidden">
+              <!-- subtle glow top -->
+              <div style="position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(124,58,237,.08);pointer-events:none"></div>
+              <div style="font-size:11px;font-weight:800;color:var(--ai-1);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:6px">
+                <span class="material-icons-round" style="font-size:14px">edit_note</span>Composer
+              </div>
+
+              <!-- Type selector — chip style -->
+              <div style="margin-bottom:12px">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px">LOẠI PROMPT</div>
+                <div style="display:flex;flex-wrap:wrap;gap:6px">
+                  <label class="train-chip"><input type="radio" name="trainType" value="system" checked onchange="onTrainTypeChange(this)"><span>⚙ System</span></label>
+                  <label class="train-chip"><input type="radio" name="trainType" value="qa" onchange="onTrainTypeChange(this)"><span>💬 Q&amp;A</span></label>
+                  <label class="train-chip"><input type="radio" name="trainType" value="rule" onchange="onTrainTypeChange(this)"><span>📋 Quy tắc</span></label>
+                  <label class="train-chip"><input type="radio" name="trainType" value="product" onchange="onTrainTypeChange(this)"><span>📦 Sản phẩm</span></label>
+                  <label class="train-chip"><input type="radio" name="trainType" value="complaint" onchange="onTrainTypeChange(this)"><span>🛡 Khiếu nại</span></label>
+                  <label class="train-chip"><input type="radio" name="trainType" value="other" onchange="onTrainTypeChange(this)"><span>✦ Khác</span></label>
+                </div>
+              </div>
+
+              <!-- Q (Q&A only) -->
+              <div id="trainQABlock" style="display:none;margin-bottom:10px">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">CÂU HỎI MẪU</div>
+                <input type="text" id="trainQuestion" class="input-field" placeholder="VD: Tại sao đơn hoàn bị từ chối?" style="height:38px;font-size:13px">
+              </div>
+
+              <!-- Content -->
+              <div style="margin-bottom:10px">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px" id="trainContentLabel">NỘI DUNG PROMPT</div>
+                <textarea id="trainContent" class="input-field" rows="5" placeholder="Nhập nội dung bạn muốn AI ghi nhớ và áp dụng..." style="resize:vertical;font-size:13px;padding:12px;min-height:110px;line-height:1.6"></textarea>
+              </div>
+
+              <!-- Note -->
+              <div style="margin-bottom:14px">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">GHI CHÚ <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:.7">(tuỳ chọn)</span></div>
+                <input type="text" id="trainNote" class="input-field" placeholder="Bối cảnh sử dụng..." style="height:36px;font-size:12px">
+              </div>
+
+              <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
+                <button onclick="saveTrainPrompt()" style="height:42px;border-radius:12px;font-size:13px;font-weight:800;background:var(--grad-ai);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:.2px;box-shadow:0 8px 20px rgba(124,58,237,.3);transition:.15s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 12px 28px rgba(124,58,237,.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 20px rgba(124,58,237,.3)'">
+                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z" fill="#fff"/></svg>Cho AI học
+                </button>
+                <button onclick="testTrainPrompt()" title="Thử nghiệm" style="height:42px;width:42px;border-radius:12px;font-size:13px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='rgba(16,185,129,.12)';this.style.color='var(--green)';this.style.borderColor='var(--green)'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--text2)';this.style.borderColor='var(--border)'">
+                  <span class="material-icons-round" style="font-size:20px">play_arrow</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Test result -->
+            <div id="trainTestArea" style="display:none;background:var(--surface);border:1px solid rgba(16,185,129,.3);border-radius:18px;padding:16px;backdrop-filter:blur(12px);position:relative;overflow:hidden">
+              <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(16,185,129,.04),transparent);pointer-events:none;border-radius:18px"></div>
+              <div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;position:relative">
+                <span class="material-icons-round" style="font-size:14px">terminal</span>AI RESPONSE
+              </div>
+              <div id="trainTestResult" style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;position:relative"></div>
+            </div>
+          </div>
+
+          <!-- RIGHT: Library -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;backdrop-filter:blur(16px);display:flex;flex-direction:column;gap:0;min-height:400px">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+              <div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:6px">
+                <span class="material-icons-round" style="font-size:14px">auto_stories</span>Knowledge Base
+              </div>
+<div style="display:flex;gap:6px">
+                <button onclick="scrollTrainList(-1)" title="Cuộn lên" style="width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'">
+                  <span class="material-icons-round" style="font-size:15px">keyboard_arrow_up</span>
+                </button>
+                <button onclick="scrollTrainList(1)" title="Cuộn xuống" style="width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'">
+                  <span class="material-icons-round" style="font-size:15px">keyboard_arrow_down</span>
+                </button>
+                <button onclick="loadTrainPrompts()" title="Tải lại" style="width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'">
+                  <span class="material-icons-round" style="font-size:15px">refresh</span>
+                </button>
+              </div>
+            </div>
+            <div id="trainPromptList" style="flex:1;overflow-y:auto;max-height:520px">
+              <div style="text-align:center;padding:40px 20px;color:var(--text3)">
+                <span class="material-icons-round" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3">auto_awesome</span>
+                <div style="font-size:13px;font-weight:600">Knowledge base trống</div>
+                <div style="font-size:11px;margin-top:4px;opacity:.7">Thêm prompt đầu tiên để AI học</div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+      <!-- Edit Prompt Modal -->
+      <div id="trainEditModal" style="display:none;position:fixed;inset:0;z-index:99997;background:rgba(10,10,15,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);align-items:center;justify-content:center">
+        <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:480px;width:92%;box-shadow:0 28px 60px rgba(0,0,0,.3);position:relative">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
+            <div style="width:36px;height:36px;border-radius:11px;background:var(--grad-ai);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+              <span class="material-icons-round" style="color:#fff;font-size:18px">edit_note</span>
+            </div>
+            <div style="font-size:15px;font-weight:800;color:var(--text)">Sửa Prompt</div>
+            <button onclick="closeTrainEditModal()" style="margin-left:auto;background:transparent;border:none;cursor:pointer;color:var(--text3);display:flex;align-items:center">
+              <span class="material-icons-round" style="font-size:20px">close</span>
+            </button>
+          </div>
+          <input type="hidden" id="editPromptIdx">
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">LOẠI PROMPT</div>
+            <div style="display:flex;flex-wrap:wrap;gap:6px">
+              <label class="train-chip"><input type="radio" name="editTrainType" value="system"><span>⚙ System</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="qa"><span>💬 Q&A</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="rule"><span>📋 Quy tắc</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="product"><span>📦 Sản phẩm</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="complaint"><span>🛡 Khiếu nại</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="other"><span>✦ Khác</span></label>
+            </div>
+          </div>
+          <div id="editQABlock" style="display:none;margin-bottom:10px">
+            <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">CÂU HỎI MẪU</div>
+            <input type="text" id="editPromptQuestion" class="input-field" style="height:36px;font-size:13px">
+          </div>
+          <div style="margin-bottom:10px">
+            <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">NỘI DUNG</div>
+            <textarea id="editPromptContent" class="input-field" rows="4" style="resize:vertical;font-size:13px;padding:10px 12px;min-height:90px;line-height:1.6"></textarea>
+          </div>
+          <div style="margin-bottom:16px">
+            <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">GHI CHÚ</div>
+            <input type="text" id="editPromptNote" class="input-field" style="height:36px;font-size:12px">
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button onclick="closeTrainEditModal()" style="height:40px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit">Huỷ</button>
+            <button onclick="saveEditPrompt()" style="height:40px;border-radius:11px;border:none;background:var(--grad-ai);color:#fff;cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;box-shadow:0 6px 16px rgba(124,58,237,.3)">Lưu thay đổi</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===== END TRAIN AI VIEW ===== -->
+
     </div>
   </div>
 </div>
@@ -3387,9 +3579,9 @@ button[onclick*="export"]{
               <span class="ai-draft-row-k">Tình trạng</span>
               <span class="ai-draft-row-v ai-draft-row-status" id="aiDraftCtxKind">—</span>
             </div>
-            <div class="ai-draft-row-v18">
-              <span class="ai-draft-row-k">Vision</span>
-              <span class="ai-draft-row-v ai-draft-row-vision" id="aiDraftCtxInsight">—</span>
+            <div class="ai-draft-row-v18" style="align-items:flex-start">
+              <span class="ai-draft-row-k" style="padding-top:2px;flex-shrink:0">Vision</span>
+              <div class="ai-draft-row-v ai-draft-row-vision" id="aiDraftCtxInsight" style="flex:1;line-height:1.6;max-height:72px;overflow-y:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent;padding-right:2px">—</div>
             </div>
             <div class="ai-draft-row-v18">
               <span class="ai-draft-row-k">Memory</span>
@@ -3937,13 +4129,14 @@ function switchView(view){
     document.getElementById('historyView').style.display='none'; 
     document.getElementById('adminView').style.display='none'; 
     document.getElementById('productView').style.display='none';
+    const _trainAIv=document.getElementById('trainAIView');if(_trainAIv)_trainAIv.style.display='none';
     const _dtc=document.getElementById('dashTopbarControls');if(_dtc)_dtc.style.display='none';
     document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active')); 
     document.getElementById('nav-'+view)?.classList.add('active'); 
     document.querySelectorAll('.bnav-item').forEach(n=>n.classList.remove('active')); 
     const bnavEl=document.getElementById('bnav-'+view); 
     if(bnavEl)bnavEl.classList.add('active'); 
-    const titles={form:'Nhập đơn hoàn',history:'Lịch sử nhập',dashboard:'Dashboard', product:'Sản phẩm'}; 
+    const titles={form:'Nhập đơn hoàn',history:'Lịch sử nhập',dashboard:'Dashboard', product:'Sản phẩm', trainai:'Train AI'}; 
     document.getElementById('pageTitleBar').innerText=titles[view]||''; 
     // Mobile: ẩn tiêu đề trên topbar khi dashboard (controls đã đủ info)
     const _topbar = document.querySelector('.topbar');
@@ -3965,6 +4158,9 @@ function switchView(view){
     } else if(view==='product'){ 
         document.getElementById('productView').style.display='block'; 
         if(allProducts.length === 0) loadProductsGlobal(); else renderProductGrid(); 
+    } else if(view==='trainai'){
+        document.getElementById('trainAIView').style.display='block';
+        loadTrainPrompts();
     } 
     closeSidebar(); 
 }
@@ -4472,6 +4668,8 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
         }
         loadHistory();
         initChat();
+        // Load train prompts ngầm để AI có kiến thức ngay khi vào app
+        setTimeout(()=>{ if(typeof loadTrainPromptsSilent==='function') loadTrainPromptsSilent(); }, 1500);
       }else{
         showToast('error','Đăng nhập thất bại', res.message||'Sai tên đăng nhập hoặc mật khẩu');
       }
@@ -9900,12 +10098,26 @@ function aiAddMsg(role, text) {
     div.innerHTML = String(text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
   } else {
     const t = String(text||'');
-    if (/<[a-z][\s\S]*>/i.test(t)) {
-      div.innerHTML = t.replace(/\n/g,'<br>');
+    // Parse markdown + HTML — luôn xử lý cả 2
+    const _parseMarkdown = (s) => s
+      .replace(/&(?![a-z#0-9]+;)/g,'&amp;')
+      .replace(/</g,'&lt;').replace(/>/g,'&gt;')
+      .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')
+      .replace(/\*(.*?)\*/g,'<b>$1</b>')
+      .replace(/`([^`]+)`/g,'<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
+      .replace(/\n/g,'<br>');
+    if (/<[a-zA-Z][\s\S]*>/i.test(t)) {
+      // Có HTML sẵn — parse thêm markdown bold
+      div.innerHTML = t
+        .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')
+        .replace(/`([^`]+)`/g,'<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
+        .replace(/\n/g,'<br>');
     } else {
+      // Parse markdown thuần — giữ nguyên * đầu dòng, chỉ parse **bold**
       div.innerHTML = t
         .replace(/&(?![a-z#0-9]+;)/g,'&amp;')
         .replace(/\*\*(.*?)\*\*/g,'<b>$1</b>')
+        .replace(/`([^`]+)`/g,'<code style="background:var(--surface2);padding:1px 5px;border-radius:4px;font-size:12px">$1</code>')
         .replace(/\n/g,'<br>');
     }
   }
@@ -11735,9 +11947,9 @@ Các loại gợi ý (dùng đúng theo quy tắc trên):
 
 QUAN TRỌNG — prompt field phải dùng đúng template sau (thay [MÃ], [TÌNH TRẠNG], [SẢN PHẨM], [SHOP] bằng giá trị thực từ câu trả lời AI):
 
-- complaint_good: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. Bắt đầu bằng 'Kính gửi [TÊN KÊNH],' — KHÔNG viết 'Tôi là chủ shop' hay tên shop. Đơn [MÃ] sản phẩm [SẢN PHẨM] gửi đúng đủ giống mô tả, hàng mới 100%, có video đóng gói. Khách hoàn vì không vừa size (lý do phổ biến với giày dép) hoặc không còn nhu cầu — không phải lỗi shop. Yêu cầu không đánh vi phạm, không trừ điểm uy tín. Tối đa 256 ký tự, chỉ trả về nội dung khiếu nại."
+- complaint_good: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. KHÔNG bắt đầu bằng 'Kính gửi...' hay mã vận đơn — vào thẳng nội dung. Đơn [MÃ] sản phẩm [SẢN PHẨM] gửi đúng đủ giống mô tả, hàng mới 100%, có video đóng gói. Khách hoàn vì không vừa size (lý do phổ biến với giày dép) hoặc không còn nhu cầu — không phải lỗi shop. Yêu cầu không đánh vi phạm, không trừ điểm uy tín. Tối đa 256 ký tự, chỉ trả về nội dung khiếu nại."
 
-- complaint_bad: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. Bắt đầu bằng 'Kính gửi [TÊN KÊNH],' — KHÔNG viết 'Tôi là chủ shop' hay tên shop. Đơn [MÃ] sản phẩm [SẢN PHẨM] hoàn về bị [TÌNH TRẠNG] do lỗi khách/shipper, shop đã quay video đóng gói hàng mới 100%. Hàng bẩn/lỗi không thể bán lại, shop chịu thiệt hại. Yêu cầu bồi thường, không trừ điểm và phí. Tối đa 256 ký tự (đếm kỹ), chỉ trả về nội dung khiếu nại."
+- complaint_bad: dùng đúng template này:\n"Soạn nội dung khiếu nại gửi lên [TÊN KÊNH] cho đơn hoàn [MÃ]. KHÔNG bắt đầu bằng 'Kính gửi...' hay mã vận đơn — vào thẳng nội dung. Đơn [MÃ] sản phẩm [SẢN PHẨM] hoàn về bị [TÌNH TRẠNG] do lỗi khách/shipper, shop đã quay video đóng gói hàng mới 100%. Hàng bẩn/lỗi không thể bán lại, shop chịu thiệt hại. Yêu cầu bồi thường, không trừ điểm và phí. Tối đa 256 ký tự (đếm kỹ), chỉ trả về nội dung khiếu nại."
 
 - Các loại khác (update_status, view_images, find_similar, compare_day, trend_analysis, detail_shop): dùng câu hỏi ngắn gọn tiếng Việt
 
@@ -11931,7 +12143,7 @@ function _aiFuOpenComplaintModal(type, aiPrompt) {
 
   if (type === 'complaint_good') {
     const prod = order ? (order.product||'?') : '?';
-    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. Bắt đầu bằng "Kính gửi ${_chDisplay}," — KHÔNG viết "Tôi là chủ shop" hay tên shop. Nội dung: Đơn hàng ${code} sản phẩm ${prod} shop gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. Khách hoàn lại vì không vừa size hoặc không còn nhu cầu, không phải lỗi shop. Yêu cầu không đánh vi phạm, không trừ điểm uy tín. Viết tiếng Việt, lịch sự, tối đa 256 ký tự, chỉ trả về nội dung khiếu nại.`;
+    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. KHÔNG bắt đầu bằng "Kính gửi..." hay mã vận đơn — vào thẳng nội dung. Nội dung: Đơn hàng ${code} sản phẩm ${prod} shop gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. Khách hoàn lại vì không vừa size hoặc không còn nhu cầu, không phải lỗi shop. Yêu cầu không đánh vi phạm, không trừ điểm uy tín. Viết tiếng Việt, lịch sự, tối đa 256 ký tự, chỉ trả về nội dung khiếu nại.`;
   } else {
     // complaint_bad
     const prod   = order ? (order.product||'?') : '?';
@@ -11950,7 +12162,7 @@ function _aiFuOpenComplaintModal(type, aiPrompt) {
     } else {
       damage = `hàng hoàn về bị ${stat}, gây thiệt hại trực tiếp cho shop`;
     }
-    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. Bắt đầu bằng "Kính gửi ${_chDisplay}," — KHÔNG viết "Tôi là chủ shop" hay tên shop. Nội dung: Đơn ${code} sản phẩm ${prod} — shop đã gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. ${damage}. Yêu cầu bồi thường, không trừ điểm và phí. BẮT BUỘC đề cập shop gửi đúng đủ và lập luận thiệt hại. Viết tiếng Việt, lịch sự, tối đa 256 ký tự (đếm kỹ, KHÔNG vượt quá), chỉ trả về nội dung khiếu nại.`;
+    builtPrompt = `Soạn nội dung khiếu nại gửi lên ${_chDisplay} cho đơn hoàn ${code}. KHÔNG bắt đầu bằng "Kính gửi..." hay mã vận đơn — vào thẳng nội dung. Nội dung: Đơn ${code} sản phẩm ${prod} — shop đã gửi đúng đủ giống mô tả, hàng mới 100%, có video quay lúc đóng gói. ${damage}. Yêu cầu bồi thường, không trừ điểm và phí. BẮT BUỘC đề cập shop gửi đúng đủ và lập luận thiệt hại. Viết tiếng Việt, lịch sự, tối đa 256 ký tự (đếm kỹ, KHÔNG vượt quá), chỉ trả về nội dung khiếu nại.`;
   }
 
   // Đặt dữ liệu vào modal KN chuyên biệt và mở lên
@@ -11997,7 +12209,11 @@ function _aiFuOpenComplaintModal(type, aiPrompt) {
       // Track token usage
       if (data.usage) aiTokensUpdate(data.usage, 'complaint');
       else aiTokensUpdate({ prompt_tokens: Math.round(builtPrompt.length/4), completion_tokens: Math.round((data.answer||'').length/4) });
-      let answer = data.answer.trim();
+      let answer = data.answer.trim()
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/#{1,6}\s/g, '').trim();
       if (answer.length > 256) answer = answer.substring(0, 253) + '...';
       // Typewriter effect
       aiTypewriterEffect(answer);
@@ -12241,10 +12457,15 @@ async function aiAsk(question, displayLabel) {
     let payload;
     if (hasImg) {
       // Dùng Vision API
+      // Lấy system prompts train cho vision
+      const _visionTrainSys = (typeof trainPromptsCache!=='undefined' && trainPromptsCache.length)
+        ? trainPromptsCache.filter(p=>p.type==='system'||p.type==='complaint').map(p=>p.content).join('\n')
+        : '';
       payload = {
         action: 'gemini_vision',
         question: question || 'Đọc ảnh này và cho tôi biết thông tin quan trọng, so sánh với dữ liệu hệ thống nếu có.',
         context,
+        trainData: (()=>{ try{ return JSON.parse(_getTrainSystemForComplaint()); }catch(e){return undefined;} })(),
         imageBase64: imgB64,
         imageMimeType: imgMime
       };
@@ -12433,8 +12654,29 @@ function aiDraftSetInsight(text){
   const el = document.getElementById('aiDraftCtxInsight');
   const wrap = document.getElementById('aiDraftCtxInsightWrap');
   if (!el || !wrap) return;
-  if (!text){ wrap.style.display='none'; return; }
-  el.textContent = '🔍 ' + text;
+  if (!text){ wrap.style.display='none'; window._lastVisionDetail=''; return; }
+
+  // Nếu có detail từng ảnh → hiển thị xuống dòng
+  const detail = window._lastVisionDetail || '';
+  if (detail) {
+    // Build HTML: từng dòng "Ảnh N: ..." + nhận định cuối
+    const lines = detail.split('\n').filter(Boolean);
+    let html = '<div style="font-size:11px;line-height:1.7">';
+    lines.forEach(line => {
+      const m = line.match(/^(Ảnh \d+):(.*)/);
+      if (m) {
+        html += `<div><span style="font-weight:800;color:var(--ai-2)">${m[1]}:</span><span style="color:var(--text)">${m[2]}</span></div>`;
+      } else {
+        html += `<div style="color:var(--text2)">${line}</div>`;
+      }
+    });
+    // Nhận định tổng hợp cuối
+    html += `<div style="margin-top:5px;padding-top:5px;border-top:1px dashed var(--border);font-weight:700;color:var(--ai-1)">▶ Tổng hợp: ${text}</div>`;
+    html += '</div>';
+    el.innerHTML = html;
+  } else {
+    el.textContent = '🔍 ' + text;
+  }
   wrap.style.display = 'block';
 }
 
@@ -12600,7 +12842,8 @@ async function aiAnalyzeDamageFromImages(order, kind) {
         body: JSON.stringify({
           action: 'gemini_vision',
           question: visionPrompt,
-          context: 'Phân tích ảnh sản phẩm hoàn để soạn khiếu nại — nhấn mạnh rất bẩn không thể làm sạch',
+          context: _getTrainContextForComplaint('vision'),
+          trainData: JSON.parse(_getTrainSystemForComplaint()),
           imageBase64:   loadedImages[0].base64,
           imageMimeType: loadedImages[0].mime,
         }),
@@ -12612,24 +12855,36 @@ async function aiAnalyzeDamageFromImages(order, kind) {
         if (txt && !/KHÔNG_RÕ/i.test(txt)) allInsights.push(txt);
       }
     } else {
-      // Nhiều ảnh — gửi từng ảnh với prompt phân tích theo góc chụp, rồi tổng hợp
-      const perImagePrompt =
-        `Bạn là chuyên gia kiểm hàng. Đây là 1 trong nhiều ảnh sản phẩm "${order.product || 'sản phẩm'}" hoàn về tình trạng "${order.status || ''}".\n` +
-        `Xác định góc chụp (đế/mặt trên/mũi/gót/cạnh/quai...) rồi mô tả TẤT CẢ ${focusWord} thấy trong ảnh này.\n` +
-        `QUAN TRỌNG: Mọi vết bẩn dù nhỏ đều phải mô tả là RẤT BẨN, KHÔNG THỂ LÀM SẠCH.\n` +
-        `Không dùng từ "nhẹ/ít/mờ/hơi" — dùng "nặng/nhiều/rõ/rất".\n` +
-        `Trả lời tiếng Việt, ngắn gọn 1 câu tối đa 80 ký tự, không markdown, không mở đầu bằng "Trong ảnh/Tôi thấy".\n` +
-        `Nếu không thấy ${focusWord}, trả về "KHÔNG_RÕ".`;
+      // Nhiều ảnh — phân tích từng ảnh riêng, hiển thị chi tiết từng ảnh
+      const perImageResults = []; // { imgNum, label, txt }
 
-      const perImageResults = [];
       for (let i = 0; i < loadedImages.length; i++) {
+        const imgNum = i + 1;
+        const perImagePrompt =
+          `Bạn là chuyên gia kiểm hàng chuyên nghiệp. Đây là ảnh ${imgNum}/${loadedImages.length} của sản phẩm "${order.product||'sản phẩm'}" hoàn về tình trạng "${order.status||''}".
+` +
+          `NHIỆM VỤ:
+` +
+          `1. Xác định GÓC CHỤP: đây là ảnh chụp phần nào? (đế/lòng bàn chân/mặt trên/mũi/gót/cạnh bên/quai/toàn bộ giày...)
+` +
+          `2. Mô tả TẤT CẢ ${focusWord} thấy trong ảnh: vị trí chính xác + tính chất (màu, loang, mức độ)
+` +
+          `3. BẮT BUỘC: mọi vết bẩn dù nhỏ → mô tả là RẤT BẨN, KHÔNG THỂ LÀM SẠCH
+` +
+          `4. KHÔNG dùng "nhẹ/ít/mờ/hơi"
+` +
+          `Trả lời tiếng Việt, 1-2 câu ngắn gọn (tối đa 120 ký tự), không markdown.
+` +
+          `Nếu thực sự không thấy ${focusWord} nào, trả về chính xác "KHÔNG_RÕ".`;
+
         try {
           const res = await fetch(WEB_APP_URL, {
             method: 'POST',
             body: JSON.stringify({
               action: 'gemini_vision',
               question: perImagePrompt,
-              context: `Phân tích ảnh ${i+1}/${loadedImages.length} — soạn khiếu nại`,
+              context: _getTrainContextForComplaint('vision') + ` | Ảnh ${imgNum}/${loadedImages.length}`,
+              trainData: JSON.parse(_getTrainSystemForComplaint()),
               imageBase64:   loadedImages[i].base64,
               imageMimeType: loadedImages[i].mime,
             }),
@@ -12637,44 +12892,49 @@ async function aiAnalyzeDamageFromImages(order, kind) {
           const data = await res.json();
           if (data.result === 'success') {
             if (data.usage) aiTokensUpdate(data.usage, 'complaint');
-            let txt = String(data.answer || '').trim().replace(/[*_`>#]/g, '').replace(/\s+/g, ' ').trim();
+            let txt = String(data.answer||'').trim().replace(/[*_`>#]/g,'').replace(/\s+/g,' ').trim();
             if (txt && !/KHÔNG_RÕ/i.test(txt)) {
-              perImageResults.push(txt);
-              console.log('[aiAnalyzeDamage] ảnh', i+1, 'insight:', txt);
+              perImageResults.push({ imgNum, txt });
+              console.log(`[Vision] Ảnh ${imgNum}:`, txt);
             } else {
-              console.log('[aiAnalyzeDamage] ảnh', i+1, 'không rõ bẩn/lỗi');
+              console.log(`[Vision] Ảnh ${imgNum}: không rõ bẩn/lỗi`);
             }
           }
         } catch(e) {
-          console.warn('[aiAnalyzeDamage] ảnh', i+1, 'exception:', e);
+          console.warn(`[Vision] Ảnh ${imgNum} lỗi:`, e);
         }
       }
 
-      // Tổng hợp từ các ảnh — loại trùng vị trí
       if (perImageResults.length > 0) {
-        // Nếu chỉ có 1 kết quả, dùng trực tiếp; nhiều hơn thì gộp
-        const combined = perImageResults.join('; ');
-        if (combined.length <= 150) {
-          allInsights.push(combined);
-        } else {
-          // Gộp ngắn gọn: lấy kết quả đầy đủ nhất từ ảnh đầu tiên có insight
-          allInsights.push(perImageResults[0]);
-          // Thêm số lượng vị trí bẩn tìm thấy
-          if (perImageResults.length > 1) {
-            allInsights.push(`(${perImageResults.length} vị trí bẩn trong ${loadedImages.length} ảnh)`);
-          }
-        }
+        // Build detailed display (từng ảnh xuống dòng) + summary
+        const detailLines = perImageResults.map(r => `Ảnh ${r.imgNum}: ${r.txt}`);
+        const detailText  = detailLines.join('\n');
+        // Summary: gộp tất cả vị trí bẩn cho KN
+        const summaryParts = perImageResults.map(r => r.txt);
+        const summary = summaryParts.join('; ');
+        // Lưu detail để hiện trong context panel
+        allInsights.push({ detail: detailText, summary });
       }
     }
 
     if (!allInsights.length) {
-      console.warn('[aiAnalyzeDamage] AI không nhìn rõ bẩn/lỗi trong tất cả ảnh → bỏ qua');
+      console.warn('[aiAnalyzeDamage] Không đọc được insight từ ảnh nào');
       return '';
     }
 
-    let finalTxt = allInsights.join(' ').replace(/\s+/g, ' ').trim();
-    if (finalTxt.length > 150) finalTxt = finalTxt.slice(0, 147) + '...';
-    console.log('[aiAnalyzeDamage] final insight:', finalTxt);
+    // Trả về object nếu có detail (nhiều ảnh), hoặc string (1 ảnh)
+    const firstInsight = allInsights[0];
+    if (typeof firstInsight === 'object' && firstInsight.detail) {
+      // Lưu detail vào window để hiển thị trong panel
+      window._lastVisionDetail = firstInsight.detail;
+      let finalTxt = firstInsight.summary.replace(/\(\d+\s*vị trí[^)]*\)/gi,'').replace(/\s+/g,' ').trim();
+      // Không giới hạn 150 ký tự nữa — để đủ thông tin
+      console.log('[aiAnalyzeDamage] summary:', finalTxt);
+      console.log('[aiAnalyzeDamage] detail:\n', firstInsight.detail);
+      return finalTxt;
+    }
+    let finalTxt = String(firstInsight).replace(/\(\d+\s*vị trí[^)]*\)/gi,'').replace(/\s+/g,' ').trim();
+    console.log('[aiAnalyzeDamage] final:', finalTxt);
     return finalTxt;
 
   } catch (e) {
@@ -12767,6 +13027,36 @@ const _agentTrace = {
   }
 };
 
+// ── Lấy train context + trainSystem cho complaint/vision agent ──
+function _getTrainContextForComplaint(mode) {
+  let base = mode === 'vision'
+    ? 'Phân tích ảnh sản phẩm hoàn để soạn khiếu nại — nhấn mạnh rất bẩn không thể làm sạch'
+    : 'Hệ thống kho hàng hoàn XIXA';
+  if (typeof trainPromptsCache === 'undefined' || !trainPromptsCache.length) return base;
+  const relevant = trainPromptsCache.filter(p =>
+    p.type === 'complaint' || p.type === 'system' || p.type === 'rule'
+  );
+  if (!relevant.length) return base;
+  const knowledge = relevant.filter(p => p.type !== 'system').map(p => {
+    if (p.type === 'qa' && p.question) return 'Q: ' + p.question + ' → ' + p.content;
+    return '[QUY TẮC] ' + p.content;
+  }).join('\n');
+  return knowledge ? 'KIẾN THỨC BỔ SUNG:\n' + knowledge + '\n\n' + base : base;
+}
+
+// Lấy riêng system prompts train cho complaint/vision
+function _getTrainSystemForComplaint() {
+  if (typeof trainPromptsCache === 'undefined' || !trainPromptsCache.length) return '';
+  // Trả về structured trainData để backend weave sâu
+  return JSON.stringify({
+    behavior: trainPromptsCache.filter(p=>p.type==='system').map(p=>p.content),
+    complaints: trainPromptsCache.filter(p=>p.type==='complaint').map(p=>p.content),
+    rules: trainPromptsCache.filter(p=>p.type==='rule').map(p=>p.content),
+    qa: trainPromptsCache.filter(p=>p.type==='qa'&&p.content).map(p=>({q:p.question||'',a:p.content})),
+    products: trainPromptsCache.filter(p=>p.type==='product').map(p=>p.content),
+  });
+}
+
 async function aiGenerateDraft() {
   const order = _aiDraftOrderData;
   if (!order) return;
@@ -12819,7 +13109,9 @@ async function aiGenerateDraft() {
     try {
       _imageInsight = await aiAnalyzeDamageFromImages(order, _isBan ? 'ban' : 'loi');
     } catch (e) { _imageInsight = ''; }
-    _agentTrace.setDone('vision', _imageInsight || 'Không đọc được ảnh');
+    _agentTrace.setDone('vision', window._lastVisionDetail
+        ? window._lastVisionDetail.split('\n').map(l=>l.replace(/^Ảnh \d+:/,'')).filter(Boolean).join(' · ').substring(0,120)
+        : (_imageInsight || 'Không đọc được ảnh'));
     if (_loadEl) _loadEl.innerText = 'AI đang soạn thảo...';
     // v18 — Hiển thị insight vào split-view cột trái
     try { if (typeof aiDraftSetInsight==='function') aiDraftSetInsight(_imageInsight); } catch(e){}
@@ -12844,7 +13136,7 @@ async function aiGenerateDraft() {
   }
 
   const prompt = `Soạn nội dung khiếu nại gửi lên ${platformGuide[_aiDraftPlatform]} cho đơn hoàn sau.
-Bắt đầu bằng "Kính gửi ${platformGuide[_aiDraftPlatform]}," — KHÔNG viết "Tôi là chủ shop" hay tên shop ở đầu.
+KHÔNG bắt đầu bằng "Kính gửi..." hay "Mã vận đơn..." — vào thẳng nội dung khiếu nại ngay.
 
 THÔNG TIN ĐƠN:
 - Mã vận đơn: ${order.code}
@@ -12886,13 +13178,29 @@ Yêu cầu bắt buộc:
   _agentTrace.addStep('draft', `Đang soạn KN cho <strong>${_platLabel}</strong> (template ${_aiDraftPlatform}_v3)…`);
   _agentTrace.setActive('draft');
 
+  // ── Inject train prompts vào context khiếu nại ──────────
+  let _complaintTrainCtx = 'Hệ thống kho hàng hoàn XIXA';
+  if (typeof trainPromptsCache !== 'undefined' && trainPromptsCache.length > 0) {
+    const _trainExtra = trainPromptsCache
+      .filter(p => p.type === 'complaint' || p.type === 'system' || p.type === 'rule')
+      .map(p => {
+        if (p.type === 'system') return '[SYSTEM] ' + p.content;
+        if (p.type === 'qa' && p.question) return 'Khi soạn KN "' + p.question + '" → ' + p.content;
+        return '[QUY TẮC KN] ' + p.content;
+      }).join('\n');
+    if (_trainExtra) {
+      _complaintTrainCtx = 'KIẾN THỨC ĐƯỢC TRAIN THÊM:\n' + _trainExtra + '\n\nHệ thống kho hàng hoàn XIXA';
+    }
+  }
+
   try {
     const res = await fetch(WEB_APP_URL, {
       method: 'POST',
       body: JSON.stringify({
         action: 'gemini_chat',
         question: prompt,
-        context: 'Hệ thống kho hàng hoàn XIXA',
+        context: _complaintTrainCtx,
+        trainData: JSON.parse(_getTrainSystemForComplaint()),
         history: []
       })
     });
@@ -12903,8 +13211,14 @@ Yêu cầu bắt buộc:
       const _tokensUsed = data.usage ? (data.usage.total_tokens || data.usage.prompt_tokens + data.usage.completion_tokens) : Math.round((prompt.length + (data.answer||'').length)/4);
       if (data.usage) aiTokensUpdate(data.usage, 'complaint');
       else aiTokensUpdate({ prompt_tokens: Math.round(prompt.length/4), completion_tokens: Math.round((data.answer||'').length/4) }, 'complaint');
+      // Strip markdown khỏi nội dung KN — KN là plain text gửi lên sàn
+      let answer = data.answer.trim()
+        .replace(/\*\*(.*?)\*\*/g, '$1')   // **bold** → plain
+        .replace(/\*(.*?)\*/g, '$1')         // *italic* → plain
+        .replace(/`([^`]+)`/g, '$1')          // `code` → plain
+        .replace(/#{1,6}\s/g, '')            // ## heading → remove
+        .trim();
       // Tự cắt thông minh: ưu tiên cắt tại cuối câu gần nhất
-      let answer = data.answer.trim();
       if (answer.length > 256) {
         const cutZone = answer.substring(0, 253);
         const lastDot  = Math.max(cutZone.lastIndexOf('.'), cutZone.lastIndexOf('!'), cutZone.lastIndexOf('?'));
@@ -13722,7 +14036,7 @@ async function qcGenerate() {
   }
 
   const question = `Soạn nội dung khiếu nại gửi lên ${plName} cho đơn hoàn sau.
-Bắt đầu bằng "Kính gửi ${plName}," — KHÔNG viết "Tôi là chủ shop" hay tên shop ở đầu.
+KHÔNG bắt đầu bằng "Kính gửi..." hay "Mã vận đơn..." — vào thẳng nội dung ngay.
 
 THÔNG TIN ĐƠN:
 - Mã vận đơn: ${code}
@@ -14845,6 +15159,381 @@ function aiSearchFocus(){
   } else {
     ids.forEach(attachObserver);
   }
+})();
+</script>
+
+<!-- ========================================================
+     TRAIN AI MODULE — Quản lý prompt & yêu cầu AI
+     ======================================================== -->
+<script>
+let trainPromptsCache = [];
+let trainActiveFilter = '';
+
+// ── Custom Train Loading overlay ─────────────────────────
+function showTrainLoading(show){
+  let el = document.getElementById('trainLoadingOverlay');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'trainLoadingOverlay';
+    el.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(10,10,15,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
+    el.innerHTML = `
+      <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:24px;padding:36px 44px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.35);max-width:320px;width:90%;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-40px;left:-40px;width:150px;height:150px;border-radius:50%;background:rgba(124,58,237,.08);pointer-events:none"></div>
+        <div style="position:absolute;bottom:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(59,130,246,.08);pointer-events:none"></div>
+        <div style="position:relative">
+          <div style="width:64px;height:64px;margin:0 auto 18px;position:relative">
+            <div style="position:absolute;inset:0;border-radius:50%;background:var(--grad-ai);opacity:.15;animation:trainPulseRing 1.8s ease-in-out infinite"></div>
+            <div style="position:absolute;inset:4px;border-radius:50%;background:var(--grad-ai);opacity:.25;animation:trainPulseRing 1.8s ease-in-out infinite .3s"></div>
+            <div style="position:absolute;inset:8px;border-radius:50%;background:var(--grad-ai);display:flex;align-items:center;justify-content:center">
+              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z" fill="#fff"/></svg>
+            </div>
+          </div>
+          <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:6px;letter-spacing:-.2px">AI đang học...</div>
+          <div style="font-size:12px;color:var(--text3);font-weight:500;margin-bottom:18px" id="trainLoadingSubtext">Đang ghi prompt vào bộ nhớ</div>
+          <div style="height:3px;border-radius:100px;background:var(--border);overflow:hidden">
+            <div id="trainLoadingBar" style="height:100%;border-radius:100px;background:var(--grad-ai);width:0%;transition:width .4s ease"></div>
+          </div>
+          <div id="trainLoadingPct" style="font-size:11px;font-weight:800;margin-top:6px;background:var(--grad-ai);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">0%</div>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+    const style = document.createElement('style');
+    style.textContent = '@keyframes trainPulseRing{0%,100%{transform:scale(1);opacity:.15}50%{transform:scale(1.25);opacity:.05}}';
+    document.head.appendChild(style);
+  }
+  if(show){
+    el.style.display='flex';
+    // Animate progress bar
+    let pct = 0;
+    el._interval = setInterval(()=>{
+      pct += Math.random()*8;
+      if(pct>88) pct=88;
+      const bar = document.getElementById('trainLoadingBar');
+      const pctEl = document.getElementById('trainLoadingPct');
+      const sub = document.getElementById('trainLoadingSubtext');
+      if(bar) bar.style.width = pct+'%';
+      if(pctEl) pctEl.textContent = Math.floor(pct)+'%';
+      if(sub){
+        if(pct>60) sub.textContent='Đang kết nối Knowledge Base...';
+        else if(pct>30) sub.textContent='Đang mã hoá và lưu trữ...';
+        else sub.textContent='Đang ghi prompt vào bộ nhớ';
+      }
+    }, 280);
+  } else {
+    clearInterval(el._interval);
+    const bar = document.getElementById('trainLoadingBar');
+    const pctEl = document.getElementById('trainLoadingPct');
+    const sub = document.getElementById('trainLoadingSubtext');
+    if(bar) bar.style.width='100%';
+    if(pctEl) pctEl.textContent='100%';
+    if(sub) sub.textContent='Hoàn tất! AI đã ghi nhớ ✓';
+    setTimeout(()=>{ el.style.display='none'; }, 700);
+  }
+}
+
+// ── Custom AI-styled confirm delete ─────────────────────
+function aiConfirm(message, onOk){
+  let el = document.getElementById('aiConfirmModal');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'aiConfirmModal';
+    el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,10,15,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)';
+    el.innerHTML = `
+      <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:20px;padding:28px 28px 22px;max-width:300px;width:88%;box-shadow:0 28px 60px rgba(0,0,0,.3);text-align:center;position:relative;overflow:hidden">
+        <div style="position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(239,68,68,.06);pointer-events:none"></div>
+        <div style="width:44px;height:44px;border-radius:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
+          <span class="material-icons-round" style="color:var(--red);font-size:22px">delete_outline</span>
+        </div>
+        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Xoá prompt?</div>
+        <div id="aiConfirmMsg" style="font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.5">Prompt này sẽ bị xoá khỏi Knowledge Base và AI sẽ không còn nhớ nội dung này.</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <button id="aiConfirmCancel" style="height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--surface2)'">Huỷ</button>
+          <button id="aiConfirmOk" style="height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;box-shadow:0 6px 16px rgba(239,68,68,.3);transition:.15s">Xoá</button>
+        </div>
+      </div>`;
+    document.body.appendChild(el);
+  }
+  el.style.display='flex';
+  document.getElementById('aiConfirmCancel').onclick = ()=>{ el.style.display='none'; };
+  document.getElementById('aiConfirmOk').onclick = ()=>{ el.style.display='none'; onOk(); };
+  el.onclick = (e)=>{ if(e.target===el) el.style.display='none'; };
+}
+
+// ── Type change handler (radio chips) ────────────────────
+function onTrainTypeChange(el){
+  const val = el.value;
+  const qaBlock = document.getElementById('trainQABlock');
+  const lbl = document.getElementById('trainContentLabel');
+  if(val === 'qa'){
+    qaBlock.style.display='block';
+    lbl.textContent = 'CÂU TRẢ LỜI MẪU';
+  } else if(val === 'system'){
+    qaBlock.style.display='none';
+    lbl.textContent = 'NỘI DUNG SYSTEM PROMPT';
+  } else if(val === 'rule'){
+    qaBlock.style.display='none';
+    lbl.textContent = 'MÔ TẢ QUY TẮC NGHIỆP VỤ';
+  } else {
+    qaBlock.style.display='none';
+    lbl.textContent = 'NỘI DUNG PROMPT / YÊU CẦU';
+  }
+}
+
+// ── Filter pills ──────────────────────────────────────────
+function setTrainTypeFilter(btn, type){
+  trainActiveFilter = type;
+  document.querySelectorAll('.train-type-pill').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  renderTrainList();
+}
+
+// ── Lưu prompt ───────────────────────────────────────────
+async function saveTrainPrompt(){
+  const typeEl = document.querySelector('input[name="trainType"]:checked');
+  const type   = typeEl ? typeEl.value : 'other';
+  const content = (document.getElementById('trainContent').value||'').trim();
+  const note    = (document.getElementById('trainNote').value||'').trim();
+  const question= (document.getElementById('trainQuestion')?.value||'').trim();
+  if(!content){ showToast('warning','Chưa nhập nội dung','Vui lòng nhập prompt cần train'); return; }
+  showTrainLoading(true);
+  try {
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action:'save_train_prompt', type, question, content, note, staffName: currentUser||'Admin' })
+    });
+    const data = await res.json();
+    showTrainLoading(false);
+    if(data.result === 'success'){
+      showToast('success','Đã lưu!','Prompt ghi vào sheet Train AI');
+      document.getElementById('trainContent').value='';
+      document.getElementById('trainNote').value='';
+      if(document.getElementById('trainQuestion')) document.getElementById('trainQuestion').value='';
+      loadTrainPrompts();
+    } else {
+      showToast('error','Lỗi lưu', data.message||'');
+    }
+  } catch(e){ showTrainLoading(false); showToast('error','Lỗi kết nối', e.message||''); }
+}
+
+// ── Load ngầm khi login — không hiện UI ─────────────────
+async function loadTrainPromptsSilent(){
+  try {
+    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'get_train_prompts'}) });
+    const data = await res.json();
+    if(data.result === 'success' && data.data){
+      trainPromptsCache = data.data;
+      // Cập nhật counter nếu đang ở tab Train AI
+      const cntEl = document.getElementById('trainCountNum');
+      if(cntEl) cntEl.textContent = trainPromptsCache.length;
+      console.log('[TrainAI] Loaded', trainPromptsCache.length, 'prompts silently');
+    }
+  } catch(e){ console.warn('[TrainAI] Silent load failed:', e); }
+}
+
+// ── Load từ Sheet ─────────────────────────────────────────
+async function loadTrainPrompts(){
+  const list = document.getElementById('trainPromptList');
+  if(!list) return;
+  list.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:30px;color:var(--text3);font-size:12px"><span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:18px">sync</span>Đang đồng bộ...</div>';
+  try {
+    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'get_train_prompts'}) });
+    const data = await res.json();
+    if(data.result === 'success'){
+      trainPromptsCache = data.data || [];
+      renderTrainList();
+    } else {
+      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:12px">⚠ ' + (data.message||'Không tải được') + '</div>';
+    }
+  } catch(e){
+    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:12px">Lỗi kết nối server</div>';
+  }
+}
+
+// ── Render ────────────────────────────────────────────────
+function renderTrainList(){
+  const list  = document.getElementById('trainPromptList');
+  const cntEl = document.getElementById('trainCountNum');
+  let items   = trainPromptsCache;
+  if(cntEl) cntEl.textContent = items.length;
+  if(trainActiveFilter) items = items.filter(p => (p.type||'') === trainActiveFilter);
+  if(!items.length){
+    list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3)"><span class="material-icons-round" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3">auto_awesome</span><div style="font-size:13px;font-weight:600">' + (trainActiveFilter ? 'Không có prompt loại này' : 'Knowledge base trống') + '</div><div style="font-size:11px;margin-top:4px;opacity:.7">Thêm prompt đầu tiên để AI học</div></div>';
+    return;
+  }
+  const C = {system:'var(--ai-1)',qa:'var(--green)',rule:'var(--amber)',product:'var(--blue)',complaint:'var(--red)',other:'var(--text3)'};
+  const L = {system:'⚙ System',qa:'💬 Q&A',rule:'📋 Quy tắc',product:'📦 Sản phẩm',complaint:'🛡 Khiếu nại',other:'✦ Khác'};
+  list.innerHTML = items.map((p,i) => {
+    const c = C[p.type]||'var(--text3)', lb = L[p.type]||p.type||'Khác';
+    return '<div class="train-card">'
+      + '<div style="position:absolute;top:8px;right:8px;display:flex;gap:3px">'      + '<button onclick="editTrainPrompt('+i+')" title="Sửa" style="width:24px;height:24px;border-radius:7px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s" onmouseover="this.style.color=\'var(--blue)\';this.style.background=\'rgba(59,130,246,.1)\'" onmouseout="this.style.color=\'var(--text3)\';this.style.background=\'transparent\'"><span class="material-icons-round" style="font-size:14px">edit</span></button>'      + '<button onclick="deleteTrainPrompt('+i+')" title="Xóa" style="width:24px;height:24px;border-radius:7px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s" onmouseover="this.style.color=\'var(--red)\';this.style.background=\'rgba(239,68,68,.1)\'" onmouseout="this.style.color=\'var(--text3)\';this.style.background=\'transparent\'"><span class="material-icons-round" style="font-size:14px">close</span></button>'      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">'
+      + '<span class="train-card-type" style="background:'+c+'1a;color:'+c+'">'+lb+'</span>'
+      + '<span style="font-size:10px;color:var(--text3)">'+escHtml(p.staffName||'Admin')+' · '+escHtml(p.time||'')+'</span>'
+      + '</div>'
+      + (p.question ? '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:5px"><span class="material-icons-round" style="font-size:13px;color:'+c+'">help_outline</span>'+escHtml(p.question)+'</div>' : '')
+      + '<div style="font-size:12.5px;color:var(--text);line-height:1.65;white-space:pre-wrap">'+escHtml(p.content||'')+'</div>'
+      + (p.note ? '<div style="font-size:10.5px;color:var(--text3);margin-top:6px;display:flex;align-items:flex-start;gap:4px"><span class="material-icons-round" style="font-size:12px;margin-top:1px">push_pin</span>'+escHtml(p.note)+'</div>' : '')
+      + '</div>';
+  }).join('');
+}
+
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Scroll Knowledge Base list ───────────────────────────
+function scrollTrainList(dir){
+  const el = document.getElementById('trainPromptList');
+  if(!el) return;
+  // Scroll 1 card height ~ 120px mỗi lần nhấn
+  el.scrollBy({ top: dir * 120, behavior: 'smooth' });
+}
+
+// ── Edit prompt ──────────────────────────────────────────
+function editTrainPrompt(idx){
+  const p = trainPromptsCache[idx];
+  if(!p) return;
+  // Fill modal
+  document.getElementById('editPromptIdx').value = idx;
+  document.getElementById('editPromptContent').value = p.content || '';
+  document.getElementById('editPromptQuestion').value = p.question || '';
+  document.getElementById('editPromptNote').value = p.note || '';
+  // Set radio
+  const radios = document.querySelectorAll('input[name="editTrainType"]');
+  radios.forEach(r => r.checked = (r.value === (p.type||'other')));
+  // Show/hide QA block
+  document.getElementById('editQABlock').style.display = (p.type==='qa') ? 'block' : 'none';
+  // Show modal
+  const modal = document.getElementById('trainEditModal');
+  modal.style.display = 'flex';
+  // Radio change handler
+  radios.forEach(r => r.onchange = function(){
+    document.getElementById('editQABlock').style.display = (this.value==='qa') ? 'block' : 'none';
+  });
+  modal.onclick = (e) => { if(e.target===modal) closeTrainEditModal(); };
+}
+
+function closeTrainEditModal(){
+  document.getElementById('trainEditModal').style.display = 'none';
+}
+
+async function saveEditPrompt(){
+  const idx = parseInt(document.getElementById('editPromptIdx').value);
+  const p   = trainPromptsCache[idx];
+  if(!p) return;
+  const typeEl  = document.querySelector('input[name="editTrainType"]:checked');
+  const type    = typeEl ? typeEl.value : p.type;
+  const content = (document.getElementById('editPromptContent').value||'').trim();
+  const question= (document.getElementById('editPromptQuestion').value||'').trim();
+  const note    = (document.getElementById('editPromptNote').value||'').trim();
+  if(!content){ showToast('warning','Chưa nhập nội dung',''); return; }
+  closeTrainEditModal();
+  showTrainLoading(true);
+  try {
+    // Xóa dòng cũ, thêm dòng mới (delete + save)
+    const resDel = await fetch(WEB_APP_URL, {method:'POST', body: JSON.stringify({action:'delete_train_prompt', rowIndex: p.rowIndex})});
+    const dataDel = await resDel.json();
+    if(dataDel.result !== 'success'){ showTrainLoading(false); showToast('error','Lỗi sửa prompt', dataDel.message||''); return; }
+    const resSave = await fetch(WEB_APP_URL, {method:'POST', body: JSON.stringify({
+      action:'save_train_prompt', type, question, content, note, staffName: currentUser||'Admin'
+    })});
+    const dataSave = await resSave.json();
+    showTrainLoading(false);
+    if(dataSave.result === 'success'){
+      showToast('success','Đã cập nhật!','Prompt đã được sửa');
+      loadTrainPrompts();
+    } else {
+      showToast('error','Lỗi lưu', dataSave.message||'');
+    }
+  } catch(e){ showTrainLoading(false); showToast('error','Lỗi kết nối', e.message||''); }
+}
+
+// ── Xóa ───────────────────────────────────────────────────
+function deleteTrainPrompt(idx){
+  const p = trainPromptsCache[idx];
+  if(!p) return;
+  aiConfirm('', async ()=>{
+  try {
+    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'delete_train_prompt', rowIndex: p.rowIndex}) });
+    const data = await res.json();
+    if(data.result === 'success'){
+      trainPromptsCache.splice(idx,1);
+      renderTrainList();
+      showToast('success','Đã xoá','AI đã quên prompt này');
+    } else { showToast('error','Lỗi xoá', data.message||''); }
+  } catch(e){ showToast('error','Lỗi kết nối',''); }
+  });
+}
+
+// ── Test prompt ───────────────────────────────────────────
+async function testTrainPrompt(){
+  const typeEl  = document.querySelector('input[name="trainType"]:checked');
+  const type    = typeEl ? typeEl.value : 'other';
+  const content = (document.getElementById('trainContent').value||'').trim();
+  const question= (document.getElementById('trainQuestion')?.value||'').trim();
+  if(!content){ showToast('warning','Chưa nhập nội dung','Nhập prompt trước khi thử nghiệm'); return; }
+  const testArea = document.getElementById('trainTestArea');
+  const testResult = document.getElementById('trainTestResult');
+  testArea.style.display='block';
+  testResult.innerHTML = '<span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:16px;vertical-align:middle;margin-right:6px">sync</span><span style="color:var(--text3);font-size:12px">AI đang xử lý...</span>';
+  let testQ = question || 'Tóm tắt nội dung bạn vừa được học.';
+  if(type==='system') testQ = 'Dựa trên hướng dẫn này, tự giới thiệu ngắn vai trò của bạn.';
+  const savedCtx = trainPromptsCache.map(p => {
+    if(p.question) return 'Q: ' + p.question + ' → A: ' + p.content;
+    return '[' + (p.type||'rule') + '] ' + p.content;
+  }).join('\n');
+  const fullCtx = (savedCtx ? 'PROMPT ĐÃ TRAIN:\n' + savedCtx + '\n\n' : '') + 'PROMPT MỚI:\n[' + type + '] ' + (question ? 'Q: '+question+' → A: '+content : content);
+  try {
+    const res = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'gemini_chat', question: testQ, context: fullCtx, history:[]}) });
+    const data = await res.json();
+    testResult.textContent = data.result==='success' ? (data.answer||'Không có phản hồi.') : ('⚠️ ' + (data.message||''));
+  } catch(e){ testResult.textContent = '⚠️ Lỗi: ' + e.message; }
+}
+
+// ── Auto-inject train prompts vào mọi request AI ─────────
+// ── Train AI deep inject — gửi trainData có cấu trúc đầy đủ ──
+// Backend sẽ weave vào core system prompt theo từng layer
+(function(){
+  const _orig = window.fetch;
+  window.fetch = async function(url, opts) {
+    if(url === WEB_APP_URL && opts && opts.body && trainPromptsCache.length > 0) {
+      try {
+        const body = JSON.parse(opts.body);
+        if(body.action === 'gemini_chat' || body.action === 'gemini_vision') {
+          // Phân loại toàn bộ prompts thành các nhóm rõ ràng
+          const trainData = {
+            // Hành vi cốt lõi — weave vào đầu system prompt
+            // Tự động thêm format instruction để AI biết dùng **bold** đúng cú pháp
+            behavior: [
+              'Khi cần bôi đen / nhấn mạnh thông tin, dùng **text** (hai dấu sao bao quanh). Ví dụ: **Bị bẩn**, **X1216 Navy**. KHÔNG dùng <b> hay một dấu sao.',
+              ...trainPromptsCache
+                .filter(p => p.type === 'system')
+                .map(p => p.content)
+            ],
+            // Q&A — weave vào phần identity/knowledge của AI
+            qa: trainPromptsCache
+              .filter(p => p.type === 'qa' && p.content)
+              .map(p => ({ q: p.question||'', a: p.content })),
+            // Quy tắc nghiệp vụ — weave vào phần rules
+            rules: trainPromptsCache
+              .filter(p => p.type === 'rule')
+              .map(p => p.content),
+            // Sản phẩm — weave vào phần knowledge
+            products: trainPromptsCache
+              .filter(p => p.type === 'product')
+              .map(p => p.content),
+            // Khiếu nại — weave vào phần complaint handling
+            complaints: trainPromptsCache
+              .filter(p => p.type === 'complaint')
+              .map(p => p.content),
+          };
+          // Chỉ gửi nếu có data
+          const hasData = Object.values(trainData).some(v => v.length > 0);
+          if(hasData) body.trainData = trainData;
+          opts = Object.assign({}, opts, { body: JSON.stringify(body) });
+        }
+      } catch(e){}
+    }
+    return _orig.call(this, url, opts);
+  };
 })();
 </script>
 </body>
