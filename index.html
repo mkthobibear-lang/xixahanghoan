@@ -9991,8 +9991,25 @@ function aiBuildContext(type, question) {
   const orderLines = sorted.slice(0, 50).map(o => {
     const t = o.time ? new Date(o.time).toLocaleDateString('vi-VN') : '?';
     const prod = (o.product||'').replace(/\|/g,',').substring(0,60);
-    return `  [${o.code}] ${t} | ${o.shop||'?'} | ${o.channel||'?'} | ${o.status} | ${prod}`;
+    const cs = o.complaintStatus ? ` | KN:${o.complaintStatus}` : '';
+    return `  [${o.code}] ${t} | ${o.shop||'?'} | ${o.channel||'?'} | ${o.status}${cs} | ${prod}`;
   }).join('\n');
+
+  // Thống kê khiếu nại
+  const csMap = {};
+  orders.forEach(o => {
+    if (!o.status.includes('Tốt')) {
+      const cs = (o.complaintStatus||'Chưa xử lý').trim();
+      csMap[cs] = (csMap[cs]||0) + 1;
+    }
+  });
+  const csSuccess = csMap['Đã khiếu nại thành công'] || 0;
+  const csProcessing = csMap['Đang xử lý'] || 0;
+  const csPending = csMap['Chưa xử lý'] || 0;
+  const csWarrantyDone = csMap['Đã bảo hành'] || 0;
+  const csFailed = csMap['Chưa thành công'] || 0;
+  const csLines = Object.entries(csMap).map(([k,v])=>`${k}: ${v}`).join(' | ');
+  const complaintSummary = `\nKHIẾU NẠI: Thành công: ${csSuccess} | Đang xử lý: ${csProcessing} | Chưa xử lý: ${csPending} | Đã bảo hành: ${csWarrantyDone} | Chưa thành công: ${csFailed}`;
 
   const [yr, mo] = m.split('-');
 
@@ -10032,7 +10049,7 @@ XIXA là kho tiếp nhận hàng HOÀN TRẢ từ sàn TMĐT (Shopee/TikTok/Laza
 TUYỆT ĐỐI KHÔNG đề xuất người bán cần "cải thiện chất lượng hàng" hay "kiểm tra trước khi gửi hàng" — vì đây là hàng hoàn về, không phải hàng xuất đi.
 Khi phân tích: tập trung vào xu hướng hoàn, hành vi shipper, pattern gian lận khách, hoặc cách xử lý/khiếu nại batch.
 ---
-DỮ LIỆU KHO HÀNG XIXA — Tháng ${parseInt(mo)}/${yr}\nTỔNG QUAN: ${total} đơn | Tốt: ${good}(${Math.round(good/total*100)}%) | Bẩn: ${dirty} | Lỗi/Thiếu: ${error}(${Math.round(error/total*100)}%) | Bảo hành: ${warranty}`;
+DỮ LIỆU KHO HÀNG XIXA — Tháng ${parseInt(mo)}/${yr}\nTỔNG QUAN: ${total} đơn | Tốt: ${good}(${Math.round(good/total*100)}%) | Bẩn: ${dirty} | Lỗi/Thiếu: ${error}(${Math.round(error/total*100)}%) | Bảo hành: ${warranty}${complaintSummary}`;
 
   // ── CONTEXT 'summary': tổng quan + kênh + shop top (không chi tiết đơn) ──
   if (type === 'summary') {
@@ -10044,9 +10061,12 @@ DỮ LIỆU KHO HÀNG XIXA — Tháng ${parseInt(mo)}/${yr}\nTỔNG QUAN: ${tota
     const badOrders = orders.filter(o => !o.status.includes('Tốt'))
       .sort((a,b) => new Date(b.time) - new Date(a.time))
       .slice(0, 30)
-      .map(o => `  [${o.code}] ${o.time ? new Date(o.time).toLocaleDateString('vi-VN') : '?'} | ${o.shop||'?'} | ${o.status} | ${(o.product||'').substring(0,50)}`)
+      .map(o => {
+        const cs = o.complaintStatus ? ` | KN:${o.complaintStatus}` : '';
+        return `  [${o.code}] ${o.time ? new Date(o.time).toLocaleDateString('vi-VN') : '?'} | ${o.shop||'?'} | ${o.status}${cs} | ${(o.product||'').substring(0,50)}`;
+      })
       .join('\n');
-    return `${header}\nTHEO SHOP (lỗi):\n${shopLines}\nCHI TIẾT ĐƠN KHÔNG TỐT (30 gần nhất):\n${badOrders}`;
+    return `${header}\nTHEO SHOP (lỗi):\n${shopLines}\nCHI TIẾT ĐƠN KHÔNG TỐT (30 gần nhất — format: [mã] ngày | shop | trạng thái | KN:trạng_thái_khiếu_nại | sản phẩm):\n${badOrders}`;
   }
 
   // ── CONTEXT 'shop': đơn của shop được nhắc (tối đa 40) ────────
@@ -10056,13 +10076,16 @@ DỮ LIỆU KHO HÀNG XIXA — Tháng ${parseInt(mo)}/${yr}\nTỔNG QUAN: ${tota
       .filter(o => shopKeyword ? (o.shop||'').toLowerCase().includes(shopKeyword.toLowerCase().split(' ')[0]) : true)
       .sort((a,b) => new Date(b.time) - new Date(a.time))
       .slice(0, 40)
-      .map(o => `  [${o.code}] ${o.time ? new Date(o.time).toLocaleDateString('vi-VN') : '?'} | ${o.status} | ${(o.product||'').substring(0,50)}`)
+      .map(o => {
+        const cs = o.complaintStatus ? ` | KN:${o.complaintStatus}` : '';
+        return `  [${o.code}] ${o.time ? new Date(o.time).toLocaleDateString('vi-VN') : '?'} | ${o.status}${cs} | ${(o.product||'').substring(0,50)}`;
+      })
       .join('\n');
     return `${header}\nTHEO SHOP:\n${shopLines}\nĐƠN CỦA SHOP (40 gần nhất):\n${shopOrders}`;
   }
 
   // ── CONTEXT 'full' (mặc định): toàn bộ như cũ ─────────────────
-  return `${header}\nTHEO KÊNH: Shopee ${ch.Shopee} | TikTok ${ch.Tiktok} | Viettel/VTP ${ch['Viettel/VTP']} | Lazada ${ch.Lazada}\nTHEO SHOP:\n${shopLines}\nTOP 5 SẢN PHẨM HOÀN NHIỀU NHẤT:\n${topProds}\nCHI TIẾT ĐƠN (50 đơn gần nhất, lỗi ưu tiên — format: [mã] ngày | shop | kênh | trạng thái | sản phẩm):\n${orderLines}${prevSection}`;
+  return `${header}\nTHEO KÊNH: Shopee ${ch.Shopee} | TikTok ${ch.Tiktok} | Viettel/VTP ${ch['Viettel/VTP']} | Lazada ${ch.Lazada}\nTHEO SHOP:\n${shopLines}\nTOP 5 SẢN PHẨM HOÀN NHIỀU NHẤT:\n${topProds}\nCHI TIẾT ĐƠN (50 đơn gần nhất, lỗi ưu tiên — format: [mã] ngày | shop | kênh | trạng thái | KN:trạng_thái_khiếu_nại | sản phẩm):\n${orderLines}${prevSection}`;
 }
 
 // Tìm đơn theo mã — dùng khi user hỏi về mã cụ thể
@@ -11659,7 +11682,7 @@ function aiShowOrderImages(order) {
   wrap.style.cssText = 'align-self:flex-start;max-width:92%;margin-top:-4px';
   const label = document.createElement('div');
   label.style.cssText = 'font-size:10px;color:var(--text3);font-weight:700;margin-bottom:5px;padding-left:2px';
-  label.innerText = `📎 Ảnh đính kèm · ${order.code}`;
+  label.innerText = `📎 ${order.code} · ${order.status||''} · ${order.shop||''}`;
   wrap.appendChild(label);
   const grid = document.createElement('div');
   grid.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap';
@@ -12471,7 +12494,8 @@ async function aiAsk(question, displayLabel) {
       };
     } else {
       // Dùng text API thông thường
-      payload = { action: 'gemini_chat', question, context, history: AI.history };
+      const _trainDataForChat = (()=>{ try{ const s=_getTrainSystemForComplaint(); return s?JSON.parse(s):undefined; }catch(e){return undefined;} })();
+      payload = { action: 'gemini_chat', question, context, history: AI.history, ...(_trainDataForChat ? {trainData: _trainDataForChat} : {}) };
     }
 
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -12500,6 +12524,23 @@ async function aiAsk(question, displayLabel) {
         AI_FU.orderShop    = foundOrder.shop    || AI_FU.orderShop;
         AI_FU.orderChannel = foundOrder.channel || AI_FU.orderChannel;
       }
+      // ── Auto-show ảnh cho mọi mã đơn AI nhắc đến trong câu trả lời ──
+      (function() {
+        try {
+          const answer = data.answer || '';
+          const codeMatches = answer.match(/\b([A-Z]{2,8}\d{8,25}|\d{8,25}DH|\d{10,25})\b/gi) || [];
+          const shownCodes = new Set(foundOrder ? [(foundOrder.code||'').toUpperCase().replace(/'/g,'')] : []);
+          codeMatches.forEach(rawCode => {
+            const code = rawCode.toUpperCase().replace(/'/g,'').trim();
+            if (shownCodes.has(code)) return;
+            shownCodes.add(code);
+            const order = aiFindOrder(code);
+            if (order && (order.imageLinks||'').trim()) {
+              aiShowOrderImages(order);
+            }
+          });
+        } catch(e) {}
+      })();
       // AI tự quyết định gợi ý (async, không block UI)
       (async () => {
         try {
