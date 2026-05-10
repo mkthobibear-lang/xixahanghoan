@@ -116,6 +116,7 @@ body::after{
 }
 .sidebar-logo .ver::before{content:"";width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite}
 
+
 .nav-section{padding:16px 12px;flex:1;overflow-y:auto}
 
 /* ── Train AI ── */
@@ -170,11 +171,11 @@ body::after{
   background:var(--surface);backdrop-filter:blur(18px) saturate(140%);
   -webkit-backdrop-filter:blur(18px) saturate(140%);
   border-bottom:1px solid var(--border);
-  padding:0 24px;height:60px;
+  padding:0 24px 0 20px;height:60px;
   display:flex;align-items:center;justify-content:space-between;
   position:fixed;top:0;left:230px;right:0;z-index:80;
 }
-.page-title{font-size:15px;font-weight:800;color:var(--text);letter-spacing:-.2px}
+.page-title{display:none!important}
 .topbar-actions{display:flex;align-items:center;gap:8px}
 .icon-btn{
   width:36px;height:36px;border-radius:10px;
@@ -805,12 +806,69 @@ select.input-field{cursor:pointer}
 }
 .btn-export-dash:hover,.btn-export:hover{transform:translateY(-1px);box-shadow:0 10px 24px rgba(124,58,237,.42)}
 
-/* ===== LOGIN ===== */
-#loginScreen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;background:var(--bg);position:relative;z-index:1}
-.login-card{background:var(--surface);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--r-lg);padding:36px 32px;max-width:380px;width:100%;text-align:center;box-shadow:var(--shadow-lg);position:relative;overflow:hidden}
-.login-card::before{content:"";position:absolute;left:0;right:0;top:0;height:4px;background:var(--grad-ai)}
-.login-logo{height:48px;margin-bottom:18px}
-.login-title{font-size:18px;font-weight:800;margin-bottom:24px;background:var(--grad-ai);background-clip:text;-webkit-background-clip:text;color:transparent}
+/* ===== LOGIN AI TECH ===== */
+#loginScreen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+  background:#f0f4ff;position:relative;z-index:1;overflow:hidden;
+}
+#loginScreen::before{
+  content:"";position:absolute;inset:0;z-index:0;
+  background:
+    radial-gradient(ellipse 80% 60% at 20% 50%,rgba(124,58,237,.08),transparent 60%),
+    radial-gradient(ellipse 60% 50% at 80% 30%,rgba(6,182,212,.07),transparent 55%),
+    radial-gradient(ellipse 40% 40% at 60% 80%,rgba(59,130,246,.06),transparent 50%);
+}
+#loginParticles{position:absolute;inset:0;z-index:0;pointer-events:none}
+.login-card{
+  background:rgba(255,255,255,.92);backdrop-filter:blur(24px);
+  border:1px solid rgba(124,58,237,.15);border-radius:24px;
+  padding:40px 36px;max-width:400px;width:100%;text-align:center;
+  box-shadow:0 0 0 1px rgba(124,58,237,.06),0 24px 60px rgba(124,58,237,.12),0 8px 32px rgba(0,0,0,.06);
+  position:relative;overflow:hidden;z-index:1;
+  animation:fadeUp .5s ease;
+}
+.login-card::before{
+  content:"";position:absolute;left:0;right:0;top:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(124,58,237,.8),rgba(6,182,212,.8),transparent);
+}
+.login-card::after{
+  content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(135deg,rgba(124,58,237,.04) 0%,transparent 50%),
+    repeating-linear-gradient(0deg,transparent,transparent 39px,rgba(124,58,237,.03) 40px),
+    repeating-linear-gradient(90deg,transparent,transparent 39px,rgba(124,58,237,.03) 40px);
+}
+.login-logo{height:48px;margin:0 auto 10px;display:block;filter:drop-shadow(0 0 12px rgba(124,58,237,.4))}
+.login-title{font-size:24px;font-weight:900;margin-bottom:6px;background:linear-gradient(135deg,#7c3aed,#2563eb,#06b6d4);background-clip:text;-webkit-background-clip:text;color:transparent;letter-spacing:-.3px}
+.login-sub{color:rgba(71,85,105,.8)!important;font-weight:600!important}
+.login-card .form-label{color:rgba(100,116,139,.9);letter-spacing:.5px;font-size:10.5px}
+.login-card .input-field{
+  background:rgba(248,250,255,.9)!important;border-color:rgba(124,58,237,.18)!important;
+  color:#1e293b!important;
+}
+.login-card .input-field:focus{
+  border-color:rgba(124,58,237,.55)!important;
+  box-shadow:0 0 0 3px rgba(124,58,237,.1),0 0 16px rgba(124,58,237,.06)!important;
+  background:#fff!important;
+}
+.login-card .input-field::placeholder{color:rgba(148,163,184,.6)!important}
+.login-card .btn-primary{
+  background:linear-gradient(135deg,#7c3aed,#2563eb,#06b6d4)!important;
+  box-shadow:0 8px 24px rgba(124,58,237,.4),0 0 40px rgba(124,58,237,.15)!important;
+  letter-spacing:1px;font-size:13px;
+}
+.login-card .btn-primary:hover{
+  box-shadow:0 12px 32px rgba(124,58,237,.55),0 0 60px rgba(124,58,237,.2)!important;
+  transform:translateY(-1px);
+}
+.login-ai-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  background:rgba(124,58,237,.08);border:1px solid rgba(124,58,237,.15);
+  border-radius:20px;padding:4px 12px;margin-bottom:20px;
+  font-size:10px;font-weight:700;color:#7c3aed;letter-spacing:.5px;
+}
+.login-ai-badge::before{content:"";width:5px;height:5px;border-radius:50%;background:#7c3aed;box-shadow:0 0 6px rgba(124,58,237,.5);animation:pulse 2s infinite}
+
 
 /* ===== TOAST ===== */
 #toastContainer{position:fixed;top:20px;right:20px;z-index:99999;display:flex;flex-direction:column;gap:10px;pointer-events:none}
@@ -1228,27 +1286,8 @@ button[onclick*="addProduct"]{
 
 /* ---------- LOGIN ---------- */
 #loginScreen{position:fixed;inset:0;background:var(--bg);z-index:9000;display:flex;align-items:center;justify-content:center;padding:24px}
-.login-card{
-  width:100%;max-width:380px;
-  background:var(--surface);backdrop-filter:blur(16px);
-  border:1px solid var(--border);border-radius:24px;
-  padding:36px 32px;box-shadow:var(--shadow-lg);
-  position:relative;overflow:hidden;
-  animation:fadeUp .4s ease;
-}
-.login-card::before{
-  content:"";position:absolute;left:0;right:0;top:0;height:4px;
-  background:var(--grad-ai);
-}
-.login-card::after{
-  content:"";position:absolute;inset:-50%;z-index:-1;
-  background:radial-gradient(ellipse 60% 40% at 50% 0%,rgba(124,58,237,.10),transparent 60%);
-}
-.login-logo{height:48px;margin:0 auto 22px;display:block}
-.login-title{font-size:22px;font-weight:800;margin-bottom:6px;text-align:center;background:var(--grad-ai);background-clip:text;-webkit-background-clip:text;color:transparent}
-.login-sub{font-size:13px;color:var(--text3);margin-bottom:28px;font-weight:600;text-align:center}
-.password-toggle{cursor:pointer;padding:0 12px;color:var(--text3);display:flex;align-items:center}
-.password-toggle:hover{color:var(--ai-2)}
+.password-toggle{cursor:pointer;padding:0 12px;color:rgba(148,163,184,.5);display:flex;align-items:center}
+.password-toggle:hover{color:#a78bfa}
 
 #adminView{display:none;animation:fadeUp .35s ease}
 
@@ -1574,30 +1613,70 @@ button[onclick*="export"]{
 
 /* ============ TOPBAR AI SEARCH BOX ============ */
 .ai-search-box{
-  display:none;align-items:center;gap:10px;
-  padding:7px 14px;border-radius:11px;
-  background:var(--surface2);border:1px solid var(--border);
-  margin-left:12px;flex:1;max-width:480px;min-width:0;
-  transition:.2s;
+  display:none;align-items:center;gap:0;
+  border-radius:14px;
+  background:var(--surface);
+  border:1.5px solid var(--border);
+  margin-left:0;flex:1;max-width:520px;min-width:0;
+  transition:.25s;overflow:hidden;
+  box-shadow:0 2px 8px rgba(0,0,0,.04);
+  position:relative;
 }
 .ai-search-box:focus-within{
-  border-color:var(--ai-2);background:var(--surface);
-  box-shadow:0 0 0 4px rgba(59,130,246,.10);
+  border-color:rgba(124,58,237,.5);
+  box-shadow:0 0 0 3px rgba(124,58,237,.08),0 4px 16px rgba(124,58,237,.1);
+}
+.ai-search-mode-toggle{
+  display:flex;align-items:center;gap:5px;
+  padding:0 12px;height:38px;flex-shrink:0;
+  border-right:1.5px solid var(--border);
+  cursor:pointer;transition:.2s;
+  background:transparent;border-top:none;border-bottom:none;border-left:none;
+  font-family:inherit;
+}
+.ai-search-mode-toggle:hover{background:var(--surface2)}
+.ai-search-mode-icon{
+  width:22px;height:22px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(135deg,#7c3aed,#2563eb);
+  flex-shrink:0;
+}
+.ai-search-mode-icon .material-icons-round{font-size:13px;color:#fff}
+.ai-search-mode-label{
+  font-size:10px;font-weight:700;letter-spacing:.3px;
+  color:var(--text2);white-space:nowrap;
 }
 .ai-search-box input{
   flex:1;min-width:0;background:transparent;border:none;outline:none;
   color:var(--text);font-family:inherit;font-size:13px;font-weight:500;
+  padding:0 14px;height:38px;
 }
 .ai-search-box input::placeholder{color:var(--text3)}
+.ai-search-box-right{
+  display:flex;align-items:center;gap:6px;padding:0 10px;flex-shrink:0;
+}
 .ai-search-box .kbd{
   font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:700;
   padding:3px 7px;border-radius:6px;border:1px solid var(--border);
-  background:var(--surface);color:var(--text3);flex-shrink:0;
+  background:var(--surface2);color:var(--text3);flex-shrink:0;white-space:nowrap;
 }
+.ai-search-ask-btn{
+  display:flex;align-items:center;gap:4px;
+  padding:4px 10px;border-radius:8px;border:none;cursor:pointer;
+  background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(37,99,235,.08));
+  color:#7c3aed;font-size:10.5px;font-weight:700;font-family:inherit;
+  transition:.15s;white-space:nowrap;
+}
+.ai-search-ask-btn:hover{background:linear-gradient(135deg,rgba(124,58,237,.2),rgba(37,99,235,.14));transform:none;}
+.ai-search-ask-btn .material-icons-round{font-size:13px}
+/* mode indicator */
+.ai-search-box.mode-ai .ai-search-mode-icon{background:linear-gradient(135deg,#7c3aed,#06b6d4)}
+.ai-search-box.mode-ai input::placeholder{color:rgba(124,58,237,.5)}
+.ai-search-box.mode-ai{border-color:rgba(124,58,237,.3)}
 @media(min-width:861px){
   body.admin-mode .ai-search-box{display:flex}
 }
-@media(max-width:1100px){.ai-search-box{max-width:280px}}
+@media(max-width:1100px){.ai-search-box{max-width:320px}}
 @media(max-width:860px){.ai-search-box{display:none !important}}
 
 /* ============ KPI SPARKLINE ============ */
@@ -1812,28 +1891,83 @@ button[onclick*="export"]{
 <div id="toastContainer"></div>
 
 <div id="loginScreen">
+  <canvas id="loginParticles"></canvas>
   <div class="login-card">
     <img src="https://i.ibb.co/cKKgz9X6/ch-29-7-x-15-5-cm.png" class="login-logo">
+    <div class="login-ai-badge">✦ AI Returns Intelligence</div>
     <div class="login-title">Chào mừng trở lại</div>
-    <div class="login-sub">Đăng nhập để quản lý kho hàng hoàn</div>
+    <div class="login-sub" style="font-size:12px;margin-bottom:28px;font-weight:500">Đăng nhập để truy cập hệ thống</div>
     <form id="loginForm">
-      <div style="margin-bottom:14px">
+      <div style="margin-bottom:14px;text-align:left">
         <label class="form-label">Tên đăng nhập</label>
         <div class="input-with-action">
           <input type="text" class="input-field" id="loginUser" placeholder="Nhập tên đăng nhập" required>
         </div>
       </div>
-      <div style="margin-bottom:24px">
+      <div style="margin-bottom:28px;text-align:left">
         <label class="form-label">Mật khẩu</label>
         <div class="input-with-action">
           <input type="password" class="input-field" id="loginPass" placeholder="Nhập mật khẩu" required>
           <span class="input-action-btn password-toggle" onclick="togglePass()"><span class="material-icons-round">visibility</span></span>
         </div>
       </div>
-      <button type="submit" class="btn-primary" style="margin-top:0">Đăng nhập</button>
+      <button type="submit" class="btn-primary" style="margin-top:0;width:100%">Đăng nhập</button>
     </form>
+    <div style="margin-top:20px;font-size:10px;color:rgba(100,116,139,.5);display:flex;align-items:center;justify-content:center;gap:6px">
+      <span style="width:24px;height:1px;background:rgba(100,116,139,.2);display:inline-block"></span>
+      Secured · XIXA AI System
+      <span style="width:24px;height:1px;background:rgba(100,116,139,.2);display:inline-block"></span>
+    </div>
   </div>
 </div>
+<script>
+(function(){
+  const canvas = document.getElementById('loginParticles');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles=[], animId;
+  function resize(){ W=canvas.width=window.innerWidth; H=canvas.height=window.innerHeight; }
+  resize(); window.addEventListener('resize',resize);
+  for(let i=0;i<55;i++) particles.push({
+    x:Math.random()*W, y:Math.random()*H,
+    r:Math.random()*1.5+.3,
+    vx:(Math.random()-.5)*.3, vy:(Math.random()-.5)*.3,
+    o:Math.random()*.6+.2,
+    c:Math.random()>.5?'124,58,237':'6,182,212'
+  });
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    particles.forEach(p=>{
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=W; if(p.x>W)p.x=0;
+      if(p.y<0)p.y=H; if(p.y>H)p.y=0;
+      ctx.beginPath();
+      ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle=`rgba(${p.c},${p.o})`;
+      ctx.fill();
+    });
+    // Draw connecting lines
+    for(let i=0;i<particles.length;i++){
+      for(let j=i+1;j<particles.length;j++){
+        const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y;
+        const dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<120){
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x,particles[i].y);
+          ctx.lineTo(particles[j].x,particles[j].y);
+          ctx.strokeStyle=`rgba(124,58,237,${.08*(1-dist/120)})`;
+          ctx.lineWidth=.5;
+          ctx.stroke();
+        }
+      }
+    }
+    animId=requestAnimationFrame(draw);
+  }
+  draw();
+  // Stop animation when login done
+  window._stopLoginParticles=function(){ cancelAnimationFrame(animId); };
+})();
+</script>
 
 <div id="loading">
   <div class="ai-loading-star-wrap"><svg class="ai-star-spinner" width="64" height="64" viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
@@ -1936,9 +2070,21 @@ button[onclick*="export"]{
         <div class="page-title" id="pageTitleBar">Nhập đơn hoàn</div>
         <!-- AI Search Box -->
         <div class="ai-search-box admin-only" id="aiSearchBox">
-          <span class="material-icons-round" style="color:var(--text3);font-size:18px">search</span>
-          <input type="text" placeholder="Tìm mã vận đơn, shop, sản phẩm — hoặc gõ / để hỏi AI" id="aiSearchInput" onfocus="aiSearchFocus()" onkeydown="if(event.key==='Enter'){var v=this.value.trim();if(v){if(v.startsWith('/')){if(window.aiChatSend)window.aiChatSend(v.slice(1));}else{window.searchOrders&&window.searchOrders(v);setTimeout(()=>{this.value='';this.blur();},200);}}}if(event.key==='Escape'){this.blur();}"
-          <span class="kbd">⌘ K</span>
+          <!-- Mode toggle: search ↔ AI -->
+          <button class="ai-search-mode-toggle" id="aiSearchModeBtn" onclick="aiSearchToggleMode()" title="Chuyển đổi chế độ">
+            <div class="ai-search-mode-icon"><span class="material-icons-round">search</span></div>
+            <span class="ai-search-mode-label" id="aiSearchModeLabel">TÌM KIẾM</span>
+          </button>
+          <input type="text" id="aiSearchInput"
+            placeholder="Tìm mã vận đơn, shop, sản phẩm..."
+            onfocus="aiSearchFocus()"
+            onkeydown="aiSearchKeydown(event)">
+          <div class="ai-search-box-right">
+            <button class="ai-search-ask-btn" id="aiSearchAskBtn" onclick="aiSearchSubmit()" title="Hỏi AI">
+              <span class="material-icons-round">auto_awesome</span>Hỏi AI
+            </button>
+            <span class="kbd">⌘K</span>
+          </div>
         </div>
         <div id="dashTopbarControls" style="display:none;align-items:center;gap:8px">
           <div style="position:relative;display:inline-block">
@@ -4647,6 +4793,7 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
         if(roleDisplay) roleDisplay.innerText = res.role || (isAdmin?'Quản Lý':'Nhân viên');
 
         document.getElementById('loginScreen').style.display='none';
+        if(window._stopLoginParticles) window._stopLoginParticles();
         document.getElementById('mainApp').style.display='flex';
         // Bật FAB chat khi đã đăng nhập
         document.getElementById('chatFab').style.display='flex';
@@ -8437,15 +8584,7 @@ body.dark .ai-msg-act-btn{background:rgba(15,23,42,.7);color:var(--text2);border
   font-size:11px;color:var(--text2);
   line-height:1.45;
 }
-.ai-trace-step::before{
-  content:'';flex-shrink:0;
-  width:6px;height:6px;border-radius:50%;
-  background:#7c3aed;
-  margin-top:6px;
-  box-shadow:0 0 0 3px rgba(124,58,237,.2);
-}
-.ai-trace-step.done::before{background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2)}
-.ai-trace-step.error::before{background:#ef4444;box-shadow:0 0 0 3px rgba(239,68,68,.2)}
+@keyframes aiTracePending{0%,100%{opacity:.35;transform:scale(.9)}50%{opacity:1;transform:scale(1)}}
 .ai-trace-step b{color:var(--text);font-weight:700}
 .ai-trace-step .ai-trace-tool{
   font-family:'JetBrains Mono',monospace;
@@ -8922,18 +9061,16 @@ body.dark .ai-agent-trace{
 .ai-agent-trace.collapsed .ai-agent-trace-head .material-icons-round{transform:rotate(-90deg)}
 .ai-agent-trace-body{margin-top:8px;padding-top:8px;border-top:1px dashed rgba(124,58,237,.18)}
 .ai-trace-step{
-  display:flex;align-items:flex-start;gap:9px;
-  padding:4px 0;
+  display:flex;align-items:center;gap:9px;
+  padding:5px 0;
   font-size:11.5px;color:var(--text2);
   line-height:1.5;
 }
 .ai-trace-step::before{
   content:'';flex-shrink:0;
-  width:14px;height:14px;border-radius:50%;
+  width:16px;height:16px;border-radius:50%;
   background:transparent;
-  border:1.5px solid rgba(124,58,237,.4);
-  margin-top:2px;
-  position:relative;
+  border:2px solid rgba(124,58,237,.35);
   animation:aiTracePending 1.5s ease-in-out infinite;
 }
 @keyframes aiTracePending{
@@ -8941,21 +9078,16 @@ body.dark .ai-agent-trace{
   50%{opacity:1}
 }
 .ai-trace-step.done::before{
-  background:#22c55e;
-  border-color:#22c55e;
-  animation:none;
-  opacity:1;
+  background:#22c55e;border-color:#22c55e;
+  animation:none;opacity:1;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3 8l3.5 3.5L13 5' stroke='%23fff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round' fill='none'/%3E%3C/svg%3E");
+  background-size:11px 11px;
+  background-repeat:no-repeat;
+  background-position:center;
 }
-.ai-trace-step.done::after{
-  content:'';position:absolute;
-  width:6px;height:3px;
-  border-left:1.5px solid #fff;border-bottom:1.5px solid #fff;
-  transform:rotate(-45deg);
-  margin-top:5px;margin-left:-11px;
-}
+.ai-trace-step.done::after{display:none}
 .ai-trace-step.error::before{
-  background:#ef4444;border-color:#ef4444;
-  animation:none;
+  background:#ef4444;border-color:#ef4444;animation:none;
 }
 .ai-trace-step b{color:var(--text);font-weight:700}
 .ai-trace-step .ai-trace-tool{
@@ -14460,26 +14592,68 @@ window.searchOrders = function(keyword) {
   }, 150);
 };
 
+// ── AI Search Bar v2 ──────────────────────────────────────────
+window._aiSearchMode = 'search'; // 'search' | 'ai'
+
 function aiSearchFocus(){
-  var inp=document.getElementById('aiSearchInput');
-  if(!inp || inp._searchListenerAttached) return;
-  inp._searchListenerAttached = true;
-  inp.addEventListener('keydown',function(e){
-    if(e.key==='Enter'){
-      var v=inp.value.trim();
-      if(!v) return;
-      if(v.startsWith('/')){
-        if(window.aiChatSend) window.aiChatSend(v.slice(1));
-        else if(window.openChatWindow) window.openChatWindow();
-      } else {
-        window.searchOrders(v);
-        // Clear search box after navigating
-        setTimeout(function(){ inp.value=''; inp.blur(); }, 200);
-      }
-    }
-    if(e.key==='Escape'){ inp.blur(); }
-  });
+  var box = document.getElementById('aiSearchBox');
+  if(box && window._aiSearchMode==='ai') box.classList.add('mode-ai');
 }
+
+function aiSearchToggleMode(){
+  var box   = document.getElementById('aiSearchBox');
+  var icon  = box && box.querySelector('.ai-search-mode-icon .material-icons-round');
+  var label = document.getElementById('aiSearchModeLabel');
+  var inp   = document.getElementById('aiSearchInput');
+  if(window._aiSearchMode === 'search'){
+    window._aiSearchMode = 'ai';
+    if(icon)  icon.innerText  = 'auto_awesome';
+    if(label) label.innerText = 'HOI AI';
+    if(box)   box.classList.add('mode-ai');
+    if(inp){  inp.placeholder = 'Hoi AI bat cu dieu gi ve kho hang...'; inp.focus(); }
+  } else {
+    window._aiSearchMode = 'search';
+    if(icon)  icon.innerText  = 'search';
+    if(label) label.innerText = 'TIM KIEM';
+    if(box)   box.classList.remove('mode-ai');
+    if(inp){  inp.placeholder = 'Tim ma van don, shop, san pham...'; inp.focus(); }
+  }
+}
+
+function aiSearchSubmit(){
+  var inp = document.getElementById('aiSearchInput');
+  var v   = inp ? inp.value.trim() : '';
+  if(!v) return;
+  if(window._aiSearchMode === 'ai' || v.startsWith('/')){
+    var q = v.startsWith('/') ? v.slice(1) : v;
+    // Mở AI chat và gửi câu hỏi
+    var win = document.getElementById('aiChatWin');
+    if(win && win.style.display==='none') { if(typeof toggleAiChat==='function') toggleAiChat(); }
+    if(typeof aiAsk==='function') aiAsk(q);
+    var inp = document.getElementById('aiSearchInput');
+    if(inp){ inp.value=''; inp.blur(); }
+    return;
+  } else {
+    window.searchOrders && window.searchOrders(v);
+    setTimeout(function(){ if(inp){inp.value='';inp.blur();} }, 200);
+  }
+}
+
+function aiSearchKeydown(e){
+  if(e.key==='Enter'){ e.preventDefault(); aiSearchSubmit(); }
+  if(e.key==='Escape'){ e.target.blur(); }
+  if(e.key==='Tab' && !e.shiftKey && document.getElementById('aiSearchInput')===document.activeElement){
+    e.preventDefault(); aiSearchToggleMode();
+  }
+}
+
+document.addEventListener('keydown', function(e){
+  if((e.metaKey||e.ctrlKey) && e.key==='k'){
+    e.preventDefault();
+    var inp = document.getElementById('aiSearchInput');
+    if(inp){ inp.focus(); inp.select(); }
+  }
+});
 </script>
 
 <script>
