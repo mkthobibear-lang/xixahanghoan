@@ -2956,6 +2956,7 @@ button[onclick*="export"]{
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
               <div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:6px">
                 <span class="material-icons-round" style="font-size:14px">auto_stories</span>Knowledge Base
+                <span id="vectorDBStatus" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(124,58,237,.1);color:#7c3aed;letter-spacing:.3px;margin-left:4px" title="Vector DB đang hoạt động — tự động chọn prompt liên quan nhất">⚡ VECTOR DB</span>
               </div>
 <div style="display:flex;gap:6px">
                 <button onclick="scrollTrainList(-1)" title="Cuộn lên" style="width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'">
@@ -15703,9 +15704,140 @@ async function testTrainPrompt(){
   } catch(e){ testResult.textContent = '⚠️ Lỗi: ' + e.message; }
 }
 
-// ── Auto-inject train prompts vào mọi request AI ─────────
-// ── Train AI deep inject — gửi trainData có cấu trúc đầy đủ ──
-// Backend sẽ weave vào core system prompt theo từng layer
+// ================================================================
+// VECTOR DB — Semantic Search với TF-IDF + Cosine Similarity
+// Thay vì inject tất cả prompts, chỉ lấy top-K liên quan nhất
+// ================================================================
+
+const VectorDB = (function(){
+
+  // ── Chuẩn hoá text tiếng Việt: giữ nguyên dấu, lowercase ──
+  function normalize(text){
+    return String(text||'').toLowerCase().trim();
+  }
+
+  // ── Tách bigrams + unigrams từ text tiếng Việt ────────────
+  function ngrams(text){
+    const words = normalize(text).split(/\s+/).filter(w=>w.length>0);
+    const result = new Set(words); // unigrams
+    for(let i=0;i<words.length-1;i++){
+      result.add(words[i]+' '+words[i+1]); // bigrams
+    }
+    return result;
+  }
+
+  // ── Jaccard similarity: overlap / union ───────────────────
+  function jaccard(setA, setB){
+    if(!setA.size || !setB.size) return 0;
+    let inter = 0;
+    setA.forEach(t => { if(setB.has(t)) inter++; });
+    return inter / (setA.size + setB.size - inter);
+  }
+
+  // ── Keyword bonus: kiểm tra từ khoá domain trực tiếp ──────
+  const DOMAIN_KEYWORDS = {
+    'khiếu nại':  ['khiếu nại','complaint','khieu nai','phản ánh','bồi thường','đổi trả'],
+    'bẩn':        ['bẩn','dirty','bị bẩn','ố bẩn','bẩn thỉu','dơ'],
+    'tráo':       ['tráo','swap','đổi hàng','hàng giả','fake'],
+    'thiếu':      ['thiếu','missing','mất hàng','không đủ'],
+    'bảo hành':   ['bảo hành','warranty','bh','hỏng','lỗi sp'],
+    'sản phẩm':   ['sản phẩm','sp','hàng','model','size','màu'],
+    'shop':       ['shop','gian hàng','store','cửa hàng'],
+    'kênh':       ['kênh','shopee','tiktok','lazada','vtp','viettel'],
+    'ảnh':        ['ảnh','hình','image','photo','chụp','bill','nhãn'],
+    'đơn':        ['đơn','mã vận đơn','tracking','order','vận đơn'],
+    'tháng':      ['tháng','tháng này','month','thống kê','báo cáo'],
+    'nhân viên':  ['nhân viên','nv','staff','người nhập'],
+  };
+
+  function keywordBonus(query, promptText){
+    const q = normalize(query);
+    const p = normalize(promptText);
+    let bonus = 0;
+    Object.values(DOMAIN_KEYWORDS).forEach(variants => {
+      const inQuery    = variants.some(v => q.includes(v));
+      const inPrompt   = variants.some(v => p.includes(v));
+      if(inQuery && inPrompt) bonus += 0.3;
+    });
+    return bonus;
+  }
+
+  // ── Cache ngrams của từng prompt ──────────────────────────
+  let _cache = [];
+  let _cacheVersion = 0;
+
+  function buildCache(prompts){
+    if(prompts.length === _cacheVersion) return;
+    _cache = prompts.map(p => {
+      const text = [p.question||'', p.content||'', p.note||'', p.type||''].join(' ');
+      return { p, grams: ngrams(text), raw: text };
+    });
+    _cacheVersion = prompts.length;
+  }
+
+  // ── Tìm top-K prompts thực sự liên quan ───────────────────
+  function findRelevant(query, prompts, topK=6){
+    if(!prompts.length) return [];
+    buildCache(prompts);
+
+    const qGrams = ngrams(query);
+    const THRESHOLD = 0.06; // Jaccard tối thiểu
+
+    const scored = _cache.map(({p, grams, raw}) => {
+      const sim   = jaccard(qGrams, grams);
+      const bonus = keywordBonus(query, raw);
+      return { p, score: sim + bonus };
+    }).sort((a,b) => b.score - a.score);
+
+    // Debug: log scores (xem trong console)
+    console.log('[VectorDB] scores:', scored.map(s=>({
+      type:s.p.type,
+      q: (s.p.question||s.p.content||'').substring(0,40),
+      score: s.score.toFixed(3)
+    })));
+
+    // System prompts: giữ nếu score > threshold thấp hơn (0.02)
+    const systemPrompts = scored
+      .filter(s => s.p.type==='system' && s.score >= 0.02)
+      .map(s => s.p);
+
+    // Các prompts khác: phải đạt threshold chính
+    const otherRelevant = scored
+      .filter(s => s.p.type!=='system' && s.score >= THRESHOLD)
+      .slice(0, topK)
+      .map(s => s.p);
+
+    const systemSet = new Set(systemPrompts.map(p=>p.rowIndex));
+    const merged = [...systemPrompts, ...otherRelevant.filter(p=>!systemSet.has(p.rowIndex))];
+
+    return merged;
+  }
+
+  return { findRelevant, ngrams, jaccard, keywordBonus };
+})();
+
+// ── UI badge cho Vector DB status ─────────────────────────────
+function _showVectorDBBadge(total, selected){
+  let badge = document.getElementById('vectorDBBadge');
+  if(!badge){
+    badge = document.createElement('div');
+    badge.id = 'vectorDBBadge';
+    badge.style.cssText = 'position:fixed;top:70px;right:20px;z-index:99999;' +
+      'background:linear-gradient(135deg,rgba(124,58,237,.12),rgba(37,99,235,.08));' +
+      'border:1px solid rgba(124,58,237,.25);backdrop-filter:blur(12px);' +
+      'border-radius:12px;padding:7px 12px;font-size:10.5px;font-weight:700;' +
+      'color:#7c3aed;display:flex;align-items:center;gap:6px;' +
+      'box-shadow:0 4px 16px rgba(124,58,237,.15);opacity:0;transition:opacity .3s;pointer-events:none';
+    document.body.appendChild(badge);
+  }
+  badge.innerHTML = '<span style="width:7px;height:7px;border-radius:50%;background:#7c3aed;box-shadow:0 0 6px #7c3aed;flex-shrink:0;animation:pulse 1.5s infinite"></span>' +
+    '⚡ Vector DB — <b>' + selected + '</b>/<span style="opacity:.7">' + total + '</span> prompts phù hợp';
+  badge.style.opacity = '1';
+  clearTimeout(badge._t);
+  badge._t = setTimeout(()=>{ badge.style.opacity='0'; }, 3500);
+}
+
+// ── Auto-inject — dùng Vector DB để chọn prompt liên quan ──────
 (function(){
   const _orig = window.fetch;
   window.fetch = async function(url, opts) {
@@ -15713,36 +15845,29 @@ async function testTrainPrompt(){
       try {
         const body = JSON.parse(opts.body);
         if(body.action === 'gemini_chat' || body.action === 'gemini_vision') {
-          // Phân loại toàn bộ prompts thành các nhóm rõ ràng
-          const trainData = {
-            // Hành vi cốt lõi — weave vào đầu system prompt
-            // Tự động thêm format instruction để AI biết dùng **bold** đúng cú pháp
-            behavior: [
-              'Khi cần bôi đen / nhấn mạnh thông tin, dùng **text** (hai dấu sao bao quanh). Ví dụ: **Bị bẩn**, **X1216 Navy**. KHÔNG dùng <b> hay một dấu sao.',
-              ...trainPromptsCache
-                .filter(p => p.type === 'system')
-                .map(p => p.content)
-            ],
-            // Q&A — weave vào phần identity/knowledge của AI
-            qa: trainPromptsCache
-              .filter(p => p.type === 'qa' && p.content)
-              .map(p => ({ q: p.question||'', a: p.content })),
-            // Quy tắc nghiệp vụ — weave vào phần rules
-            rules: trainPromptsCache
-              .filter(p => p.type === 'rule')
-              .map(p => p.content),
-            // Sản phẩm — weave vào phần knowledge
-            products: trainPromptsCache
-              .filter(p => p.type === 'product')
-              .map(p => p.content),
-            // Khiếu nại — weave vào phần complaint handling
-            complaints: trainPromptsCache
-              .filter(p => p.type === 'complaint')
-              .map(p => p.content),
-          };
-          // Chỉ gửi nếu có data
-          const hasData = Object.values(trainData).some(v => v.length > 0);
-          if(hasData) body.trainData = trainData;
+
+          // Câu hỏi để tìm prompt liên quan
+          const query = body.question || body.context || '';
+
+          // Vector search — chỉ lấy prompt thực sự liên quan
+          const relevant = VectorDB.findRelevant(query, trainPromptsCache, 6);
+          _showVectorDBBadge(trainPromptsCache.length, relevant.length);
+
+          if(relevant.length > 0){
+            const trainData = {
+              behavior: [
+                'Khi cần bôi đen / nhấn mạnh thông tin, dùng **text** (hai dấu sao bao quanh). Ví dụ: **Bị bẩn**, **X1216 Navy**. KHÔNG dùng <b> hay một dấu sao.',
+                ...relevant.filter(p => p.type==='system').map(p => p.content)
+              ],
+              qa:         relevant.filter(p => p.type==='qa' && p.content).map(p => ({q:p.question||'',a:p.content})),
+              rules:      relevant.filter(p => p.type==='rule').map(p => p.content),
+              products:   relevant.filter(p => p.type==='product').map(p => p.content),
+              complaints: relevant.filter(p => p.type==='complaint').map(p => p.content),
+            };
+            const hasData = Object.values(trainData).some(v => v.length > 0);
+            if(hasData) body.trainData = trainData;
+          }
+          // relevant.length === 0 → câu hỏi lạc đề hoàn toàn, không inject gì
           opts = Object.assign({}, opts, { body: JSON.stringify(body) });
         }
       } catch(e){}
