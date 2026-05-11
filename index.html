@@ -15692,13 +15692,28 @@ async function testTrainPrompt(){
   testResult.innerHTML = '<span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:16px;vertical-align:middle;margin-right:6px">sync</span><span style="color:var(--text3);font-size:12px">AI đang xử lý...</span>';
   let testQ = question || 'Tóm tắt nội dung bạn vừa được học.';
   if(type==='system') testQ = 'Dựa trên hướng dẫn này, tự giới thiệu ngắn vai trò của bạn.';
-  const savedCtx = trainPromptsCache.map(p => {
-    if(p.question) return 'Q: ' + p.question + ' → A: ' + p.content;
-    return '[' + (p.type||'rule') + '] ' + p.content;
-  }).join('\n');
-  const fullCtx = (savedCtx ? 'PROMPT ĐÃ TRAIN:\n' + savedCtx + '\n\n' : '') + 'PROMPT MỚI:\n[' + type + '] ' + (question ? 'Q: '+question+' → A: '+content : content);
+
+  // FIX: Build trainData từ cache + prompt mới đang test
+  // để kiểm tra chính xác AI sẽ dùng kiến thức gì
+  const tempPrompt = { type, question: question||'', content, note: '' };
+  const allPrompts = [...(trainPromptsCache||[]), tempPrompt];
+  const trainData = {
+    behavior:   allPrompts.filter(p=>p.type==='system').map(p=>p.content),
+    complaints: allPrompts.filter(p=>p.type==='complaint').map(p=>p.content),
+    rules:      allPrompts.filter(p=>p.type==='rule').map(p=>p.content),
+    qa:         allPrompts.filter(p=>p.type==='qa'&&p.content).map(p=>({q:p.question||'',a:p.content})),
+    products:   allPrompts.filter(p=>p.type==='product').map(p=>p.content),
+  };
+  const hasData = Object.values(trainData).some(v=>v.length>0);
+
   try {
-    const res = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'gemini_chat', question: testQ, context: fullCtx, history:[]}) });
+    const res = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({
+      action:'gemini_chat',
+      question: testQ,
+      context: 'Hệ thống kho hàng hoàn XIXA — chế độ test prompt',
+      history:[],
+      ...(hasData ? {trainData} : {})
+    })});
     const data = await res.json();
     testResult.textContent = data.result==='success' ? (data.answer||'Không có phản hồi.') : ('⚠️ ' + (data.message||''));
   } catch(e){ testResult.textContent = '⚠️ Lỗi: ' + e.message; }
@@ -15759,7 +15774,7 @@ const VectorDB = (function(){
     if(!prompts.length) return [];
     buildCache(prompts);
 
-    const THRESHOLD = 0.05;
+    const THRESHOLD = 0.04; // Hạ threshold để bắt được nhiều hơn
     const qGrams = ngramsFiltered(query);
 
     const scored = _cache.map(({p, grams})=>({
@@ -15775,19 +15790,32 @@ const VectorDB = (function(){
       pick: s.score>=THRESHOLD?'✓':'✗'
     })));
 
-    // System: threshold thấp hơn vì là behavior cốt lõi
-    const systemPrompts = scored
-      .filter(s=>s.p.type==='system' && s.score>=0.02)
-      .map(s=>s.p);
+    // FIX: System prompts luôn được inject — đây là hành vi cốt lõi,
+    // không phụ thuộc vào mức độ liên quan với câu hỏi
+    const systemPrompts = prompts.filter(p => p.type === 'system');
 
-    // Các loại khác: phải đạt threshold chính
+    // Các loại khác: lọc theo threshold
     const others = scored
-      .filter(s=>s.p.type!=='system' && s.score>=THRESHOLD)
-      .slice(0,topK)
-      .map(s=>s.p);
+      .filter(s => s.p.type !== 'system' && s.score >= THRESHOLD)
+      .slice(0, topK)
+      .map(s => s.p);
 
-    const sysSet = new Set(systemPrompts.map(p=>p.rowIndex));
-    return [...systemPrompts, ...others.filter(p=>!sysSet.has(p.rowIndex))];
+    // FIX: Nếu không match gì cả (others rỗng), lấy top-3 có score cao nhất
+    // thay vì trả về rỗng → AI sẽ không "quên" kiến thức đã train
+    const sysSet = new Set(systemPrompts.map(p => p.rowIndex));
+    const nonSysFiltered = others.filter(p => !sysSet.has(p.rowIndex));
+
+    if(nonSysFiltered.length === 0 && scored.length > 0){
+      // Fallback: lấy top-3 non-system có score cao nhất dù không đạt threshold
+      const fallback = scored
+        .filter(s => s.p.type !== 'system' && s.score > 0)
+        .slice(0, 3)
+        .map(s => s.p)
+        .filter(p => !sysSet.has(p.rowIndex));
+      return [...systemPrompts, ...fallback];
+    }
+
+    return [...systemPrompts, ...nonSysFiltered];
   }
 
   return { findRelevant, ngramsFiltered, jaccard };
@@ -15826,31 +15854,54 @@ function _showVectorDBBadge(total, selected){
           // Câu hỏi để tìm prompt liên quan
           const query = body.question || body.context || '';
 
-          // Vector search — chỉ lấy prompt thực sự liên quan
+          // Vector search — lấy prompts liên quan (system luôn được include)
           const relevant = VectorDB.findRelevant(query, trainPromptsCache, 6);
           _showVectorDBBadge(trainPromptsCache.length, relevant.length);
 
-          if(relevant.length > 0){
-            const trainData = {
-              behavior: [
-                'Khi cần bôi đen / nhấn mạnh thông tin, dùng **text** (hai dấu sao bao quanh). Ví dụ: **Bị bẩn**, **X1216 Navy**. KHÔNG dùng <b> hay một dấu sao.',
-                ...relevant.filter(p => p.type==='system').map(p => p.content)
-              ],
-              qa:         relevant.filter(p => p.type==='qa' && p.content).map(p => ({q:p.question||'',a:p.content})),
-              rules:      relevant.filter(p => p.type==='rule').map(p => p.content),
-              products:   relevant.filter(p => p.type==='product').map(p => p.content),
-              complaints: relevant.filter(p => p.type==='complaint').map(p => p.content),
-            };
-            const hasData = Object.values(trainData).some(v => v.length > 0);
-            if(hasData) body.trainData = trainData;
-          }
-          // relevant.length === 0 → câu hỏi lạc đề hoàn toàn, không inject gì
+          // FIX: Nếu body đã có trainData (từ code tĩnh), MERGE thêm vào
+          // thay vì ghi đè. System prompts luôn được giữ nguyên.
+          const existingTrain = body.trainData || {};
+
+          const mergedTrain = {
+            // behavior: giữ existing + thêm từ relevant nếu chưa có
+            behavior: [
+              'Khi cần bôi đen / nhấn mạnh thông tin, dùng **text** (hai dấu sao bao quanh). Ví dụ: **Bị bẩn**, **X1216 Navy**. KHÔNG dùng <b> hay một dấu sao.',
+              ...(existingTrain.behavior || []),
+              ...relevant.filter(p => p.type==='system')
+                .map(p => p.content)
+                .filter(c => !(existingTrain.behavior||[]).includes(c))
+            ],
+            // qa, rules, products, complaints: hợp nhất, loại trùng
+            qa: _mergeArr(existingTrain.qa, relevant.filter(p => p.type==='qa' && p.content).map(p => ({q:p.question||'',a:p.content}))),
+            rules: _mergeStrArr(existingTrain.rules, relevant.filter(p => p.type==='rule').map(p => p.content)),
+            products: _mergeStrArr(existingTrain.products, relevant.filter(p => p.type==='product').map(p => p.content)),
+            complaints: _mergeStrArr(existingTrain.complaints, relevant.filter(p => p.type==='complaint').map(p => p.content)),
+          };
+
+          const hasData = Object.values(mergedTrain).some(v => v.length > 0);
+          if(hasData) body.trainData = mergedTrain;
+
           opts = Object.assign({}, opts, { body: JSON.stringify(body) });
         }
-      } catch(e){}
+      } catch(e){ console.warn('[VectorDB interceptor error]', e); }
     }
     return _orig.call(this, url, opts);
   };
+
+  // Helper: merge array of strings, deduplicate
+  function _mergeStrArr(existing, incoming){
+    const base = existing || [];
+    const set = new Set(base);
+    (incoming || []).forEach(v => { if(!set.has(v)){ set.add(v); base.push(v); } });
+    return base;
+  }
+  // Helper: merge array of {q,a} objects, deduplicate by q
+  function _mergeArr(existing, incoming){
+    const base = existing || [];
+    const keys = new Set(base.map(x => x.q));
+    (incoming || []).forEach(v => { if(!keys.has(v.q)){ keys.add(v.q); base.push(v); } });
+    return base;
+  }
 })();
 </script>
 </body>
