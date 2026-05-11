@@ -15711,109 +15711,86 @@ async function testTrainPrompt(){
 
 const VectorDB = (function(){
 
-  // ── Chuẩn hoá text tiếng Việt: giữ nguyên dấu, lowercase ──
+  // ── Stopwords tiếng Việt — từ quá phổ biến, không mang nghĩa ──
+  const STOP = new Set(['là','và','của','cho','có','thì','với','trong','để','được',
+    'này','các','một','tôi','bạn','hay','khi','về','từ','ra','vào','đã','sẽ','đang',
+    'không','tất','cả','theo','lại','bị','do','nên','thế','nào','cái','những','mà',
+    'rồi','vẫn','đó','đây','thêm','sau','trước','xem','hỏi','hết','lên','xuống',
+    'qua','tại','vì','nếu','thì','mình','họ','bao','nhiêu','như','vậy','cũng']);
+
   function normalize(text){
     return String(text||'').toLowerCase().trim();
   }
 
-  // ── Tách bigrams + unigrams từ text tiếng Việt ────────────
-  function ngrams(text){
-    const words = normalize(text).split(/\s+/).filter(w=>w.length>0);
-    const result = new Set(words); // unigrams
+  // ── Tách unigrams + bigrams, lọc stopwords ────────────────
+  function ngramsFiltered(text){
+    const words = normalize(text)
+      .split(/\s+/)
+      .filter(w => w.length > 1 && !STOP.has(w));
+    const result = new Set(words);
     for(let i=0;i<words.length-1;i++){
-      result.add(words[i]+' '+words[i+1]); // bigrams
+      result.add(words[i]+' '+words[i+1]);
     }
     return result;
   }
 
-  // ── Jaccard similarity: overlap / union ───────────────────
+  // ── Jaccard similarity thuần ──────────────────────────────
   function jaccard(setA, setB){
-    if(!setA.size || !setB.size) return 0;
-    let inter = 0;
-    setA.forEach(t => { if(setB.has(t)) inter++; });
-    return inter / (setA.size + setB.size - inter);
+    if(!setA.size||!setB.size) return 0;
+    let inter=0;
+    setA.forEach(t=>{ if(setB.has(t)) inter++; });
+    return inter/(setA.size+setB.size-inter);
   }
 
-  // ── Keyword bonus: kiểm tra từ khoá domain trực tiếp ──────
-  const DOMAIN_KEYWORDS = {
-    'khiếu nại':  ['khiếu nại','complaint','khieu nai','phản ánh','bồi thường','đổi trả'],
-    'bẩn':        ['bẩn','dirty','bị bẩn','ố bẩn','bẩn thỉu','dơ'],
-    'tráo':       ['tráo','swap','đổi hàng','hàng giả','fake'],
-    'thiếu':      ['thiếu','missing','mất hàng','không đủ'],
-    'bảo hành':   ['bảo hành','warranty','bh','hỏng','lỗi sp'],
-    'sản phẩm':   ['sản phẩm','sp','hàng','model','size','màu'],
-    'shop':       ['shop','gian hàng','store','cửa hàng'],
-    'kênh':       ['kênh','shopee','tiktok','lazada','vtp','viettel'],
-    'ảnh':        ['ảnh','hình','image','photo','chụp','bill','nhãn'],
-    'đơn':        ['đơn','mã vận đơn','tracking','order','vận đơn'],
-    'tháng':      ['tháng','tháng này','month','thống kê','báo cáo'],
-    'nhân viên':  ['nhân viên','nv','staff','người nhập'],
-  };
-
-  function keywordBonus(query, promptText){
-    const q = normalize(query);
-    const p = normalize(promptText);
-    let bonus = 0;
-    Object.values(DOMAIN_KEYWORDS).forEach(variants => {
-      const inQuery    = variants.some(v => q.includes(v));
-      const inPrompt   = variants.some(v => p.includes(v));
-      if(inQuery && inPrompt) bonus += 0.3;
-    });
-    return bonus;
-  }
-
-  // ── Cache ngrams của từng prompt ──────────────────────────
-  let _cache = [];
-  let _cacheVersion = 0;
+  // ── Cache ngrams ──────────────────────────────────────────
+  let _cache=[], _cacheVer=0;
 
   function buildCache(prompts){
-    if(prompts.length === _cacheVersion) return;
-    _cache = prompts.map(p => {
-      const text = [p.question||'', p.content||'', p.note||'', p.type||''].join(' ');
-      return { p, grams: ngrams(text), raw: text };
+    if(prompts.length===_cacheVer) return;
+    _cache = prompts.map(p=>{
+      const text=[p.question||'',p.content||'',p.note||''].join(' ');
+      return { p, grams: ngramsFiltered(text) };
     });
-    _cacheVersion = prompts.length;
+    _cacheVer = prompts.length;
   }
 
-  // ── Tìm top-K prompts thực sự liên quan ───────────────────
+  // ── Tìm prompts thực sự liên quan ────────────────────────
   function findRelevant(query, prompts, topK=6){
     if(!prompts.length) return [];
     buildCache(prompts);
 
-    const qGrams = ngrams(query);
-    const THRESHOLD = 0.06; // Jaccard tối thiểu
+    const THRESHOLD = 0.05;
+    const qGrams = ngramsFiltered(query);
 
-    const scored = _cache.map(({p, grams, raw}) => {
-      const sim   = jaccard(qGrams, grams);
-      const bonus = keywordBonus(query, raw);
-      return { p, score: sim + bonus };
-    }).sort((a,b) => b.score - a.score);
+    const scored = _cache.map(({p, grams})=>({
+      p, score: jaccard(qGrams, grams)
+    })).sort((a,b)=>b.score-a.score);
 
-    // Debug: log scores (xem trong console)
+    // Log để debug
+    console.log('[VectorDB] query tokens:', [...qGrams].join(', '));
     console.log('[VectorDB] scores:', scored.map(s=>({
       type:s.p.type,
-      q: (s.p.question||s.p.content||'').substring(0,40),
-      score: s.score.toFixed(3)
+      preview:(s.p.question||s.p.content||'').substring(0,35),
+      score:s.score.toFixed(3),
+      pick: s.score>=THRESHOLD?'✓':'✗'
     })));
 
-    // System prompts: giữ nếu score > threshold thấp hơn (0.02)
+    // System: threshold thấp hơn vì là behavior cốt lõi
     const systemPrompts = scored
-      .filter(s => s.p.type==='system' && s.score >= 0.02)
-      .map(s => s.p);
+      .filter(s=>s.p.type==='system' && s.score>=0.02)
+      .map(s=>s.p);
 
-    // Các prompts khác: phải đạt threshold chính
-    const otherRelevant = scored
-      .filter(s => s.p.type!=='system' && s.score >= THRESHOLD)
-      .slice(0, topK)
-      .map(s => s.p);
+    // Các loại khác: phải đạt threshold chính
+    const others = scored
+      .filter(s=>s.p.type!=='system' && s.score>=THRESHOLD)
+      .slice(0,topK)
+      .map(s=>s.p);
 
-    const systemSet = new Set(systemPrompts.map(p=>p.rowIndex));
-    const merged = [...systemPrompts, ...otherRelevant.filter(p=>!systemSet.has(p.rowIndex))];
-
-    return merged;
+    const sysSet = new Set(systemPrompts.map(p=>p.rowIndex));
+    return [...systemPrompts, ...others.filter(p=>!sysSet.has(p.rowIndex))];
   }
 
-  return { findRelevant, ngrams, jaccard, keywordBonus };
+  return { findRelevant, ngramsFiltered, jaccard };
 })();
 
 // ── UI badge cho Vector DB status ─────────────────────────────
