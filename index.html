@@ -15645,7 +15645,7 @@ async function saveEditPrompt(){
   showTrainLoading(true);
   try {
     // Xóa dòng cũ, thêm dòng mới (delete + save)
-    const resDel = await fetch(WEB_APP_URL, {method:'POST', body: JSON.stringify({action:'delete_train_prompt', rowIndex: p.rowIndex})});
+    const resDel = await fetch(WEB_APP_URL, {method:'POST', body: JSON.stringify({action:'delete_train_prompt', content: p.content, time: p.time})});
     const dataDel = await resDel.json();
     if(dataDel.result !== 'success'){ showTrainLoading(false); showToast('error','Lỗi sửa prompt', dataDel.message||''); return; }
     const resSave = await fetch(WEB_APP_URL, {method:'POST', body: JSON.stringify({
@@ -15668,7 +15668,7 @@ function deleteTrainPrompt(idx){
   if(!p) return;
   aiConfirm('', async ()=>{
   try {
-    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'delete_train_prompt', rowIndex: p.rowIndex}) });
+    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'delete_train_prompt', content: p.content, time: p.time}) });
     const data = await res.json();
     if(data.result === 'success'){
       trainPromptsCache.splice(idx,1);
