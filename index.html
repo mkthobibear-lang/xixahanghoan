@@ -123,6 +123,10 @@ body::after{
 .train-type-pill{border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.12);color:rgba(255,255,255,.85);border-radius:20px;padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;font-family:inherit;backdrop-filter:blur(6px)}
 .train-type-pill:hover{background:rgba(255,255,255,.22);color:#fff}
 .train-type-pill.active{background:#fff;color:#7c3aed;border-color:#fff;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+/* KB toolbar pills — override for non-gradient background */
+#trainKbToolbar .train-type-pill{background:var(--surface2);border-color:var(--border);color:var(--text2);backdrop-filter:none}
+#trainKbToolbar .train-type-pill:hover{background:var(--surface);color:var(--text);border-color:var(--border-strong)}
+#trainKbToolbar .train-type-pill.active{background:var(--grad-ai-soft);border-color:rgba(124,58,237,.4);color:var(--ai-1);box-shadow:none}
 .train-chip{cursor:pointer;user-select:none}
 .train-chip input[type=radio]{display:none}
 .train-chip span{display:inline-block;padding:5px 12px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid var(--border);background:var(--surface2);color:var(--text3);transition:.15s}
@@ -1938,6 +1942,23 @@ button[onclick*="export"]{
 .dash-ch-card #chProgressBars .ch-progress{height:5px;margin:4px 0 0 0;background:var(--surface2)}
 .dash-ch-card #chProgressBars .ch-progress-fill{box-shadow:0 0 8px currentColor}
 
+
+/* Train AI v2 card enhancements */
+.train-card-v2{border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;background:var(--surface2);transition:.2s;position:relative;animation:fadeUp .25s ease both}
+.train-card-v2:hover{border-color:var(--border-strong);background:var(--surface);transform:translateX(3px);box-shadow:-3px 0 0 rgba(124,58,237,.25)}
+.train-card-v2.selected{border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.04)}
+.train-card-v2.is-new{animation:trainCardNew .7s ease both}
+.train-card-check{width:16px;height:16px;border-radius:4px;border:1.5px solid var(--border);background:transparent;cursor:pointer;opacity:0;transition:.15s;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.train-card-v2.bulk-mode .train-card-check{opacity:1}
+.train-card-check.checked{background:var(--red);border-color:var(--red);opacity:1}
+@keyframes trainCardNew{0%{border-color:rgba(124,58,237,.8);box-shadow:0 0 0 0 rgba(124,58,237,.4),0 0 24px rgba(124,58,237,.15)}100%{border-color:var(--border);box-shadow:none}}
+/* Train AI v2 input-field override (ensure consistent styling) */
+#trainAIView .input-field{background:var(--surface2)!important}
+@keyframes trainThinkDot{0%,80%,100%{transform:scale(0);opacity:.3}40%{transform:scale(1);opacity:1}}
+#trainKbListWrap::-webkit-scrollbar{width:5px}
+#trainKbListWrap::-webkit-scrollbar-track{background:transparent}
+#trainKbListWrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+#trainKbListWrap::-webkit-scrollbar-thumb:hover{background:var(--border-strong,var(--text3))}
 </style>
 </head>
 <body>
@@ -2915,52 +2936,50 @@ button[onclick*="export"]{
       <!-- ===== TRAIN AI VIEW ===== -->
       <div id="trainAIView" style="display:none">
 
-        <!-- Hero header -->
-        <div style="position:relative;background:var(--grad-ai);border-radius:20px;padding:24px 24px 20px;margin-bottom:20px;overflow:hidden">
-          <div style="position:absolute;top:-30px;right:-30px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none"></div>
-          <div style="position:absolute;bottom:-40px;right:40px;width:100px;height:100px;border-radius:50%;background:rgba(255,255,255,.04);pointer-events:none"></div>
-          <div style="position:absolute;top:10px;left:50%;width:1px;height:80%;background:linear-gradient(to bottom,transparent,rgba(255,255,255,.08),transparent);pointer-events:none"></div>
-          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;position:relative">
-            <div>
-              <div style="display:inline-flex;align-items:center;gap:7px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:20px;padding:4px 12px;font-size:10px;font-weight:800;color:#fff;letter-spacing:1.2px;text-transform:uppercase;margin-bottom:10px;backdrop-filter:blur(8px)">
-                <span style="width:6px;height:6px;border-radius:50%;background:#4ade80;box-shadow:0 0 8px #4ade80;flex-shrink:0"></span>XIXA AI ENGINE
-              </div>
-              <div style="font-size:22px;font-weight:900;color:#fff;line-height:1.2;letter-spacing:-.3px">Train AI XIXA</div>
-              <div style="font-size:12px;color:rgba(255,255,255,.75);margin-top:5px;font-weight:500">Dạy AI hiểu nghiệp vụ kho hoàn — prompt được học ngay lập tức</div>
-            </div>
-            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0">
-              <div id="trainStatBadge" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);border-radius:12px;padding:8px 14px;text-align:center;backdrop-filter:blur(8px)">
-                <div style="font-size:22px;font-weight:900;color:#fff;line-height:1" id="trainCountNum">–</div>
-                <div style="font-size:10px;color:rgba(255,255,255,.7);font-weight:700;margin-top:2px">PROMPTS</div>
-              </div>
-            </div>
+        <!-- TRAIN AI v2 — Stats Bar -->
+        <div class="train-stats-bar" id="trainStatsBar" style="display:flex;gap:0;border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:18px;background:var(--surface2)">
+          <div style="flex:1;padding:12px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(0,229,195,.1);border:1px solid rgba(0,229,195,.2);display:flex;align-items:center;justify-content:center;color:#00e5c3"><span class="material-icons-round" style="font-size:16px">auto_awesome</span></div>
+            <div><div style="font-size:18px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1" id="tStatTotal">—</div><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase">Tổng</div></div>
           </div>
-          <!-- Type pills -->
-          <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:14px;position:relative">
-            <button class="train-type-pill active" data-type="" onclick="setTrainTypeFilter(this,'')">Tất cả</button>
-            <button class="train-type-pill" data-type="system" onclick="setTrainTypeFilter(this,'system')">⚙ System</button>
-            <button class="train-type-pill" data-type="qa" onclick="setTrainTypeFilter(this,'qa')">💬 Q&amp;A</button>
-            <button class="train-type-pill" data-type="rule" onclick="setTrainTypeFilter(this,'rule')">📋 Quy tắc</button>
-            <button class="train-type-pill" data-type="product" onclick="setTrainTypeFilter(this,'product')">📦 Sản phẩm</button>
-            <button class="train-type-pill" data-type="complaint" onclick="setTrainTypeFilter(this,'complaint')">🛡 Khiếu nại</button>
+          <div style="flex:1;padding:12px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(124,58,237,.1);border:1px solid rgba(124,58,237,.2);display:flex;align-items:center;justify-content:center;color:var(--ai-1)"><span class="material-icons-round" style="font-size:16px">settings</span></div>
+            <div><div style="font-size:18px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1" id="tStatSystem">—</div><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase">System</div></div>
+          </div>
+          <div style="flex:1;padding:12px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.2);display:flex;align-items:center;justify-content:center;color:var(--green)"><span class="material-icons-round" style="font-size:16px">chat</span></div>
+            <div><div style="font-size:18px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1" id="tStatQA">—</div><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase">Q&amp;A</div></div>
+          </div>
+          <div style="flex:1;padding:12px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center;color:var(--amber)"><span class="material-icons-round" style="font-size:16px">rule</span></div>
+            <div><div style="font-size:18px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1" id="tStatRule">—</div><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase">Quy tắc</div></div>
+          </div>
+          <div style="flex:1;padding:12px 16px;border-right:1px solid var(--border);display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);display:flex;align-items:center;justify-content:center;color:var(--blue)"><span class="material-icons-round" style="font-size:16px">inventory_2</span></div>
+            <div><div style="font-size:18px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1" id="tStatProduct">—</div><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase">Sản phẩm</div></div>
+          </div>
+          <div style="flex:1;padding:12px 16px;display:flex;align-items:center;gap:10px">
+            <div style="width:32px;height:32px;border-radius:8px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;color:var(--red)"><span class="material-icons-round" style="font-size:16px">shield</span></div>
+            <div><div style="font-size:18px;font-weight:800;color:var(--text);font-family:'JetBrains Mono',monospace;line-height:1" id="tStatComplaint">—</div><div style="font-size:10px;font-weight:700;color:var(--text3);letter-spacing:.5px;text-transform:uppercase">Khiếu nại</div></div>
           </div>
         </div>
 
-        <!-- 2-col layout on desktop -->
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px" id="trainGrid">
+        <!-- TRAIN AI v2 — Main Grid -->
+        <div style="display:grid;grid-template-columns:400px 1fr;gap:14px;align-items:start" id="trainGrid">
 
-          <!-- LEFT: Composer -->
+          <!-- LEFT: Composer + Test Panel -->
           <div style="display:flex;flex-direction:column;gap:12px">
-            <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;backdrop-filter:blur(16px);position:relative;overflow:hidden">
-              <!-- subtle glow top -->
-              <div style="position:absolute;top:-40px;right:-40px;width:120px;height:120px;border-radius:50%;background:rgba(124,58,237,.08);pointer-events:none"></div>
-              <div style="font-size:11px;font-weight:800;color:var(--ai-1);letter-spacing:1px;text-transform:uppercase;margin-bottom:14px;display:flex;align-items:center;gap:6px">
-                <span class="material-icons-round" style="font-size:14px">edit_note</span>Composer
-              </div>
 
-              <!-- Type selector — chip style -->
-              <div style="margin-bottom:12px">
-                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px">LOẠI PROMPT</div>
+          <!-- Composer Card -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;backdrop-filter:blur(16px)">
+            <div style="padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+              <div style="width:22px;height:22px;border-radius:6px;background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.25);display:flex;align-items:center;justify-content:center;color:var(--ai-1)"><span class="material-icons-round" style="font-size:13px">edit_note</span></div>
+              <div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:1.2px;text-transform:uppercase;flex:1">Composer</div>
+              <span style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace" id="trainComposerMode">NEW PROMPT</span>
+            </div>
+            <div style="padding:16px 18px">
+              <div style="margin-bottom:14px">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px;font-family:'JetBrains Mono',monospace">LOẠI PROMPT</div>
                 <div style="display:flex;flex-wrap:wrap;gap:6px">
                   <label class="train-chip"><input type="radio" name="trainType" value="system" checked onchange="onTrainTypeChange(this)"><span>⚙ System</span></label>
                   <label class="train-chip"><input type="radio" name="trainType" value="qa" onchange="onTrainTypeChange(this)"><span>💬 Q&amp;A</span></label>
@@ -2970,105 +2989,170 @@ button[onclick*="export"]{
                   <label class="train-chip"><input type="radio" name="trainType" value="other" onchange="onTrainTypeChange(this)"><span>✦ Khác</span></label>
                 </div>
               </div>
-
-              <!-- Q (Q&A only) -->
-              <div id="trainQABlock" style="display:none;margin-bottom:10px">
-                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">CÂU HỎI MẪU</div>
+              <div id="trainQABlock" style="display:none;margin-bottom:12px">
+                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;font-family:'JetBrains Mono',monospace">CÂU HỎI MẪU</div>
                 <input type="text" id="trainQuestion" class="input-field" placeholder="VD: Tại sao đơn hoàn bị từ chối?" style="height:38px;font-size:13px">
               </div>
-
-              <!-- Content -->
               <div style="margin-bottom:10px">
-                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px" id="trainContentLabel">NỘI DUNG PROMPT</div>
-                <textarea id="trainContent" class="input-field" rows="5" placeholder="Nhập nội dung bạn muốn AI ghi nhớ và áp dụng..." style="resize:vertical;font-size:13px;padding:12px;min-height:110px;line-height:1.6"></textarea>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+                  <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;font-family:'JetBrains Mono',monospace" id="trainContentLabel">NỘI DUNG SYSTEM PROMPT</div>
+                  <span style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace" id="trainCharHint">0 / 2000</span>
+                </div>
+                <textarea id="trainContent" class="input-field" rows="5" placeholder="Nhập nội dung bạn muốn AI ghi nhớ và áp dụng..." style="resize:vertical;font-size:13px;padding:12px;min-height:110px;line-height:1.6" oninput="onTrainContentInput(this)"></textarea>
+                <div style="flex:1;height:2px;border-radius:1px;background:var(--border);overflow:hidden;margin-top:5px"><div id="trainCharBar" style="height:100%;border-radius:1px;background:var(--green);transition:width .3s,background .3s;width:0%"></div></div>
+                <div id="trainDupeWarn" style="display:none;align-items:flex-start;gap:8px;padding:8px 11px;border-radius:9px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.25);margin-top:7px;font-size:11.5px;color:var(--amber);line-height:1.5">
+                  <span class="material-icons-round" style="font-size:14px;flex-shrink:0;margin-top:1px">warning_amber</span>
+                  <span id="trainDupeWarnText">Nội dung tương tự đã tồn tại.</span>
+                </div>
               </div>
-
-              <!-- Note -->
-              <div style="margin-bottom:14px">
-                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">GHI CHÚ <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:.7">(tuỳ chọn)</span></div>
-                <input type="text" id="trainNote" class="input-field" placeholder="Bối cảnh sử dụng..." style="height:36px;font-size:12px">
-              </div>
-
-              <div style="display:grid;grid-template-columns:1fr auto;gap:8px">
-                <button onclick="saveTrainPrompt()" style="height:42px;border-radius:12px;font-size:13px;font-weight:800;background:var(--grad-ai);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;letter-spacing:.2px;box-shadow:0 8px 20px rgba(124,58,237,.3);transition:.15s" onmouseover="this.style.transform='translateY(-1px)';this.style.boxShadow='0 12px 28px rgba(124,58,237,.4)'" onmouseout="this.style.transform='';this.style.boxShadow='0 8px 20px rgba(124,58,237,.3)'">
-                  <svg width="17" height="17" viewBox="0 0 24 24" fill="none" style="flex-shrink:0"><path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z" fill="#fff"/></svg>Cho AI học
-                </button>
-                <button onclick="testTrainPrompt()" title="Thử nghiệm" style="height:42px;width:42px;border-radius:12px;font-size:13px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.background='rgba(16,185,129,.12)';this.style.color='var(--green)';this.style.borderColor='var(--green)'" onmouseout="this.style.background='var(--surface2)';this.style.color='var(--text2)';this.style.borderColor='var(--border)'">
-                  <span class="material-icons-round" style="font-size:20px">play_arrow</span>
-                </button>
+              <div>
+                <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px;font-family:'JetBrains Mono',monospace">GHI CHÚ <span style="font-weight:500;text-transform:none;letter-spacing:0;opacity:.6;font-size:9px">(tuỳ chọn)</span></div>
+                <input type="text" id="trainNote" class="input-field" placeholder="Bối cảnh sử dụng, ví dụ minh hoạ..." style="height:36px;font-size:12px">
               </div>
             </div>
-
-            <!-- Test result -->
-            <div id="trainTestArea" style="display:none;background:var(--surface);border:1px solid rgba(16,185,129,.3);border-radius:18px;padding:16px;backdrop-filter:blur(12px);position:relative;overflow:hidden">
-              <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(16,185,129,.04),transparent);pointer-events:none;border-radius:18px"></div>
-              <div style="font-size:10px;font-weight:800;color:var(--green);letter-spacing:1px;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:6px;position:relative">
-                <span class="material-icons-round" style="font-size:14px">terminal</span>AI RESPONSE
-              </div>
-              <div id="trainTestResult" style="font-size:13px;line-height:1.75;color:var(--text);white-space:pre-wrap;position:relative"></div>
-            </div>
-          </div>
-
-          <!-- RIGHT: Library -->
-          <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:18px;backdrop-filter:blur(16px);display:flex;flex-direction:column;gap:0;min-height:400px">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-              <div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:1px;text-transform:uppercase;display:flex;align-items:center;gap:6px">
-                <span class="material-icons-round" style="font-size:14px">auto_stories</span>Knowledge Base
-                <span id="vectorDBStatus" style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;background:rgba(124,58,237,.1);color:#7c3aed;letter-spacing:.3px;margin-left:4px" title="Vector DB đang hoạt động — tự động chọn prompt liên quan nhất">⚡ VECTOR DB</span>
-              </div>
-<div style="display:flex;gap:6px">
-                <button onclick="scrollTrainList(-1)" title="Cuộn lên" style="width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'">
-                  <span class="material-icons-round" style="font-size:15px">keyboard_arrow_up</span>
-                </button>
-                <button onclick="scrollTrainList(1)" title="Cuộn xuống" style="width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'">
-                  <span class="material-icons-round" style="font-size:15px">keyboard_arrow_down</span>
-                </button>
-                <button onclick="loadTrainPrompts()" title="Tải lại" style="width:28px;height:28px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'">
-                  <span class="material-icons-round" style="font-size:15px">refresh</span>
-                </button>
-              </div>
-            </div>
-            <div id="trainPromptList" style="flex:1;overflow-y:auto;max-height:520px">
-              <div style="text-align:center;padding:40px 20px;color:var(--text3)">
-                <span class="material-icons-round" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3">auto_awesome</span>
-                <div style="font-size:13px;font-weight:600">Knowledge base trống</div>
-                <div style="font-size:11px;margin-top:4px;opacity:.7">Thêm prompt đầu tiên để AI học</div>
-              </div>
+            <div style="padding:12px 18px;border-top:1px solid var(--border);display:flex;gap:8px">
+              <button id="trainSaveBtn" onclick="saveTrainPrompt()" style="flex:1;height:42px;border-radius:12px;font-size:13px;font-weight:800;background:var(--grad-ai);border:none;color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:7px;box-shadow:0 8px 20px rgba(124,58,237,.25);transition:.15s" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none"><path d="M12 2L14 9L21 7L16.5 12L21 17L14 15L12 22L10 15L3 17L7.5 12L3 7L10 9Z" fill="currentColor"/></svg>Cho AI học
+              </button>
+              <button onclick="quickTrainTest()" title="Test ngay với AI" id="trainTestBtn" style="width:42px;height:42px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--green)';this.style.borderColor='var(--green)';this.style.background='rgba(16,185,129,.1)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
+                <span class="material-icons-round" style="font-size:20px">play_arrow</span>
+              </button>
+              <button onclick="clearTrainComposer()" title="Xóa form" style="width:42px;height:42px;border-radius:12px;background:var(--surface2);border:1px solid var(--border);color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)';this.style.background='rgba(239,68,68,.08)'" onmouseout="this.style.color='var(--text2)';this.style.borderColor='var(--border)';this.style.background='var(--surface2)'">
+                <span class="material-icons-round" style="font-size:18px">clear</span>
+              </button>
             </div>
           </div>
 
-        </div>
+          <!-- AI TEST PANEL -->
+          <div id="trainTestPanel" style="display:none;background:var(--surface);border:1px solid rgba(16,185,129,.35);border-radius:18px;overflow:hidden;backdrop-filter:blur(16px);animation:fadeUp .25s ease">
+            <div style="padding:13px 18px;border-bottom:1px solid rgba(16,185,129,.15);display:flex;align-items:center;gap:10px;background:rgba(16,185,129,.04)">
+              <div style="width:22px;height:22px;border-radius:6px;background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);display:flex;align-items:center;justify-content:center;color:var(--green)"><span class="material-icons-round" style="font-size:13px">smart_toy</span></div>
+              <div style="font-size:11px;font-weight:800;color:var(--green);letter-spacing:1.2px;text-transform:uppercase;flex:1">AI TEST</div>
+              <div id="trainTestStatusBadge" style="display:none;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(16,185,129,.12);color:var(--green);font-family:'JetBrains Mono',monospace">LIVE</div>
+              <button onclick="closeTrainTestPanel()" style="width:26px;height:26px;border-radius:7px;background:transparent;border:none;cursor:pointer;color:var(--text3);display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text3)'"><span class="material-icons-round" style="font-size:16px">close</span></button>
+            </div>
+            <div style="padding:12px 18px;border-bottom:1px solid var(--border)">
+              <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:7px;font-family:'JetBrains Mono',monospace">CÂU HỎI TEST</div>
+              <div style="display:flex;gap:8px">
+                <input type="text" id="trainTestQuestion" class="input-field" placeholder="Nhập câu hỏi để test (để trống = tự động)..." style="flex:1;height:36px;font-size:13px" onkeydown="if(event.key==='Enter')runTrainTest()">
+                <button onclick="runTrainTest()" id="trainTestRunBtn" style="height:36px;padding:0 14px;border-radius:10px;background:var(--grad-ai);border:none;color:#fff;font-size:12.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;white-space:nowrap;transition:.15s;flex-shrink:0">
+                  <span class="material-icons-round" style="font-size:15px">send</span>Gửi
+                </button>
+              </div>
+            </div>
+            <div style="padding:14px 18px">
+              <!-- Thinking dots -->
+              <div id="trainThinking" style="display:none;align-items:center;gap:10px;padding:10px 0">
+                <div style="display:flex;gap:5px;align-items:center">
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--ai-1);animation:trainThinkDot 1.2s ease-in-out infinite"></div>
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--ai-2);animation:trainThinkDot 1.2s ease-in-out .2s infinite"></div>
+                  <div style="width:7px;height:7px;border-radius:50%;background:var(--ai-3);animation:trainThinkDot 1.2s ease-in-out .4s infinite"></div>
+                </div>
+                <span style="font-size:12px;color:var(--text3);font-weight:600">AI đang suy nghĩ...</span>
+              </div>
+              <!-- Response -->
+              <div id="trainTestResult" style="display:none">
+                <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+                  <div style="width:24px;height:24px;border-radius:7px;background:var(--grad-ai);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M12 2L14 9L21 7L16.5 12L21 17L14 15L12 22L10 15L3 17L7.5 12L3 7L10 9Z" fill="white"/></svg>
+                  </div>
+                  <span style="font-size:11.5px;font-weight:700;color:var(--text2)">XIXA AI</span>
+                  <span style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;background:var(--surface2);padding:2px 7px;border-radius:5px;border:1px solid var(--border)">Gemini</span>
+                  <span id="trainTestTime" style="font-size:10px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin-left:auto"></span>
+                </div>
+                <div id="trainTestContent" style="font-size:13.5px;line-height:1.75;color:var(--text);white-space:pre-wrap;padding:14px;background:var(--surface2);border-radius:12px;border:1px solid var(--border);max-height:260px;overflow-y:auto"></div>
+                <div style="display:flex;gap:6px;margin-top:10px">
+                  <button onclick="runTrainTest()" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:.15s" onmouseover="this.style.borderColor='var(--ai-1)';this.style.color='var(--ai-1)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'"><span class="material-icons-round" style="font-size:13px">refresh</span>Hỏi lại</button>
+                  <button onclick="copyTrainTestResult()" style="height:30px;padding:0 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:11.5px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;gap:5px;transition:.15s" onmouseover="this.style.borderColor='var(--sky)';this.style.color='var(--sky)'" onmouseout="this.style.borderColor='var(--border)';this.style.color='var(--text2)'"><span class="material-icons-round" style="font-size:13px">content_copy</span>Copy</button>
+                </div>
+              </div>
+              <!-- Empty -->
+              <div id="trainTestEmpty" style="text-align:center;padding:16px;color:var(--text3)">
+                <span class="material-icons-round" style="font-size:28px;display:block;margin-bottom:8px;opacity:.3">smart_toy</span>
+                <div style="font-size:12px">Nhập câu hỏi và nhấn Gửi để test AI với prompt hiện tại</div>
+              </div>
+            </div>
+          </div>
+
+          </div><!-- /left col -->
+
+          <!-- RIGHT: Knowledge Base with fixed height scroll -->
+          <div style="background:var(--surface);border:1px solid var(--border);border-radius:18px;overflow:hidden;backdrop-filter:blur(16px);display:flex;flex-direction:column;height:calc(100vh - 230px);min-height:500px;max-height:820px">
+            <div style="padding:14px 18px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-shrink:0">
+              <div style="width:22px;height:22px;border-radius:6px;background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.25);display:flex;align-items:center;justify-content:center;color:var(--blue)"><span class="material-icons-round" style="font-size:13px">auto_stories</span></div>
+              <div style="font-size:11px;font-weight:800;color:var(--text2);letter-spacing:1.2px;text-transform:uppercase;flex:1">Knowledge Base</div>
+              <span style="font-size:9px;font-weight:700;padding:2px 7px;border-radius:6px;background:rgba(124,58,237,.1);color:var(--ai-1);letter-spacing:.3px">⚡ VECTOR DB</span>
+            </div>
+            <div id="trainKbToolbar" style="padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;flex-wrap:wrap;flex-shrink:0">
+              <div style="flex:1;min-width:140px;position:relative;display:flex;align-items:center">
+                <span class="material-icons-round" style="position:absolute;left:9px;font-size:15px;color:var(--text3);pointer-events:none">search</span>
+                <input class="input-field" type="text" id="trainKbSearch" placeholder="Tìm trong knowledge base..." style="width:100%;height:32px;padding:0 10px 0 30px;font-size:12.5px" oninput="onTrainSearch()">
+              </div>
+              <div style="display:flex;gap:4px;flex-wrap:wrap">
+                <button class="train-type-pill active" data-type="" onclick="setTrainTypeFilter(this,'')">Tất cả</button>
+                <button class="train-type-pill" data-type="system" onclick="setTrainTypeFilter(this,'system')">⚙ System</button>
+                <button class="train-type-pill" data-type="qa" onclick="setTrainTypeFilter(this,'qa')">💬 Q&amp;A</button>
+                <button class="train-type-pill" data-type="rule" onclick="setTrainTypeFilter(this,'rule')">📋 Quy tắc</button>
+                <button class="train-type-pill" data-type="product" onclick="setTrainTypeFilter(this,'product')">📦 Sản phẩm</button>
+                <button class="train-type-pill" data-type="complaint" onclick="setTrainTypeFilter(this,'complaint')">🛡 Khiếu nại</button>
+              </div>
+              <div style="display:flex;gap:5px;margin-left:auto;align-items:center">
+                <select id="trainKbSort" style="height:30px;padding:0 24px 0 8px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text2);font-size:11px;font-family:inherit;font-weight:600;cursor:pointer;outline:none;appearance:none" onchange="renderTrainList()">
+                  <option value="newest">Mới nhất</option>
+                  <option value="oldest">Cũ nhất</option>
+                  <option value="type">Theo loại</option>
+                  <option value="length">Dài nhất</option>
+                </select>
+                <button onclick="toggleTrainBulkMode()" id="trainBulkToggle" title="Chọn nhiều" style="width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="if(!trainIsBulkMode)this.style.color='var(--text3)'"><span class="material-icons-round" style="font-size:15px">checklist</span></button>
+                <button onclick="openTrainIOModal('export')" title="Export" style="width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--sky)'" onmouseout="this.style.color='var(--text3)'"><span class="material-icons-round" style="font-size:15px">upload</span></button>
+                <button onclick="openTrainIOModal('import')" title="Import" style="width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--sky)'" onmouseout="this.style.color='var(--text3)'"><span class="material-icons-round" style="font-size:15px">download</span></button>
+                <button onclick="trainConfirmDeleteAll()" id="trainBtnDeleteFiltered" title="Xóa loại đang lọc" style="display:none;width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--red)';this.style.borderColor='var(--red)'" onmouseout="this.style.color='var(--text3)';this.style.borderColor='var(--border)'"><span class="material-icons-round" style="font-size:15px">delete_sweep</span></button>
+                <button onclick="loadTrainPrompts()" title="Tải lại" style="width:30px;height:30px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--ai-1)'" onmouseout="this.style.color='var(--text3)'"><span class="material-icons-round" id="trainSyncIcon" style="font-size:15px">sync</span></button>
+              </div>
+            </div>
+            <div id="trainBulkBar" style="display:none;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid rgba(239,68,68,.2);background:rgba(239,68,68,.05);flex-shrink:0">
+              <span style="font-size:12px;font-weight:700;color:var(--red);font-family:'JetBrains Mono',monospace"><span id="trainBulkCount">0</span> đã chọn</span>
+              <div style="display:flex;gap:6px;margin-left:auto">
+                <button onclick="trainBulkDelete()" style="height:28px;padding:0 12px;border-radius:7px;border:1px solid rgba(239,68,68,.3);background:rgba(239,68,68,.1);color:var(--red);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit"><span class="material-icons-round" style="font-size:13px">delete</span>Xóa</button>
+                <button onclick="toggleTrainBulkMode()" style="height:28px;padding:0 12px;border-radius:7px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);font-size:11.5px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;font-family:inherit"><span class="material-icons-round" style="font-size:13px">close</span>Huỷ</button>
+              </div>
+            </div>
+            <!-- SCROLLABLE list -->
+            <div id="trainKbListWrap" style="flex:1;overflow-y:auto;padding:12px 14px;scrollbar-width:thin;scrollbar-color:var(--border) transparent">
+              <div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:40px;color:var(--text3);font-size:12.5px"><span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:18px;color:var(--ai-1)">sync</span>Đang đồng bộ...</div>
+            </div>
+          </div>
+
+        </div><!-- /trainGrid -->
 
       </div>
+
+      <!-- ===== TRAIN AI v2 MODALS ===== -->
       <!-- Edit Prompt Modal -->
-      <div id="trainEditModal" style="display:none;position:fixed;inset:0;z-index:99997;background:rgba(10,10,15,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);align-items:center;justify-content:center">
-        <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:480px;width:92%;box-shadow:0 28px 60px rgba(0,0,0,.3);position:relative">
+      <div id="trainEditModal" style="display:none;position:fixed;inset:0;z-index:99997;background:rgba(10,10,15,.65);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
+        <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:500px;width:100%;box-shadow:0 28px 60px rgba(0,0,0,.4);animation:fadeUp .25s ease">
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:18px">
-            <div style="width:36px;height:36px;border-radius:11px;background:var(--grad-ai);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-              <span class="material-icons-round" style="color:#fff;font-size:18px">edit_note</span>
-            </div>
-            <div style="font-size:15px;font-weight:800;color:var(--text)">Sửa Prompt</div>
-            <button onclick="closeTrainEditModal()" style="margin-left:auto;background:transparent;border:none;cursor:pointer;color:var(--text3);display:flex;align-items:center">
-              <span class="material-icons-round" style="font-size:20px">close</span>
-            </button>
+            <div style="width:38px;height:38px;border-radius:12px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--blue)"><span class="material-icons-round" style="font-size:18px">edit</span></div>
+            <div style="font-size:15px;font-weight:800;color:var(--text);flex:1">Sửa Prompt</div>
+            <button onclick="closeTrainEditModal()" style="width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:.15s" onmouseover="this.style.color='var(--red)'" onmouseout="this.style.color='var(--text2)'"><span class="material-icons-round" style="font-size:17px">close</span></button>
           </div>
           <input type="hidden" id="editPromptIdx">
-          <div style="margin-bottom:10px">
-            <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">LOẠI PROMPT</div>
+          <div style="margin-bottom:12px">
+            <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px">LOẠI PROMPT</div>
             <div style="display:flex;flex-wrap:wrap;gap:6px">
-              <label class="train-chip"><input type="radio" name="editTrainType" value="system"><span>⚙ System</span></label>
-              <label class="train-chip"><input type="radio" name="editTrainType" value="qa"><span>💬 Q&A</span></label>
-              <label class="train-chip"><input type="radio" name="editTrainType" value="rule"><span>📋 Quy tắc</span></label>
-              <label class="train-chip"><input type="radio" name="editTrainType" value="product"><span>📦 Sản phẩm</span></label>
-              <label class="train-chip"><input type="radio" name="editTrainType" value="complaint"><span>🛡 Khiếu nại</span></label>
-              <label class="train-chip"><input type="radio" name="editTrainType" value="other"><span>✦ Khác</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="system" onchange="onEditTrainTypeChange(this)"><span>⚙ System</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="qa" onchange="onEditTrainTypeChange(this)"><span>💬 Q&A</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="rule" onchange="onEditTrainTypeChange(this)"><span>📋 Quy tắc</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="product" onchange="onEditTrainTypeChange(this)"><span>📦 Sản phẩm</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="complaint" onchange="onEditTrainTypeChange(this)"><span>🛡 Khiếu nại</span></label>
+              <label class="train-chip"><input type="radio" name="editTrainType" value="other" onchange="onEditTrainTypeChange(this)"><span>✦ Khác</span></label>
             </div>
           </div>
-          <div id="editQABlock" style="display:none;margin-bottom:10px">
+          <div id="editQABlock" style="display:none;margin-bottom:12px">
             <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">CÂU HỎI MẪU</div>
             <input type="text" id="editPromptQuestion" class="input-field" style="height:36px;font-size:13px">
           </div>
-          <div style="margin-bottom:10px">
+          <div style="margin-bottom:12px">
             <div style="font-size:10px;font-weight:800;color:var(--text3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:6px">NỘI DUNG</div>
             <textarea id="editPromptContent" class="input-field" rows="4" style="resize:vertical;font-size:13px;padding:10px 12px;min-height:90px;line-height:1.6"></textarea>
           </div>
@@ -3077,13 +3161,52 @@ button[onclick*="export"]{
             <input type="text" id="editPromptNote" class="input-field" style="height:36px;font-size:12px">
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-            <button onclick="closeTrainEditModal()" style="height:40px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit">Huỷ</button>
-            <button onclick="saveEditPrompt()" style="height:40px;border-radius:11px;border:none;background:var(--grad-ai);color:#fff;cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;box-shadow:0 6px 16px rgba(124,58,237,.3)">Lưu thay đổi</button>
+            <button onclick="closeTrainEditModal()" style="height:40px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s">Huỷ</button>
+            <button onclick="saveEditPrompt()" style="height:40px;border-radius:11px;border:none;background:var(--grad-ai);color:#fff;cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;box-shadow:0 6px 16px rgba(124,58,237,.25);transition:.15s">Lưu thay đổi</button>
           </div>
         </div>
       </div>
 
+      <!-- Train Confirm Modal -->
+      <div id="trainConfirmModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(10,10,15,.65);backdrop-filter:blur(14px);align-items:center;justify-content:center;padding:20px">
+        <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:20px;padding:28px;max-width:340px;width:100%;text-align:center;box-shadow:0 28px 60px rgba(0,0,0,.4);animation:fadeUp .25s ease">
+          <div style="width:52px;height:52px;border-radius:16px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px;color:var(--red)"><span class="material-icons-round" style="font-size:24px">delete_outline</span></div>
+          <div style="font-size:16px;font-weight:800;color:var(--text);margin-bottom:8px" id="trainConfirmTitle">Xoá prompt?</div>
+          <div style="font-size:12.5px;color:var(--text3);line-height:1.6;margin-bottom:20px" id="trainConfirmSub">Prompt sẽ bị xoá vĩnh viễn khỏi Knowledge Base.</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+            <button onclick="closeTrainConfirm()" style="height:40px;border-radius:11px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s">Huỷ</button>
+            <button id="trainConfirmOkBtn" style="height:40px;border-radius:11px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;cursor:pointer;font-size:13px;font-weight:800;font-family:inherit;box-shadow:0 6px 16px rgba(239,68,68,.25);transition:.15s">Xoá</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Train IO Modal -->
+      <div id="trainIOModal" style="display:none;position:fixed;inset:0;z-index:99998;background:rgba(10,10,15,.65);backdrop-filter:blur(16px);align-items:center;justify-content:center;padding:20px">
+        <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:20px;padding:24px;max-width:500px;width:100%;box-shadow:0 28px 60px rgba(0,0,0,.4);animation:fadeUp .25s ease">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px">
+            <div style="width:38px;height:38px;border-radius:12px;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.2);display:flex;align-items:center;justify-content:center;color:var(--amber)"><span class="material-icons-round" id="trainIOModalIcon" style="font-size:20px">upload</span></div>
+            <div style="font-size:15px;font-weight:800;color:var(--text);flex:1" id="trainIOModalTitle">Export JSON</div>
+            <button onclick="closeTrainIOModal()" style="width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;color:var(--text2);display:flex;align-items:center;justify-content:center;transition:.15s"><span class="material-icons-round" style="font-size:17px">close</span></button>
+          </div>
+          <div style="display:flex;gap:0;margin-bottom:14px;border:1px solid var(--border);border-radius:10px;overflow:hidden">
+            <button id="trainTabExport" onclick="switchTrainIOTab('export')" style="flex:1;height:36px;border:none;background:rgba(59,130,246,.1);color:var(--blue);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s">Export</button>
+            <button id="trainTabImport" onclick="switchTrainIOTab('import')" style="flex:1;height:36px;border:none;background:var(--surface2);color:var(--text2);font-family:inherit;font-size:12.5px;font-weight:600;cursor:pointer;transition:.15s">Import</button>
+          </div>
+          <div id="trainExportSection">
+            <textarea id="exportTextarea" class="input-field" rows="8" readonly style="font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;resize:none"></textarea>
+            <button onclick="copyTrainExport()" style="width:100%;height:38px;margin-top:10px;border-radius:10px;border:none;background:var(--grad-ai);color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:6px;transition:.15s"><span class="material-icons-round" style="font-size:15px">content_copy</span>Copy JSON</button>
+          </div>
+          <div id="trainImportSection" style="display:none">
+            <textarea id="importTextarea" class="input-field" rows="8" placeholder="Dán JSON prompts ở đây (mảng [])..." style="font-family:'JetBrains Mono',monospace;font-size:11.5px;line-height:1.7;resize:none"></textarea>
+            <div id="trainImportPreview" style="font-size:11.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;margin:8px 0 0"></div>
+            <button onclick="doTrainImport()" style="width:100%;height:38px;margin-top:10px;border-radius:10px;border:none;background:var(--grad-ai);color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s">Nhập dữ liệu</button>
+          </div>
+        </div>
+      </div>
+      <!-- ===== END TRAIN AI v2 MODALS ===== -->
+
       <!-- ===== END TRAIN AI VIEW ===== -->
+
 
       <!-- ===== AUDIT TRAIL VIEW ===== -->
       <div id="auditView" style="display:none">
@@ -4958,8 +5081,8 @@ document.getElementById('loginForm').addEventListener('submit',function(e){
         }
         loadHistory();
         initChat();
-        // Load train prompts ngầm để AI có kiến thức ngay khi vào app
-        setTimeout(()=>{ if(typeof loadTrainPromptsSilent==='function') loadTrainPromptsSilent(); }, 1500);
+        // Load train prompts NGAY khi đăng nhập (không setTimeout) để AI có kiến thức trước khi user chat
+        if(typeof loadTrainPromptsSilent === 'function') loadTrainPromptsSilent();
       }else{
         showToast('error','Đăng nhập thất bại', res.message||'Sai tên đăng nhập hoặc mật khẩu');
       }
@@ -5803,7 +5926,7 @@ Yêu cầu: Viết 2–3 câu nhận xét ngắn gọn, súc tích bằng tiến
 
   fetch(WEB_APP_URL, {
     method: 'POST',
-    body: JSON.stringify({ action:'gemini_chat', question:prompt, context:'', history:[] })
+    body: JSON.stringify({ action:'gemini_chat', question:prompt, context:'phân tích biểu đồ dashboard kho hàng hoàn', history:[] })
   })
   .then(r=>r.json())
   .then(data => {
@@ -6704,13 +6827,13 @@ let bulkSelected = new Set();
 function toggleBulkMode() {
   bulkMode = !bulkMode;
   bulkSelected.clear();
-  const bar = document.getElementById('bulkBar');
+  const bar = document.getElementById('trainBulkBar');
   const list = document.getElementById('historyList');
   if(bulkMode) {
     bar.classList.add('active');
     list.classList.add('bulk-mode');
     document.querySelectorAll('.history-item-check').forEach(c => c.classList.add('visible'));
-    document.getElementById('bulkCount').innerText = '0';
+    document.getElementById('trainBulkCount').innerText = '0';
   } else {
     bar.classList.remove('active');
     list.classList.remove('bulk-mode');
@@ -6730,7 +6853,7 @@ function toggleBulkItem(el, code, checkEl) {
     el.classList.add('selected');
     checkEl.classList.add('checked');
   }
-  document.getElementById('bulkCount').innerText = bulkSelected.size;
+  document.getElementById('trainBulkCount').innerText = bulkSelected.size;
 }
 
 function bulkExport() {
@@ -12757,23 +12880,17 @@ async function aiAsk(question, displayLabel) {
 
     let payload;
     if (hasImg) {
-      // Dùng Vision API
-      // Lấy system prompts train cho vision
-      const _visionTrainSys = (typeof trainPromptsCache!=='undefined' && trainPromptsCache.length)
-        ? trainPromptsCache.filter(p=>p.type==='system'||p.type==='complaint').map(p=>p.content).join('\n')
-        : '';
+      // Dùng Vision API — trainData sẽ được interceptor tự inject từ trainPromptsCache
       payload = {
         action: 'gemini_vision',
         question: question || 'Đọc ảnh này và cho tôi biết thông tin quan trọng, so sánh với dữ liệu hệ thống nếu có.',
         context,
-        trainData: (()=>{ try{ return JSON.parse(_getTrainSystemForComplaint()); }catch(e){return undefined;} })(),
         imageBase64: imgB64,
         imageMimeType: imgMime
       };
     } else {
-      // Dùng text API thông thường
-      const _trainDataForChat = (()=>{ try{ const s=_getTrainSystemForComplaint(); return s?JSON.parse(s):undefined; }catch(e){return undefined;} })();
-      payload = { action: 'gemini_chat', question, context, history: AI.history, ...(_trainDataForChat ? {trainData: _trainDataForChat} : {}) };
+      // Dùng text API — trainData sẽ được interceptor tự inject từ trainPromptsCache
+      payload = { action: 'gemini_chat', question, context, history: AI.history };
     }
 
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify(payload) });
@@ -15524,346 +15641,724 @@ document.addEventListener('keydown', function(e){
 </script>
 
 <!-- ========================================================
-     TRAIN AI MODULE — Quản lý prompt & yêu cầu AI
+     TRAIN AI MODULE v2 — Knowledge Engine
      ======================================================== -->
 <script>
+// ══════════════════════════════════════════════
+//  TRAIN AI XIXA v2 — Knowledge Engine
+//  Config: point to your Apps Script URL
+// ══════════════════════════════════════════════
+const MAX_CHARS = 2000;
+
+// ── State ──
 let trainPromptsCache = [];
 let trainActiveFilter = '';
+let trainSearchQuery = '';
+let trainIsBulkMode = false;
+let trainSelectedIndices = new Set();
+let editingOriginalTime = null;
 
-// ── Custom Train Loading overlay ─────────────────────────
-function showTrainLoading(show){
-  let el = document.getElementById('trainLoadingOverlay');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'trainLoadingOverlay';
-    el.style.cssText = 'position:fixed;inset:0;z-index:99998;display:flex;align-items:center;justify-content:center;background:rgba(10,10,15,.55);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px)';
-    el.innerHTML = `
-      <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:24px;padding:36px 44px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.35);max-width:320px;width:90%;position:relative;overflow:hidden">
-        <div style="position:absolute;top:-40px;left:-40px;width:150px;height:150px;border-radius:50%;background:rgba(124,58,237,.08);pointer-events:none"></div>
-        <div style="position:absolute;bottom:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(59,130,246,.08);pointer-events:none"></div>
-        <div style="position:relative">
-          <div style="width:64px;height:64px;margin:0 auto 18px;position:relative">
-            <div style="position:absolute;inset:0;border-radius:50%;background:var(--grad-ai);opacity:.15;animation:trainPulseRing 1.8s ease-in-out infinite"></div>
-            <div style="position:absolute;inset:4px;border-radius:50%;background:var(--grad-ai);opacity:.25;animation:trainPulseRing 1.8s ease-in-out infinite .3s"></div>
-            <div style="position:absolute;inset:8px;border-radius:50%;background:var(--grad-ai);display:flex;align-items:center;justify-content:center">
-              <svg width="26" height="26" viewBox="0 0 24 24" fill="none"><path d="M12 2L13.5 8.5L20 7L15.5 12L20 17L13.5 15.5L12 22L10.5 15.5L4 17L8.5 12L4 7L10.5 8.5Z" fill="#fff"/></svg>
-            </div>
-          </div>
-          <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:6px;letter-spacing:-.2px">AI đang học...</div>
-          <div style="font-size:12px;color:var(--text3);font-weight:500;margin-bottom:18px" id="trainLoadingSubtext">Đang ghi prompt vào bộ nhớ</div>
-          <div style="height:3px;border-radius:100px;background:var(--border);overflow:hidden">
-            <div id="trainLoadingBar" style="height:100%;border-radius:100px;background:var(--grad-ai);width:0%;transition:width .4s ease"></div>
-          </div>
-          <div id="trainLoadingPct" style="font-size:11px;font-weight:800;margin-top:6px;background:var(--grad-ai);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">0%</div>
-        </div>
-      </div>`;
-    document.body.appendChild(el);
-    const style = document.createElement('style');
-    style.textContent = '@keyframes trainPulseRing{0%,100%{transform:scale(1);opacity:.15}50%{transform:scale(1.25);opacity:.05}}';
-    document.head.appendChild(style);
-  }
-  if(show){
-    el.style.display='flex';
-    // Animate progress bar
-    let pct = 0;
-    el._interval = setInterval(()=>{
-      pct += Math.random()*8;
-      if(pct>88) pct=88;
-      const bar = document.getElementById('trainLoadingBar');
-      const pctEl = document.getElementById('trainLoadingPct');
-      const sub = document.getElementById('trainLoadingSubtext');
-      if(bar) bar.style.width = pct+'%';
-      if(pctEl) pctEl.textContent = Math.floor(pct)+'%';
-      if(sub){
-        if(pct>60) sub.textContent='Đang kết nối Knowledge Base...';
-        else if(pct>30) sub.textContent='Đang mã hoá và lưu trữ...';
-        else sub.textContent='Đang ghi prompt vào bộ nhớ';
-      }
-    }, 280);
-  } else {
-    clearInterval(el._interval);
-    const bar = document.getElementById('trainLoadingBar');
-    const pctEl = document.getElementById('trainLoadingPct');
-    const sub = document.getElementById('trainLoadingSubtext');
-    if(bar) bar.style.width='100%';
-    if(pctEl) pctEl.textContent='100%';
-    if(sub) sub.textContent='Hoàn tất! AI đã ghi nhớ ✓';
-    setTimeout(()=>{ el.style.display='none'; }, 700);
-  }
-}
+// ── Type config ──
+const TYPE = {
+  system:    { label:'⚙ System',    color:'var(--violet)', bg:'var(--violet-dim)', border:'rgba(123,97,255,.25)' },
+  qa:        { label:'💬 Q&A',      color:'var(--emerald)', bg:'var(--emerald-dim)', border:'rgba(52,211,153,.25)' },
+  rule:      { label:'📋 Quy tắc',  color:'var(--amber)',  bg:'var(--amber-dim)',  border:'rgba(255,179,64,.25)' },
+  product:   { label:'📦 Sản phẩm', color:'var(--blue)',   bg:'var(--blue-dim)',   border:'rgba(77,159,255,.25)' },
+  complaint: { label:'🛡 Khiếu nại',color:'var(--rose)',   bg:'var(--rose-dim)',   border:'rgba(255,77,106,.25)' },
+  other:     { label:'✦ Khác',      color:'var(--text3)',  bg:'var(--glass)',      border:'var(--line2)' },
+};
 
-// ── Custom AI-styled confirm delete ─────────────────────
-function aiConfirm(message, onOk){
-  let el = document.getElementById('aiConfirmModal');
-  if(!el){
-    el = document.createElement('div');
-    el.id = 'aiConfirmModal';
-    el.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(10,10,15,.6);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)';
-    el.innerHTML = `
-      <div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:20px;padding:28px 28px 22px;max-width:300px;width:88%;box-shadow:0 28px 60px rgba(0,0,0,.3);text-align:center;position:relative;overflow:hidden">
-        <div style="position:absolute;top:-30px;right:-30px;width:100px;height:100px;border-radius:50%;background:rgba(239,68,68,.06);pointer-events:none"></div>
-        <div style="width:44px;height:44px;border-radius:14px;background:rgba(239,68,68,.1);border:1px solid rgba(239,68,68,.2);display:flex;align-items:center;justify-content:center;margin:0 auto 14px">
-          <span class="material-icons-round" style="color:var(--red);font-size:22px">delete_outline</span>
-        </div>
-        <div style="font-size:15px;font-weight:800;color:var(--text);margin-bottom:6px">Xoá prompt?</div>
-        <div id="aiConfirmMsg" style="font-size:12px;color:var(--text3);margin-bottom:20px;line-height:1.5">Prompt này sẽ bị xoá khỏi Knowledge Base và AI sẽ không còn nhớ nội dung này.</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <button id="aiConfirmCancel" style="height:38px;border-radius:10px;border:1px solid var(--border);background:var(--surface2);color:var(--text2);cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;transition:.15s" onmouseover="this.style.background='var(--surface)'" onmouseout="this.style.background='var(--surface2)'">Huỷ</button>
-          <button id="aiConfirmOk" style="height:38px;border-radius:10px;border:none;background:linear-gradient(135deg,#ef4444,#dc2626);color:#fff;cursor:pointer;font-size:13px;font-weight:700;font-family:inherit;box-shadow:0 6px 16px rgba(239,68,68,.3);transition:.15s">Xoá</button>
-        </div>
-      </div>`;
-    document.body.appendChild(el);
-  }
-  el.style.display='flex';
-  document.getElementById('aiConfirmCancel').onclick = ()=>{ el.style.display='none'; };
-  document.getElementById('aiConfirmOk').onclick = ()=>{ el.style.display='none'; onOk(); };
-  el.onclick = (e)=>{ if(e.target===el) el.style.display='none'; };
-}
-
-// ── Type change handler (radio chips) ────────────────────
-function onTrainTypeChange(el){
-  const val = el.value;
+// ════════════════════════
+//  COMPOSER
+// ════════════════════════
+function onTrainTypeChange(el) {
+  const v = el.value;
   const qaBlock = document.getElementById('trainQABlock');
   const lbl = document.getElementById('trainContentLabel');
-  if(val === 'qa'){
-    qaBlock.style.display='block';
-    lbl.textContent = 'CÂU TRẢ LỜI MẪU';
-  } else if(val === 'system'){
-    qaBlock.style.display='none';
-    lbl.textContent = 'NỘI DUNG SYSTEM PROMPT';
-  } else if(val === 'rule'){
-    qaBlock.style.display='none';
-    lbl.textContent = 'MÔ TẢ QUY TẮC NGHIỆP VỤ';
+  if(qaBlock) qaBlock.style.display = v === 'qa' ? 'block' : 'none';
+  const labels = {
+    system: 'NỘI DUNG SYSTEM PROMPT',
+    qa: 'CÂU TRẢ LỜI MẪU',
+    rule: 'MÔ TẢ QUY TẮC NGHIỆP VỤ',
+    product: 'THÔNG TIN SẢN PHẨM',
+    complaint: 'HƯỚNG XỬ LÝ KHIẾU NẠI',
+    other: 'NỘI DUNG PROMPT / YÊU CẦU'
+  };
+  if(lbl) lbl.textContent = labels[v] || 'NỘI DUNG PROMPT';
+  checkDuplicate();
+}
+
+function onTrainContentInput(el) {
+  const len = el.value.length;
+  const pct = Math.min(len / MAX_CHARS * 100, 100);
+  const fill = document.getElementById('trainCharBar');
+  const hint = document.getElementById('trainCharHint');
+  if(fill){ fill.style.width = pct + '%'; fill.style.background = pct > 90 ? 'var(--red)' : pct > 70 ? 'var(--amber)' : 'var(--green)'; }
+  if(hint) hint.textContent = len + ' / ' + MAX_CHARS;
+  checkDuplicate();
+}
+// alias
+function onContentInput(el){ onTrainContentInput(el); }
+
+function checkDuplicate() {
+  const content = (document.getElementById('trainContent').value || '').trim().toLowerCase();
+  const warn = document.getElementById('trainDupeWarn');
+  const warnText = document.getElementById('trainDupeWarnText');
+  if (content.length < 20) { if(warn) warn.style.display='none'; return; }
+  const dupe = trainPromptsCache.find(p => (p.content || '').toLowerCase().trim() === content);
+  if (dupe) {
+    const t = TYPE[dupe.type] || TYPE.other;
+    if(warnText) warnText.textContent = `Nội dung giống với prompt ${t.label} lưu lúc ${dupe.time || ''}.`;
+    if(warn) warn.style.display='flex';
   } else {
-    qaBlock.style.display='none';
-    lbl.textContent = 'NỘI DUNG PROMPT / YÊU CẦU';
+    if(warn) warn.style.display='none';
   }
 }
 
-// ── Filter pills ──────────────────────────────────────────
-function setTrainTypeFilter(btn, type){
-  trainActiveFilter = type;
-  document.querySelectorAll('.train-type-pill').forEach(p => p.classList.remove('active'));
-  btn.classList.add('active');
-  renderTrainList();
+function clearTrainComposer() {
+  document.getElementById('trainContent').value = '';
+  document.getElementById('trainNote').value = '';
+  document.getElementById('trainQuestion').value = '';
+  document.getElementById('trainCharHint').textContent = '0 / ' + MAX_CHARS;
+  document.getElementById('trainCharBar').style.width = '0%';
+  const dw = document.getElementById('trainDupeWarn');
+  const ta = document.getElementById('trainTestArea');
+  if(dw) dw.style.display='none';
+  if(ta) ta.style.display='none';
+  // Reset test panel
+  const testResult = document.getElementById('trainTestResult');
+  const testEmpty = document.getElementById('trainTestEmpty');
+  const testThinking = document.getElementById('trainThinking');
+  if(testResult) testResult.style.display='none';
+  if(testThinking) testThinking.style.display='none';
+  if(testEmpty) testEmpty.style.display='block';
+  const tq = document.getElementById('trainTestQuestion');
+  if(tq) tq.value='';
+  document.getElementById('trainComposerMode').textContent = 'NEW PROMPT';
+  document.querySelector('input[name="trainType"][value="system"]').checked = true;
+  onTrainTypeChange({ value: 'system' });
 }
 
-// ── Lưu prompt ───────────────────────────────────────────
-async function saveTrainPrompt(){
+// ════════════════════════
+//  SAVE
+// ════════════════════════
+async function saveTrainPrompt() {
   const typeEl = document.querySelector('input[name="trainType"]:checked');
-  const type   = typeEl ? typeEl.value : 'other';
-  const content = (document.getElementById('trainContent').value||'').trim();
-  const note    = (document.getElementById('trainNote').value||'').trim();
-  const question= (document.getElementById('trainQuestion')?.value||'').trim();
-  if(!content){ showToast('warning','Chưa nhập nội dung','Vui lòng nhập prompt cần train'); return; }
+  const type = typeEl ? typeEl.value : 'other';
+  const content = (document.getElementById('trainContent').value || '').trim();
+  const note = (document.getElementById('trainNote').value || '').trim();
+  const question = (document.getElementById('trainQuestion').value || '').trim();
+  if (!content) { showToast('warning','Chưa nhập nội dung','Nhập prompt trước khi lưu'); return; }
+
+  const btn = document.getElementById('trainSaveBtn');
+  btn.disabled = true;
   showTrainLoading(true);
+
   try {
     const res = await fetch(WEB_APP_URL, {
       method: 'POST',
-      body: JSON.stringify({ action:'save_train_prompt', type, question, content, note, staffName: currentUser||'Admin' })
+      body: JSON.stringify({ action: 'save_train_prompt', type, question, content, note, staffName: (currentUser||'Admin') })
     });
     const data = await res.json();
     showTrainLoading(false);
-    if(data.result === 'success'){
-      showToast('success','Đã lưu!','Prompt ghi vào sheet Train AI');
-      document.getElementById('trainContent').value='';
-      document.getElementById('trainNote').value='';
-      if(document.getElementById('trainQuestion')) document.getElementById('trainQuestion').value='';
-      loadTrainPrompts();
+    btn.disabled = false;
+    if (data.result === 'success') {
+      showToast('success','Đã lưu!','Prompt ghi vào Knowledge Base');
+      clearTrainComposer();
+      loadTrainPrompts(true);
     } else {
-      showToast('error','Lỗi lưu', data.message||'');
+      showToast('error', 'Lỗi lưu', data.message || 'Vui lòng thử lại');
     }
-  } catch(e){ showTrainLoading(false); showToast('error','Lỗi kết nối', e.message||''); }
-}
-
-// ── Load ngầm khi login — không hiện UI ─────────────────
-async function loadTrainPromptsSilent(){
-  try {
-    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'get_train_prompts'}) });
-    const data = await res.json();
-    if(data.result === 'success' && data.data){
-      trainPromptsCache = data.data;
-      // Cập nhật counter nếu đang ở tab Train AI
-      const cntEl = document.getElementById('trainCountNum');
-      if(cntEl) cntEl.textContent = trainPromptsCache.length;
-      console.log('[TrainAI] Loaded', trainPromptsCache.length, 'prompts silently');
-    }
-  } catch(e){ console.warn('[TrainAI] Silent load failed:', e); }
-}
-
-// ── Load từ Sheet ─────────────────────────────────────────
-async function loadTrainPrompts(){
-  const list = document.getElementById('trainPromptList');
-  if(!list) return;
-  list.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:30px;color:var(--text3);font-size:12px"><span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:18px">sync</span>Đang đồng bộ...</div>';
-  try {
-    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'get_train_prompts'}) });
-    const data = await res.json();
-    if(data.result === 'success'){
-      trainPromptsCache = data.data || [];
-      renderTrainList();
-    } else {
-      list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:12px">⚠ ' + (data.message||'Không tải được') + '</div>';
-    }
-  } catch(e){
-    list.innerHTML = '<div style="text-align:center;padding:20px;color:var(--red);font-size:12px">Lỗi kết nối server</div>';
+  } catch (e) {
+    showTrainLoading(false);
+    btn.disabled = false;
+    showToast('error', 'Lỗi kết nối', e.message || '');
   }
 }
 
-// ── Render ────────────────────────────────────────────────
-function renderTrainList(){
-  const list  = document.getElementById('trainPromptList');
-  const cntEl = document.getElementById('trainCountNum');
-  let items   = trainPromptsCache;
-  if(cntEl) cntEl.textContent = items.length;
-  if(trainActiveFilter) items = items.filter(p => (p.type||'') === trainActiveFilter);
-  if(!items.length){
-    list.innerHTML = '<div style="text-align:center;padding:40px 20px;color:var(--text3)"><span class="material-icons-round" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3">auto_awesome</span><div style="font-size:13px;font-weight:600">' + (trainActiveFilter ? 'Không có prompt loại này' : 'Knowledge base trống') + '</div><div style="font-size:11px;margin-top:4px;opacity:.7">Thêm prompt đầu tiên để AI học</div></div>';
+// ════════════════════════
+//  TEST
+// ════════════════════════
+async function testTrainPrompt() {
+  const typeEl = document.querySelector('input[name="trainType"]:checked');
+  const type = typeEl ? typeEl.value : 'other';
+  const content = (document.getElementById('trainContent').value || '').trim();
+  const question = (document.getElementById('trainQuestion').value || '').trim();
+  if (!content) { showToast('warning','Chưa nhập nội dung','Nhập prompt trước khi test'); return; }
+
+  const area = document.getElementById('trainTestArea');
+  const result = document.getElementById('trainTestResult');
+  if(area) area.style.display='block';
+  if(result) result.innerHTML = '<span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:15px;vertical-align:middle;margin-right:6px">sync</span><span style="color:var(--text3)">AI đang xử lý...</span>';
+
+  let testQ = question || 'Tóm tắt nội dung bạn vừa được học.';
+  if (type === 'system') testQ = 'Dựa trên hướng dẫn này, giới thiệu ngắn vai trò của bạn.';
+  if (type === 'rule')   testQ = question || 'Liệt kê các quy tắc nghiệp vụ bạn phải tuân theo.';
+
+  // ── Tạm push temp prompt vào cache để interceptor pick lên ──
+  const tempPrompt = {
+    rowIndex: -999,
+    type, question: question || '', content, note: '',
+    time: 'temp', staffName: 'test'
+  };
+  const _origCache = trainPromptsCache;
+  trainPromptsCache = [...(trainPromptsCache || []), tempPrompt];
+
+  try {
+    // Gọi fetch bình thường — interceptor sẽ tự inject trainData
+    const res = await fetch(WEB_APP_URL, {
+      method: 'POST',
+      body: JSON.stringify({ action: 'gemini_chat', question: testQ, context: 'Test chế độ Train AI XIXA', history: [] })
+    });
+    const data = await res.json();
+    if(result) {
+      if(data.result === 'success') {
+        const cnt = data.trainCount || 0;
+        result.innerHTML = '<div style="color:var(--text3);font-size:11px;margin-bottom:6px">✓ AI được train với ' + cnt + ' hướng dẫn</div>' +
+                           '<div>' + (data.answer || '—').replace(/</g,'&lt;') + '</div>';
+      } else {
+        result.textContent = '⚠️ ' + (data.message || '');
+      }
+    }
+  } catch (e) {
+    if(result) result.textContent = '⚠️ Lỗi: ' + e.message;
+  } finally {
+    // Restore cache
+    trainPromptsCache = _origCache;
+  }
+}
+
+// ════════════════════════
+//  LOAD & RENDER
+// ════════════════════════
+async function loadTrainPrompts(highlightNew = false) {
+  const icon = document.getElementById('trainSyncIcon');
+  if(icon) { icon.style.animation = 'spin 1s linear infinite'; }
+  const wrap = document.getElementById('trainKbListWrap');
+  if (!trainPromptsCache.length && wrap) {
+    wrap.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;gap:8px;padding:40px;color:var(--text3);font-size:12.5px"><span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:18px;color:var(--ai-1)">sync</span>Đang đồng bộ...</div>';
+  }
+  try {
+    const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'get_train_prompts' }) });
+    const data = await res.json();
+    if (data.result === 'success') {
+      const prevLen = trainPromptsCache.length;
+      trainPromptsCache = data.data || [];
+      renderTrainList(highlightNew && trainPromptsCache.length > prevLen);
+      updateTrainStats();
+    } else {
+      if(wrap) wrap.innerHTML = _trainErrorHTML(data.message || 'Không tải được dữ liệu');
+    }
+  } catch (e) {
+    // If we have cached data, show it instead of error
+    if (trainPromptsCache.length > 0) {
+      renderTrainList();
+    } else if(wrap) {
+      wrap.innerHTML = _trainErrorHTML('Kiểm tra kết nối và thử lại');
+    }
+  }
+  if(icon) icon.style.animation = '';
+}
+
+function _trainErrorHTML(msg) {
+  return `<div style="text-align:center;padding:40px 20px;color:var(--text3)">
+    <span class="material-icons-round" style="font-size:32px;display:block;margin-bottom:10px;color:var(--red)">wifi_off</span>
+    <div style="font-size:13px;font-weight:700;color:var(--text2);margin-bottom:6px">Lỗi kết nối</div>
+    <div style="font-size:11.5px;margin-bottom:14px">${msg}</div>
+    <button onclick="loadTrainPrompts()" style="height:32px;padding:0 16px;border-radius:8px;background:var(--grad-ai);border:none;color:#fff;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit">
+      <span class="material-icons-round" style="font-size:13px;vertical-align:middle;margin-right:4px">refresh</span>Thử lại
+    </button>
+  </div>`;
+}
+
+function renderTrainList(highlightNew = false) {
+  const wrap = document.getElementById('trainKbListWrap');
+  if(!wrap) return;
+  let items = [...trainPromptsCache];
+
+  if (trainActiveFilter) items = items.filter(p => (p.type || '') === trainActiveFilter);
+  if (trainSearchQuery) {
+    const q = trainSearchQuery.toLowerCase();
+    items = items.filter(p =>
+      (p.content || '').toLowerCase().includes(q) ||
+      (p.question || '').toLowerCase().includes(q) ||
+      (p.note || '').toLowerCase().includes(q)
+    );
+  }
+
+  const sortEl = document.getElementById('trainKbSort');
+  const sort = sortEl ? sortEl.value : 'newest';
+  if (sort === 'oldest') items = items.reverse();
+  else if (sort === 'type') items.sort((a, b) => (a.type||'').localeCompare(b.type||''));
+  else if (sort === 'length') items.sort((a, b) => (b.content||'').length - (a.content||'').length);
+
+  const delBtn = document.getElementById('trainBtnDeleteFiltered');
+  if(delBtn) delBtn.style.display = trainActiveFilter ? 'flex' : 'none';
+
+  if (!items.length) {
+    wrap.innerHTML = `<div style="text-align:center;padding:50px 20px;color:var(--text3)">
+      <span class="material-icons-round" style="font-size:36px;display:block;margin-bottom:10px;opacity:.3">auto_awesome</span>
+      <div style="font-size:13px;font-weight:700;color:var(--text2)">${trainSearchQuery ? 'Không tìm thấy' : (trainActiveFilter ? 'Không có prompt loại này' : 'Knowledge base trống')}</div>
+      <div style="font-size:11px;margin-top:5px">${trainSearchQuery ? 'Thử từ khoá khác' : 'Thêm prompt đầu tiên để AI học'}</div>
+    </div>`;
     return;
   }
+
   const C = {system:'var(--ai-1)',qa:'var(--green)',rule:'var(--amber)',product:'var(--blue)',complaint:'var(--red)',other:'var(--text3)'};
   const L = {system:'⚙ System',qa:'💬 Q&A',rule:'📋 Quy tắc',product:'📦 Sản phẩm',complaint:'🛡 Khiếu nại',other:'✦ Khác'};
-  list.innerHTML = items.map((p,i) => {
-    const c = C[p.type]||'var(--text3)', lb = L[p.type]||p.type||'Khác';
-    return '<div class="train-card">'
-      + '<div style="position:absolute;top:8px;right:8px;display:flex;gap:3px">'      + '<button onclick="editTrainPrompt('+i+')" title="Sửa" style="width:24px;height:24px;border-radius:7px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s" onmouseover="this.style.color=\'var(--blue)\';this.style.background=\'rgba(59,130,246,.1)\'" onmouseout="this.style.color=\'var(--text3)\';this.style.background=\'transparent\'"><span class="material-icons-round" style="font-size:14px">edit</span></button>'      + '<button onclick="deleteTrainPrompt('+i+')" title="Xóa" style="width:24px;height:24px;border-radius:7px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s" onmouseover="this.style.color=\'var(--red)\';this.style.background=\'rgba(239,68,68,.1)\'" onmouseout="this.style.color=\'var(--text3)\';this.style.background=\'transparent\'"><span class="material-icons-round" style="font-size:14px">close</span></button>'      + '</div>'
-      + '<div style="display:flex;align-items:center;gap:7px;margin-bottom:7px">'
-      + '<span class="train-card-type" style="background:'+c+'1a;color:'+c+'">'+lb+'</span>'
-      + '<span style="font-size:10px;color:var(--text3)">'+escHtml(p.staffName||'Admin')+' · '+escHtml(p.time||'')+'</span>'
-      + '</div>'
-      + (p.question ? '<div style="font-size:11px;font-weight:700;color:var(--text2);margin-bottom:5px;display:flex;align-items:center;gap:5px"><span class="material-icons-round" style="font-size:13px;color:'+c+'">help_outline</span>'+escHtml(p.question)+'</div>' : '')
-      + '<div style="font-size:12.5px;color:var(--text);line-height:1.65;white-space:pre-wrap">'+escHtml(p.content||'')+'</div>'
-      + (p.note ? '<div style="font-size:10.5px;color:var(--text3);margin-top:6px;display:flex;align-items:flex-start;gap:4px"><span class="material-icons-round" style="font-size:12px;margin-top:1px">push_pin</span>'+escHtml(p.note)+'</div>' : '')
-      + '</div>';
+  const BG = {system:'rgba(124,58,237,.12)',qa:'rgba(16,185,129,.12)',rule:'rgba(245,158,11,.12)',product:'rgba(59,130,246,.12)',complaint:'rgba(239,68,68,.12)',other:'rgba(139,139,149,.1)'};
+
+  const html = items.map((p, vi) => {
+    const realIdx = trainPromptsCache.indexOf(p);
+    const c = C[p.type]||'var(--text3)', lb = L[p.type]||p.type||'Khác', bg = BG[p.type]||'rgba(139,139,149,.1)';
+    const isNew = highlightNew && vi === 0 && realIdx === 0;
+    return `<div class="train-card${isNew?' is-new':''}" style="border:1px solid var(--border);border-radius:14px;padding:13px 15px;margin-bottom:8px;background:var(--surface2);transition:.2s;position:relative;${trainSelectedIndices.has(realIdx)?'border-color:rgba(239,68,68,.35);background:rgba(239,68,68,.04);':''}" id="card-${realIdx}"
+      onmouseenter="this.style.borderColor='var(--border-strong)';this.style.background='var(--surface)';this.style.transform='translateX(3px)';this.querySelector('.train-card-actions').style.opacity='1'"
+      onmouseleave="this.style.borderColor='${trainSelectedIndices.has(realIdx)?'rgba(239,68,68,.35)':'var(--border)'}';this.style.background='${trainSelectedIndices.has(realIdx)?'rgba(239,68,68,.04)':'var(--surface2)'}';this.style.transform='';this.querySelector('.train-card-actions').style.opacity='0'">
+      ${trainIsBulkMode ? `<div onclick="trainToggleSelect(${realIdx})" style="position:absolute;top:14px;left:15px;width:16px;height:16px;border-radius:4px;border:1.5px solid ${trainSelectedIndices.has(realIdx)?'var(--red)':'var(--border)'};background:${trainSelectedIndices.has(realIdx)?'var(--red)':'transparent'};cursor:pointer;display:flex;align-items:center;justify-content:center">${trainSelectedIndices.has(realIdx)?'<span class="material-icons-round" style="font-size:11px;color:#fff">check</span>':''}</div>` : ''}
+      <div style="display:flex;align-items:flex-start;gap:8px;margin-bottom:7px${trainIsBulkMode?';padding-left:22px':''}">
+        <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:6px;font-size:10px;font-weight:700;letter-spacing:.4px;text-transform:uppercase;flex-shrink:0;background:${bg};color:${c}">${lb}</span>
+        <div style="font-size:10.5px;color:var(--text3);font-family:'JetBrains Mono',monospace;display:flex;align-items:center;gap:5px;flex:1;min-width:0;flex-wrap:wrap">
+          <span>${escHtml(p.staffName||'Admin')}</span><span style="opacity:.3">·</span>
+          <span>${escHtml(p.time||'')}</span><span style="opacity:.3">·</span>
+          <span>${(p.content||'').length} chars</span>
+        </div>
+        <div class="train-card-actions" style="display:flex;gap:3px;opacity:0;transition:opacity .15s;flex-shrink:0">
+          <button onclick="editTrainPrompt(${realIdx})" title="Sửa" style="width:24px;height:24px;border-radius:7px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s" onmouseover="this.style.color='var(--blue)';this.style.background='rgba(59,130,246,.1)'" onmouseout="this.style.color='var(--text3)';this.style.background='transparent'"><span class="material-icons-round" style="font-size:14px">edit</span></button>
+          <button onclick="deleteTrainPrompt(${realIdx})" title="Xóa" style="width:24px;height:24px;border-radius:7px;background:transparent;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:.15s" onmouseover="this.style.color='var(--red)';this.style.background='rgba(239,68,68,.1)'" onmouseout="this.style.color='var(--text3)';this.style.background='transparent'"><span class="material-icons-round" style="font-size:14px">close</span></button>
+        </div>
+      </div>
+      ${p.question ? `<div style="display:flex;align-items:center;gap:6px;padding:5px 9px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);margin-bottom:7px;font-size:12px;font-weight:600;color:var(--text2)"><span class="material-icons-round" style="font-size:13px;color:var(--green);flex-shrink:0">help_outline</span>${escHtml(p.question)}</div>` : ''}
+      <div style="font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap${p.type==='system'?';font-family:\'JetBrains Mono\',monospace;font-size:12px':''}">${escHtml(p.content||'')}</div>
+      ${p.note ? `<div style="display:flex;align-items:flex-start;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--text3)"><span class="material-icons-round" style="font-size:12px;margin-top:1px;flex-shrink:0">push_pin</span><span>${escHtml(p.note)}</span></div>` : ''}
+    </div>`;
   }).join('');
+
+  wrap.innerHTML = `<div style="display:flex;flex-direction:column;gap:0">${html}</div>`;
 }
 
-function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
-// ── Scroll Knowledge Base list ───────────────────────────
-function scrollTrainList(dir){
-  const el = document.getElementById('trainPromptList');
-  if(!el) return;
-  // Scroll 1 card height ~ 120px mỗi lần nhấn
-  el.scrollBy({ top: dir * 120, behavior: 'smooth' });
+function updateTrainStats() {
+  const total = trainPromptsCache.length;
+  const byType = t => trainPromptsCache.filter(p => (p.type || '') === t).length;
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statSystem').textContent = byType('system');
+  document.getElementById('statQA').textContent = byType('qa');
+  document.getElementById('statRule').textContent = byType('rule');
+  document.getElementById('statProduct').textContent = byType('product');
+  document.getElementById('statComplaint').textContent = byType('complaint');
+  document.getElementById('topbarPromptCount').textContent = total;
 }
 
-// ── Edit prompt ──────────────────────────────────────────
-function editTrainPrompt(idx){
+// ── Filter / Search ──
+function setTrainTypeFilter(btn, type) {
+  trainActiveFilter = type;
+  document.querySelectorAll('.train-type-pill').forEach(p => p.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  renderTrainList();
+}
+function onTrainSearch() {
+  trainSearchQuery = (document.getElementById('trainKbSearch').value||'').trim();
+  renderTrainList();
+}
+
+// ── Sort ──
+// (handled by onchange → renderTrainList)
+
+// ════════════════════════
+//  BULK MODE
+// ════════════════════════
+function toggleTrainBulkMode() {
+  trainIsBulkMode = !trainIsBulkMode;
+  trainSelectedIndices.clear();
+  const bulkBar = document.getElementById('trainBulkBar');
+  const bulkToggle = document.getElementById('trainBulkToggle');
+  bulkBar.classList.toggle('show', trainIsBulkMode);
+  bulkToggle.style.background = trainIsBulkMode ? 'var(--rose-dim)' : '';
+  bulkToggle.style.color = trainIsBulkMode ? 'var(--rose)' : '';
+  bulkToggle.style.borderColor = trainIsBulkMode ? 'rgba(255,77,106,.35)' : '';
+  updateTrainBulkCount();
+  renderTrainList();
+}
+function trainToggleSelect(idx) {
+  if (trainSelectedIndices.has(idx)) trainSelectedIndices.delete(idx);
+  else trainSelectedIndices.add(idx);
+  updateTrainBulkCount();
+  // Update card class
+  const card = document.getElementById('card-' + idx);
+  if (card) {
+    card.classList.toggle('selected', trainSelectedIndices.has(idx));
+    const check = card.querySelector('.card-check');
+    if (check) check.classList.toggle('checked', trainSelectedIndices.has(idx));
+  }
+}
+function updateTrainBulkCount() {
+  document.getElementById('trainBulkCount').textContent = trainSelectedIndices.size;
+}
+async function trainBulkDelete() {
+  if (!trainSelectedIndices.size) { showToast('warning','Chưa chọn prompt nào',''); return; }
+  showTrainConfirm(
+    `Xoá ${trainSelectedIndices.size} prompts?`,
+    `${trainSelectedIndices.size} prompt đã chọn sẽ bị xoá vĩnh viễn.`,
+    async () => {
+      const toDelete = [...trainSelectedIndices].map(i => trainPromptsCache[i]).filter(Boolean);
+      showTrainLoading(true);
+      let ok = 0;
+      for (const p of toDelete) {
+        try {
+          const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_train_prompt', content: p.content, time: p.time }) });
+          const data = await res.json();
+          if (data.result === 'success') ok++;
+        } catch(e) {}
+      }
+      showTrainLoading(false);
+      showToast(ok === toDelete.length ? 'success' : 'warning', `Đã xoá ${ok}/${toDelete.length}`, '');
+      trainSelectedIndices.clear();
+      trainIsBulkMode = false;
+      document.getElementById('trainBulkBar').classList.remove('show');
+      document.getElementById('trainBulkToggle').style.cssText = '';
+      await loadTrainPrompts();
+    }
+  );
+}
+
+// ════════════════════════
+//  EDIT
+// ════════════════════════
+function editTrainPrompt(idx) {
   const p = trainPromptsCache[idx];
-  if(!p) return;
-  // Fill modal
+  if (!p) return;
   document.getElementById('editPromptIdx').value = idx;
   document.getElementById('editPromptContent').value = p.content || '';
   document.getElementById('editPromptQuestion').value = p.question || '';
   document.getElementById('editPromptNote').value = p.note || '';
-  // Set radio
+  editingOriginalTime = p.time;
   const radios = document.querySelectorAll('input[name="editTrainType"]');
-  radios.forEach(r => r.checked = (r.value === (p.type||'other')));
-  // Show/hide QA block
-  document.getElementById('editQABlock').style.display = (p.type==='qa') ? 'block' : 'none';
-  // Show modal
-  const modal = document.getElementById('trainEditModal');
-  modal.style.display = 'flex';
-  // Radio change handler
-  radios.forEach(r => r.onchange = function(){
-    document.getElementById('editQABlock').style.display = (this.value==='qa') ? 'block' : 'none';
-  });
-  modal.onclick = (e) => { if(e.target===modal) closeTrainEditModal(); };
+  radios.forEach(r => r.checked = (r.value === (p.type || 'other')));
+  const qaBlock = document.getElementById('editQABlock');
+  if(qaBlock) qaBlock.style.display = (p.type || '') === 'qa' ? 'block' : 'none';
+  document.getElementById('trainEditModal').style.display = 'flex';
 }
-
-function closeTrainEditModal(){
-  document.getElementById('trainEditModal').style.display = 'none';
+function onEditTypeChange(el) {
+  const qaBlock = document.getElementById('editQABlock');
+  if(qaBlock) qaBlock.style.display = el.value === 'qa' ? 'block' : 'none';
 }
-
-async function saveEditPrompt(){
+function closeTrainEditModal() { document.getElementById('trainEditModal').style.display = 'none'; }
+async function saveEditPrompt() {
   const idx = parseInt(document.getElementById('editPromptIdx').value);
-  const p   = trainPromptsCache[idx];
-  if(!p) return;
-  const typeEl  = document.querySelector('input[name="editTrainType"]:checked');
-  const type    = typeEl ? typeEl.value : p.type;
-  const content = (document.getElementById('editPromptContent').value||'').trim();
-  const question= (document.getElementById('editPromptQuestion').value||'').trim();
-  const note    = (document.getElementById('editPromptNote').value||'').trim();
-  if(!content){ showToast('warning','Chưa nhập nội dung',''); return; }
+  const p = trainPromptsCache[idx];
+  if (!p) return;
+  const typeEl = document.querySelector('input[name="editTrainType"]:checked');
+  const type = typeEl ? typeEl.value : p.type;
+  const content = (document.getElementById('editPromptContent').value || '').trim();
+  const question = (document.getElementById('editPromptQuestion').value || '').trim();
+  const note = (document.getElementById('editPromptNote').value || '').trim();
+  if (!content) { showToast('warning','Chưa nhập nội dung',''); return; }
   closeTrainEditModal();
   showTrainLoading(true);
   try {
-    // Xóa dòng cũ, thêm dòng mới (delete + save)
-    const resDel = await fetch(WEB_APP_URL, {method:'POST', body: JSON.stringify({action:'delete_train_prompt', content: p.content, time: p.time})});
+    const resDel = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_train_prompt', content: p.content, time: p.time }) });
     const dataDel = await resDel.json();
-    if(dataDel.result !== 'success'){ showTrainLoading(false); showToast('error','Lỗi sửa prompt', dataDel.message||''); return; }
-    const resSave = await fetch(WEB_APP_URL, {method:'POST', body: JSON.stringify({
-      action:'save_train_prompt', type, question, content, note, staffName: currentUser||'Admin'
-    })});
+    if (dataDel.result !== 'success') { showTrainLoading(false); showToast('error', 'Lỗi xoá cũ', dataDel.message || ''); return; }
+    const resSave = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'save_train_prompt', type, question, content, note, staffName: (currentUser||'Admin') }) });
     const dataSave = await resSave.json();
     showTrainLoading(false);
-    if(dataSave.result === 'success'){
-      showToast('success','Đã cập nhật!','Prompt đã được sửa');
-      loadTrainPrompts();
-    } else {
-      showToast('error','Lỗi lưu', dataSave.message||'');
-    }
-  } catch(e){ showTrainLoading(false); showToast('error','Lỗi kết nối', e.message||''); }
+    if (dataSave.result === 'success') { showToast('success','Đã cập nhật!',''); loadTrainPrompts(); }
+    else showToast('error', 'Lỗi lưu', dataSave.message || '');
+  } catch (e) { showTrainLoading(false); showToast('error', 'Lỗi kết nối', e.message || ''); }
 }
 
-// ── Xóa ───────────────────────────────────────────────────
-function deleteTrainPrompt(idx){
+// ════════════════════════
+//  DELETE
+// ════════════════════════
+function deleteTrainPrompt(idx) {
   const p = trainPromptsCache[idx];
-  if(!p) return;
-  aiConfirm('', async ()=>{
-  try {
-    const res  = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'delete_train_prompt', content: p.content, time: p.time}) });
-    const data = await res.json();
-    if(data.result === 'success'){
-      trainPromptsCache.splice(idx,1);
-      renderTrainList();
-      showToast('success','Đã xoá','AI đã quên prompt này');
-    } else { showToast('error','Lỗi xoá', data.message||''); }
-  } catch(e){ showToast('error','Lỗi kết nối',''); }
+  if (!p) return;
+  const preview = (p.content || '').substring(0, 60) + ((p.content || '').length > 60 ? '...' : '');
+  showTrainConfirm('Xoá prompt?', `"${preview}" sẽ bị xoá vĩnh viễn.`, async () => {
+    showTrainLoading(true);
+    try {
+      const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_train_prompt', content: p.content, time: p.time }) });
+      const data = await res.json();
+      showTrainLoading(false);
+      if (data.result === 'success') { showToast('success','Đã xoá','AI quên prompt này'); loadTrainPrompts(); }
+      else showToast('error', 'Lỗi xoá', data.message || '');
+    } catch (e) { showTrainLoading(false); showToast('error','Lỗi kết nối',''); }
   });
 }
 
-// ── Test prompt ───────────────────────────────────────────
-async function testTrainPrompt(){
-  const typeEl  = document.querySelector('input[name="trainType"]:checked');
-  const type    = typeEl ? typeEl.value : 'other';
-  const content = (document.getElementById('trainContent').value||'').trim();
-  const question= (document.getElementById('trainQuestion')?.value||'').trim();
-  if(!content){ showToast('warning','Chưa nhập nội dung','Nhập prompt trước khi thử nghiệm'); return; }
-  const testArea = document.getElementById('trainTestArea');
-  const testResult = document.getElementById('trainTestResult');
-  testArea.style.display='block';
-  testResult.innerHTML = '<span class="material-icons-round" style="animation:spin 1s linear infinite;font-size:16px;vertical-align:middle;margin-right:6px">sync</span><span style="color:var(--text3);font-size:12px">AI đang xử lý...</span>';
-  let testQ = question || 'Tóm tắt nội dung bạn vừa được học.';
-  if(type==='system') testQ = 'Dựa trên hướng dẫn này, tự giới thiệu ngắn vai trò của bạn.';
+function trainConfirmDeleteAll() {
+  const items = trainPromptsCache.filter(p => (p.type || '') === trainActiveFilter);
+  if (!items.length) return;
+  const t = TYPE[trainActiveFilter] || TYPE.other;
+  showTrainConfirm(`Xoá tất cả ${t.label}?`, `${items.length} prompts loại này sẽ bị xoá.`, async () => {
+    showTrainLoading(true);
+    let ok = 0;
+    for (const p of items) {
+      try {
+        const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'delete_train_prompt', content: p.content, time: p.time }) });
+        const data = await res.json();
+        if (data.result === 'success') ok++;
+      } catch(e) {}
+    }
+    showTrainLoading(false);
+    showToast(ok === items.length ? 'success' : 'warning', `Đã xoá ${ok}/${items.length}`, '');
+    loadTrainPrompts();
+  });
+}
 
-  // FIX: Build trainData từ cache + prompt mới đang test
-  // để kiểm tra chính xác AI sẽ dùng kiến thức gì
-  const tempPrompt = { type, question: question||'', content, note: '' };
-  const allPrompts = [...(trainPromptsCache||[]), tempPrompt];
+// ════════════════════════
+//  IMPORT / EXPORT
+// ════════════════════════
+let ioTab = 'export';
+function openTrainIOModal(tab) {
+  ioTab = tab || 'export';
+  switchTrainIOTab(ioTab);
+  document.getElementById('trainIOModal').style.display = 'flex';
+  if (ioTab === 'export') {
+    document.getElementById('exportTextarea').value = JSON.stringify(trainPromptsCache, null, 2);
+  }
+}
+function closeTrainIOModal() { document.getElementById('trainIOModal').style.display = 'none'; }
+function switchTrainIOTab(tab) {
+  ioTab = tab;
+  document.getElementById('trainExportSection').style.display = tab === 'export' ? 'block' : 'none';
+  document.getElementById('trainImportSection').style.display = tab === 'import' ? 'block' : 'none';
+  const tabExport = document.getElementById('trainTabExport');
+  const tabImport = document.getElementById('trainTabImport');
+  if(tabExport){ tabExport.style.background = tab==='export' ? 'rgba(59,130,246,.15)' : 'var(--surface2)'; tabExport.style.color = tab==='export' ? 'var(--blue)' : 'var(--text2)'; }
+  if(tabImport){ tabImport.style.background = tab==='import' ? 'rgba(59,130,246,.15)' : 'var(--surface2)'; tabImport.style.color = tab==='import' ? 'var(--blue)' : 'var(--text2)'; }
+  document.getElementById('trainIOModalTitle').textContent = tab === 'export' ? 'Export JSON' : 'Import JSON';
+  document.getElementById('trainIOModalIcon').textContent = tab === 'export' ? 'upload' : 'download';
+  if (tab === 'export') {
+    document.getElementById('exportTextarea').value = JSON.stringify(trainPromptsCache, null, 2);
+  }
+}
+function copyTrainExport() {
+  const txt = document.getElementById('exportTextarea').value;
+  navigator.clipboard.writeText(txt).then(() => showToast('success', 'Đã copy JSON', trainPromptsCache.length + ' prompts'));
+}
+async function doTrainImport() {
+  const raw = document.getElementById('importTextarea').value.trim();
+  if (!raw) { showToast('warning','Chưa dán dữ liệu',''); return; }
+  let items;
+  try {
+    items = JSON.parse(raw);
+    if (!Array.isArray(items)) throw new Error('Phải là mảng []');
+  } catch (e) { showToast('error', 'JSON không hợp lệ', e.message); return; }
+  const valid = items.filter(i => i.content && i.type);
+  if (!valid.length) { showToast('warning','Không có prompt hợp lệ','Cần có type và content'); return; }
+  closeTrainIOModal();
+  showTrainLoading(true);
+  let ok = 0;
+  for (const p of valid) {
+    try {
+      const res = await fetch(WEB_APP_URL, { method: 'POST', body: JSON.stringify({ action: 'save_train_prompt', type: p.type, question: p.question || '', content: p.content, note: p.note || '', staffName: (currentUser||'Admin') }) });
+      const data = await res.json();
+      if (data.result === 'success') ok++;
+    } catch(e) {}
+  }
+  showTrainLoading(false);
+  showToast(ok > 0 ? 'success' : 'error', `Import ${ok}/${valid.length} prompts`, '');
+  loadTrainPrompts();
+}
+
+// ════════════════════════
+//  UI HELPERS
+// ════════════════════════
+function escHtml(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+// ── Confirm modal ──
+function showTrainConfirm(title, sub, onOk) {
+  document.getElementById('trainConfirmTitle').textContent = title;
+  document.getElementById('trainConfirmSub').textContent = sub;
+  document.getElementById('trainConfirmOkBtn').onclick = () => { closeTrainConfirm(); onOk(); };
+  document.getElementById('trainConfirmModal').style.display = 'flex';
+}
+function closeTrainConfirm() { document.getElementById('trainConfirmModal').style.display = 'none'; }
+
+// ── Train loading ──
+let _tlInterval;
+function showTrainLoading(show) {
+  let el = document.getElementById('trainLoadingOverlay');
+  if(!el){
+    el = document.createElement('div');
+    el.id = 'trainLoadingOverlay';
+    el.style.cssText = 'position:fixed;inset:0;z-index:99998;display:none;align-items:center;justify-content:center;background:rgba(10,10,15,.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)';
+    el.innerHTML = `<div style="background:var(--surface-solid);border:1px solid var(--border);border-radius:24px;padding:36px 44px;text-align:center;box-shadow:0 32px 80px rgba(0,0,0,.4);max-width:300px;width:90%;position:relative;overflow:hidden">
+      <div style="position:absolute;top:-40px;left:-40px;width:140px;height:140px;border-radius:50%;background:rgba(124,58,237,.07);pointer-events:none"></div>
+      <div style="width:64px;height:64px;margin:0 auto 18px;position:relative">
+        <div style="position:absolute;inset:0;border-radius:50%;background:var(--grad-ai);opacity:.15;animation:pulse 1.8s ease-in-out infinite"></div>
+        <div style="position:absolute;inset:6px;border-radius:50%;background:var(--grad-ai);opacity:.25;animation:pulse 1.8s ease-in-out infinite;animation-delay:.3s"></div>
+        <div style="position:absolute;inset:12px;border-radius:50%;background:var(--grad-ai);display:flex;align-items:center;justify-content:center">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M12 2L14 9L21 7L16.5 12L21 17L14 15L12 22L10 15L3 17L7.5 12L3 7L10 9Z" fill="#fff"/></svg>
+        </div>
+      </div>
+      <div style="font-size:17px;font-weight:900;color:var(--text);margin-bottom:6px;letter-spacing:-.2px">AI đang học...</div>
+      <div style="font-size:12px;color:var(--text3);font-weight:500;margin-bottom:16px" id="trainLoadingSubtext">Đang ghi prompt vào bộ nhớ</div>
+      <div style="height:3px;border-radius:100px;background:var(--border);overflow:hidden">
+        <div id="trainLoadingBar" style="height:100%;border-radius:100px;background:var(--grad-ai);width:0%;transition:width .4s ease"></div>
+      </div>
+      <div id="trainLoadingPct" style="font-size:11px;font-weight:800;margin-top:6px;background:var(--grad-ai);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent">0%</div>
+    </div>`;
+    document.body.appendChild(el);
+  }
+  const bar = document.getElementById('trainLoadingBar');
+  const pct = document.getElementById('trainLoadingPct');
+  const sub = document.getElementById('trainLoadingSubtext');
+  if (show) {
+    el.style.display = 'flex';
+    let p = 0;
+    clearInterval(_tlInterval);
+    _tlInterval = setInterval(() => {
+      p += Math.random() * 8;
+      if (p > 88) p = 88;
+      if(bar) bar.style.width = p + '%';
+      if(pct) pct.textContent = Math.floor(p) + '%';
+      if(sub) sub.textContent = p > 60 ? 'Kết nối Knowledge Base...' : p > 30 ? 'Mã hoá và lưu trữ...' : 'Ghi prompt vào bộ nhớ';
+    }, 280);
+  } else {
+    clearInterval(_tlInterval);
+    if(bar) bar.style.width = '100%';
+    if(pct) pct.textContent = '100%';
+    if(sub) sub.textContent = 'Hoàn tất! AI đã ghi nhớ ✓';
+    setTimeout(() => { el.style.display = 'none'; }, 700);
+  }
+}
+
+// ── Toast ──
+
+// ════════════════════════
+//  INIT
+// ════════════════════════
+
+// ── Test Panel ──────────────────────────────────────────────
+function openTrainTestPanel() {
+  const panel = document.getElementById('trainTestPanel');
+  if(panel) { panel.style.display='block'; panel.scrollIntoView({behavior:'smooth',block:'nearest'}); }
+  const btn = document.getElementById('trainTestBtn');
+  if(btn) { btn.style.color='var(--green)'; btn.style.borderColor='var(--green)'; btn.style.background='rgba(16,185,129,.1)'; }
+}
+
+// Quick test: mở panel + chạy test ngay, không cần nhập câu hỏi
+async function quickTrainTest() {
+  const content = (document.getElementById('trainContent').value||'').trim();
+  if(!content){ showToast('warning','Chưa nhập nội dung','Nhập prompt trước khi test'); return; }
+  // Clear custom question so auto-detect runs
+  const tq = document.getElementById('trainTestQuestion');
+  if(tq) tq.value = '';
+  // Open panel first
+  openTrainTestPanel();
+  // Small delay for panel animation, then run
+  setTimeout(()=>runTrainTest(), 80);
+}
+function closeTrainTestPanel() {
+  const panel = document.getElementById('trainTestPanel');
+  if(panel) panel.style.display='none';
+  const btn = document.getElementById('trainTestBtn');
+  if(btn) { btn.style.color=''; btn.style.borderColor=''; btn.style.background=''; }
+}
+async function runTrainTest() {
+  const typeEl = document.querySelector('input[name="trainType"]:checked');
+  const type = typeEl ? typeEl.value : 'other';
+  const content = (document.getElementById('trainContent').value||'').trim();
+  const question = (document.getElementById('trainQuestion')?.value||'').trim();
+  const customQ = (document.getElementById('trainTestQuestion')?.value||'').trim();
+
+  if(!content){ showToast('warning','Chưa nhập nội dung','Nhập prompt trước khi test'); return; }
+
+  const thinking = document.getElementById('trainThinking');
+  const result = document.getElementById('trainTestResult');
+  const empty = document.getElementById('trainTestEmpty');
+  const runBtn = document.getElementById('trainTestRunBtn');
+  const badge = document.getElementById('trainTestStatusBadge');
+
+  if(thinking) thinking.style.display='flex';
+  if(result) result.style.display='none';
+  if(empty) empty.style.display='none';
+  if(runBtn) { runBtn.disabled=true; runBtn.style.opacity='.6'; }
+  if(badge) badge.style.display='flex';
+
+  const t0 = Date.now();
+  let testQ = customQ || question || 'Tóm tắt nội dung bạn vừa được học.';
+  if(!customQ && type==='system') testQ='Dựa trên hướng dẫn, giới thiệu ngắn vai trò của bạn.';
+
+  const tempPrompt = {type, question:question||'', content, note:''};
+  const all = [...(trainPromptsCache||[]), tempPrompt];
   const trainData = {
-    behavior:   allPrompts.filter(p=>p.type==='system').map(p=>p.content),
-    complaints: allPrompts.filter(p=>p.type==='complaint').map(p=>p.content),
-    rules:      allPrompts.filter(p=>p.type==='rule').map(p=>p.content),
-    qa:         allPrompts.filter(p=>p.type==='qa'&&p.content).map(p=>({q:p.question||'',a:p.content})),
-    products:   allPrompts.filter(p=>p.type==='product').map(p=>p.content),
+    behavior: all.filter(p=>p.type==='system').map(p=>p.content),
+    complaints: all.filter(p=>p.type==='complaint').map(p=>p.content),
+    rules: all.filter(p=>p.type==='rule').map(p=>p.content),
+    qa: all.filter(p=>p.type==='qa'&&p.content).map(p=>({q:p.question||'',a:p.content})),
+    products: all.filter(p=>p.type==='product').map(p=>p.content),
   };
   const hasData = Object.values(trainData).some(v=>v.length>0);
 
   try {
-    const res = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({
-      action:'gemini_chat',
-      question: testQ,
-      context: 'Hệ thống kho hàng hoàn XIXA — chế độ test prompt',
-      history:[],
-      ...(hasData ? {trainData} : {})
+    const res = await fetch(WEB_APP_URL, {method:'POST', body:JSON.stringify({
+      action:'gemini_chat', question:testQ,
+      context:'Test chế độ Train AI XIXA', history:[],
+      ...(hasData?{trainData}:{})
     })});
     const data = await res.json();
-    testResult.textContent = data.result==='success' ? (data.answer||'Không có phản hồi.') : ('⚠️ ' + (data.message||''));
-  } catch(e){ testResult.textContent = '⚠️ Lỗi: ' + e.message; }
+    const elapsed = ((Date.now()-t0)/1000).toFixed(1);
+    if(thinking) thinking.style.display='none';
+    if(result) result.style.display='block';
+    const content2 = document.getElementById('trainTestContent');
+    const timeEl = document.getElementById('trainTestTime');
+    if(content2) content2.textContent = data.result==='success'?(data.answer||'—'):('⚠️ '+(data.message||''));
+    if(timeEl) timeEl.textContent = elapsed+'s';
+  } catch(e) {
+    if(thinking) thinking.style.display='none';
+    if(result) result.style.display='block';
+    const content2 = document.getElementById('trainTestContent');
+    if(content2) content2.textContent = '⚠️ Lỗi kết nối: '+e.message;
+  }
+  if(runBtn) { runBtn.disabled=false; runBtn.style.opacity='1'; }
+  if(badge) badge.style.display='none';
+}
+function copyTrainTestResult() {
+  const el = document.getElementById('trainTestContent');
+  if(!el||!el.textContent) return;
+  navigator.clipboard.writeText(el.textContent).then(()=>showToast('success','Đã copy',''));
 }
 
+// ── Silent background pre-load of train prompts cache ────────
+async function loadTrainPromptsSilent(){
+  try {
+    const res = await fetch(WEB_APP_URL, { method:'POST', body: JSON.stringify({action:'get_train_prompts'}) });
+    const data = await res.json();
+    if(data.result === 'success') {
+      trainPromptsCache = data.data || [];
+      if(typeof updateTrainStats === 'function') updateTrainStats();
+    }
+  } catch(e){ /* silent fail */ }
+}
+
+// ── Backwards compat ────────────────────────────────────────
+function scrollTrainList(dir){
+  const el = document.getElementById('trainKbListWrap');
+  if(el) el.scrollBy({top: dir*120, behavior:'smooth'});
+}
+function onEditTrainTypeChange(el){
+  const qb = document.getElementById('editQABlock');
+  if(qb) qb.style.display = el.value==='qa'?'block':'none';
+}
+// Update app stat counters on every render
+const _origRTL = renderTrainList;
+renderTrainList = function(h){
+  const s=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v;};
+  s('trainCountNum',trainPromptsCache.length);
+  s('tStatTotal',trainPromptsCache.length);
+  s('tStatSystem',trainPromptsCache.filter(p=>p.type==='system').length);
+  s('tStatQA',trainPromptsCache.filter(p=>p.type==='qa').length);
+  s('tStatRule',trainPromptsCache.filter(p=>p.type==='rule').length);
+  s('tStatProduct',trainPromptsCache.filter(p=>p.type==='product').length);
+  s('tStatComplaint',trainPromptsCache.filter(p=>p.type==='complaint').length);
+  _origRTL(h);
+};
+</script>
+
+<script>
 // ================================================================
 // AUDIT TRAIL v2 — Lưu trên Google Sheets (AUDIT_LOG)
 // ✓ Mã hoá XOR+Base64 — ai vào Sheets chỉ thấy ký tự ngẫu nhiên
@@ -16328,99 +16823,152 @@ async function auditAskAI() {
 
 const VectorDB = (function(){
 
-  // ── Stopwords tiếng Việt — từ quá phổ biến, không mang nghĩa ──
-  const STOP = new Set(['là','và','của','cho','có','thì','với','trong','để','được',
-    'này','các','một','tôi','bạn','hay','khi','về','từ','ra','vào','đã','sẽ','đang',
-    'không','tất','cả','theo','lại','bị','do','nên','thế','nào','cái','những','mà',
-    'rồi','vẫn','đó','đây','thêm','sau','trước','xem','hỏi','hết','lên','xuống',
-    'qua','tại','vì','nếu','thì','mình','họ','bao','nhiêu','như','vậy','cũng']);
+  // ── Stopwords tiếng Việt (đã bỏ dấu để match với normalize) ──
+  const STOP = new Set([
+    'la','va','cua','cho','co','thi','voi','trong','de','duoc','nay','cac','mot',
+    'toi','ban','hay','khi','ve','tu','ra','vao','da','se','dang','khong','tat',
+    'ca','theo','lai','bi','do','nen','the','nao','cai','nhung','ma','roi','van',
+    'do','day','them','sau','truoc','xem','hoi','het','len','xuong','qua','tai',
+    'vi','neu','minh','ho','bao','nhieu','nhu','vay','cung','o','a','va','an','i',
+    'gi','sao','dau','phai','lam','duoc','rang','y','la','nhe','a','oi','ah',
+    // English noise
+    'the','a','an','is','of','to','for','and','or','in','on','it'
+  ]);
+
+  // ── Bỏ dấu tiếng Việt (để "Sản phẩm" match "san pham") ──
+  function removeDiacritics(str){
+    return String(str||'')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/đ/g, 'd').replace(/Đ/g, 'D');
+  }
 
   function normalize(text){
-    return String(text||'').toLowerCase().trim();
+    return removeDiacritics(String(text||'').toLowerCase())
+      .replace(/[^a-z0-9\s]/g, ' ')   // bỏ ký tự đặc biệt
+      .replace(/\s+/g, ' ')
+      .trim();
   }
 
-  // ── Tách unigrams + bigrams, lọc stopwords ────────────────
-  function ngramsFiltered(text){
-    const words = normalize(text)
-      .split(/\s+/)
-      .filter(w => w.length > 1 && !STOP.has(w));
-    const result = new Set(words);
-    for(let i=0;i<words.length-1;i++){
-      result.add(words[i]+' '+words[i+1]);
+  // ── Tách tokens: unigrams + bigrams, loại stopword ──
+  function tokenize(text){
+    const words = normalize(text).split(/\s+/).filter(w => w.length > 1 && !STOP.has(w));
+    const grams = new Set();
+    words.forEach(w => grams.add(w));
+    for(let i=0; i<words.length-1; i++){
+      grams.add(words[i] + '_' + words[i+1]);  // bigram
     }
-    return result;
+    return { words, grams };
   }
 
-  // ── Jaccard similarity thuần ──────────────────────────────
+  // Backward compat — vẫn xuất ra để cũ
+  function ngramsFiltered(text){ return tokenize(text).grams; }
+
+  // ── Jaccard giữ lại (cho backward compat / debug) ──
   function jaccard(setA, setB){
-    if(!setA.size||!setB.size) return 0;
-    let inter=0;
-    setA.forEach(t=>{ if(setB.has(t)) inter++; });
-    return inter/(setA.size+setB.size-inter);
+    if(!setA.size || !setB.size) return 0;
+    let inter = 0;
+    setA.forEach(t => { if(setB.has(t)) inter++; });
+    return inter / (setA.size + setB.size - inter);
   }
 
-  // ── Cache ngrams ──────────────────────────────────────────
-  let _cache=[], _cacheVer=0;
+  // ── Cache: IDF + per-prompt tokens ──
+  let _cache = [], _cacheVer = '', _idf = {};
 
   function buildCache(prompts){
-    if(prompts.length===_cacheVer) return;
-    _cache = prompts.map(p=>{
-      const text=[p.question||'',p.content||'',p.note||''].join(' ');
-      return { p, grams: ngramsFiltered(text) };
+    const ver = prompts.length + '|' + (prompts[0]?.time || '') + '|' + (prompts[prompts.length-1]?.time || '');
+    if(ver === _cacheVer) return;
+
+    // 1) Tokenize tất cả
+    _cache = prompts.map(p => {
+      const text = [p.question||'', p.content||'', p.note||''].join(' ');
+      const tok = tokenize(text);
+      return { p, grams: tok.grams, words: tok.words };
     });
-    _cacheVer = prompts.length;
+
+    // 2) Tính IDF — token nào xuất hiện ở ít prompt thì quan trọng hơn
+    const N = _cache.length || 1;
+    const df = {};
+    _cache.forEach(({grams}) => {
+      grams.forEach(g => { df[g] = (df[g]||0) + 1; });
+    });
+    _idf = {};
+    Object.keys(df).forEach(g => {
+      // IDF với smoothing: log((N+1)/(df+1)) + 1, luôn dương
+      _idf[g] = Math.log((N + 1) / (df[g] + 1)) + 1;
+    });
+
+    _cacheVer = ver;
   }
 
-  // ── Tìm prompts thực sự liên quan ────────────────────────
-  function findRelevant(query, prompts, topK=6){
+  // ── Score theo TF-IDF cosine-lite (overlap có trọng số IDF) ──
+  function scoreIDF(queryGrams, promptGrams){
+    if(!queryGrams.size || !promptGrams.size) return 0;
+    let score = 0;
+    queryGrams.forEach(g => {
+      if(promptGrams.has(g)) {
+        // Bigram quan trọng hơn unigram
+        const w = g.includes('_') ? 2.0 : 1.0;
+        score += (_idf[g] || 1) * w;
+      }
+    });
+    // Normalize nhẹ theo độ dài query để câu hỏi dài/ngắn so sánh được
+    return score / Math.sqrt(queryGrams.size);
+  }
+
+  // ── Tìm prompts liên quan ──
+  // - system prompts: LUÔN inject toàn bộ (hành vi cốt lõi)
+  // - rules: LUÔN inject toàn bộ (quy tắc nghiệp vụ phải áp dụng mọi lúc)
+  // - product/complaint/qa: lọc theo query với threshold thấp + fallback hào phóng
+  function findRelevant(query, prompts, topK){
+    topK = topK || 8;
     if(!prompts.length) return [];
     buildCache(prompts);
 
-    const THRESHOLD = 0.04; // Hạ threshold để bắt được nhiều hơn
-    const qGrams = ngramsFiltered(query);
+    const qTok = tokenize(query);
+    const qGrams = qTok.grams;
 
-    const scored = _cache.map(({p, grams})=>({
-      p, score: jaccard(qGrams, grams)
-    })).sort((a,b)=>b.score-a.score);
+    // ── Tách system + rule ra (luôn lấy hết) ──
+    const alwaysInclude = prompts.filter(p =>
+      p.type === 'system' || p.type === 'rule'
+    );
+    const alwaysIdx = new Set(alwaysInclude.map(p => p.rowIndex));
 
-    // Log để debug
-    console.log('[VectorDB] query tokens:', [...qGrams].join(', '));
-    console.log('[VectorDB] scores:', scored.map(s=>({
-      type:s.p.type,
-      preview:(s.p.question||s.p.content||'').substring(0,35),
-      score:s.score.toFixed(3),
-      pick: s.score>=THRESHOLD?'✓':'✗'
-    })));
+    // ── Phần còn lại: scoring để chọn top-K ──
+    const candidatePool = _cache.filter(c => !alwaysIdx.has(c.p.rowIndex));
 
-    // FIX: System prompts luôn được inject — đây là hành vi cốt lõi,
-    // không phụ thuộc vào mức độ liên quan với câu hỏi
-    const systemPrompts = prompts.filter(p => p.type === 'system');
-
-    // Các loại khác: lọc theo threshold
-    const others = scored
-      .filter(s => s.p.type !== 'system' && s.score >= THRESHOLD)
-      .slice(0, topK)
-      .map(s => s.p);
-
-    // FIX: Nếu không match gì cả (others rỗng), lấy top-3 có score cao nhất
-    // thay vì trả về rỗng → AI sẽ không "quên" kiến thức đã train
-    const sysSet = new Set(systemPrompts.map(p => p.rowIndex));
-    const nonSysFiltered = others.filter(p => !sysSet.has(p.rowIndex));
-
-    if(nonSysFiltered.length === 0 && scored.length > 0){
-      // Fallback: lấy top-3 non-system có score cao nhất dù không đạt threshold
-      const fallback = scored
-        .filter(s => s.p.type !== 'system' && s.score > 0)
-        .slice(0, 3)
-        .map(s => s.p)
-        .filter(p => !sysSet.has(p.rowIndex));
-      return [...systemPrompts, ...fallback];
+    // Query rỗng / quá ngắn → trả về hết (không có gì để filter)
+    if(qGrams.size === 0){
+      return [...alwaysInclude, ...candidatePool.map(c => c.p)];
     }
 
-    return [...systemPrompts, ...nonSysFiltered];
+    const scored = candidatePool.map(({p, grams}) => ({
+      p,
+      score: scoreIDF(qGrams, grams)
+    })).sort((a,b) => b.score - a.score);
+
+    // Threshold tương đối: 30% của score cao nhất (động, không fix cứng)
+    const maxScore = scored[0]?.score || 0;
+    const threshold = Math.max(maxScore * 0.25, 0.15);
+
+    let picked = scored.filter(s => s.score >= threshold).slice(0, topK).map(s => s.p);
+
+    // Fallback: nếu không có prompt nào pass threshold → lấy top-3 có score > 0
+    if(picked.length === 0){
+      picked = scored.filter(s => s.score > 0).slice(0, 3).map(s => s.p);
+    }
+
+    // Fallback 2: nếu vẫn rỗng → lấy hết QA + 3 product/complaint đầu (để AI vẫn có context)
+    if(picked.length === 0){
+      const qa = candidatePool.filter(c => c.p.type === 'qa').slice(0, 5).map(c => c.p);
+      const other = candidatePool.filter(c => c.p.type !== 'qa').slice(0, 3).map(c => c.p);
+      picked = [...qa, ...other];
+    }
+
+    return [...alwaysInclude, ...picked];
   }
 
-  return { findRelevant, ngramsFiltered, jaccard };
+  return { findRelevant, ngramsFiltered, jaccard, tokenize, normalize };
 })();
 
 // ── UI badge cho Vector DB status ─────────────────────────────
@@ -16445,64 +16993,111 @@ function _showVectorDBBadge(total, selected){
 }
 
 // ── Auto-inject — dùng Vector DB để chọn prompt liên quan ──────
+// Quy tắc:
+//   - system  : LUÔN inject TẤT CẢ (định nghĩa hành vi AI)
+//   - rule    : LUÔN inject TẤT CẢ (quy tắc nghiệp vụ phải áp dụng mọi lúc)
+//   - product : VectorDB chọn top liên quan, nếu query ngắn → lấy hết
+//   - complaint: VectorDB chọn top liên quan, nếu user nhắc "khiếu nại/kn/soạn" → lấy hết
+//   - qa      : VectorDB chọn top liên quan
 (function(){
   const _orig = window.fetch;
+
+  // Helper: detect khi nào nên inject hết complaint
+  function _wantsAllComplaints(q){
+    const s = (q||'').toLowerCase();
+    return /khi[ếe]u\s*n[ạa]i|soạn\s*kn|so[aạ]n\s*khiếu|complaint|draft|phản\s*hồi|sàn|sàn/i.test(s);
+  }
+
   window.fetch = async function(url, opts) {
-    if(url === WEB_APP_URL && opts && opts.body && trainPromptsCache.length > 0) {
+    if(url !== WEB_APP_URL || !opts || !opts.body) return _orig.call(this, url, opts);
+    if(!Array.isArray(trainPromptsCache) || trainPromptsCache.length === 0) return _orig.call(this, url, opts);
+
+    let body;
+    try { body = JSON.parse(opts.body); } catch(e){ return _orig.call(this, url, opts); }
+
+    if(body.action !== 'gemini_chat' && body.action !== 'gemini_vision') {
+      return _orig.call(this, url, opts);
+    }
+
+    try {
+      const query = body.question || body.context || '';
+      const isShortQuery = !query || query.length < 30;
+      const wantsComplaints = _wantsAllComplaints(query);
+
+      // Vector search — chọn prompts liên quan từ TẤT CẢ types
+      // (VectorDB tự inject hết system+rule, phần còn lại lọc theo relevance)
+      const relevant = VectorDB.findRelevant(query, trainPromptsCache, 10);
+      _showVectorDBBadge(trainPromptsCache.length, relevant.length);
+
+      // Tách theo loại
+      const systemAll  = trainPromptsCache.filter(p => p.type === 'system');
+      const rulesAll   = trainPromptsCache.filter(p => p.type === 'rule');
+
+      // Non-system/rule: từ VectorDB
+      const relevantPicked = relevant.filter(p => p.type !== 'system' && p.type !== 'rule');
+      let productPicked    = relevantPicked.filter(p => p.type === 'product');
+      let complaintPicked  = relevantPicked.filter(p => p.type === 'complaint');
+      const qaPicked       = relevantPicked.filter(p => p.type === 'qa' && p.content);
+
+      // Nếu query ngắn / chung chung → bổ sung thêm product, complaint
+      if(isShortQuery){
+        // Lấy thêm tất cả product (vì query ngắn không đủ tín hiệu match)
+        const allProducts = trainPromptsCache.filter(p => p.type === 'product');
+        productPicked = _mergeByRow(productPicked, allProducts);
+      }
+
+      // Nếu nhắc đến khiếu nại → lấy HẾT complaint
+      if(wantsComplaints){
+        const allComplaints = trainPromptsCache.filter(p => p.type === 'complaint');
+        complaintPicked = _mergeByRow(complaintPicked, allComplaints);
+      }
+
+      // ── Build trainData từ ĐẦU — không merge với existing để tránh duplicate ──
+      // Nguồn dữ liệu duy nhất: trainPromptsCache + VectorDB output
+      const mergedTrain = {
+        behavior: [
+          // Meta rule format luôn có
+          'Khi cần bôi đen / nhấn mạnh thông tin, dùng **text** (hai dấu sao bao quanh). Ví dụ: **Bị bẩn**, **X1216 Navy**. KHÔNG dùng <b> hay một dấu sao.',
+          ...systemAll.map(p => p.content).filter(Boolean)
+        ],
+        rules:      rulesAll.map(p => p.content).filter(Boolean),
+        products:   productPicked.map(p => p.content).filter(Boolean),
+        complaints: complaintPicked.map(p => p.content).filter(Boolean),
+        qa:         qaPicked.map(p => ({ q: p.question || '', a: p.content }))
+      };
+
+      // Debug log (dev console)
       try {
-        const body = JSON.parse(opts.body);
-        if(body.action === 'gemini_chat' || body.action === 'gemini_vision') {
+        const dbg = {
+          query: query.slice(0, 80),
+          behavior: mergedTrain.behavior.length,
+          rules: mergedTrain.rules.length,
+          products: mergedTrain.products.length,
+          complaints: mergedTrain.complaints.length,
+          qa: mergedTrain.qa.length
+        };
+        console.log('[Train AI inject]', dbg);
+      } catch(e){}
 
-          // Câu hỏi để tìm prompt liên quan
-          const query = body.question || body.context || '';
-
-          // Vector search — lấy prompts liên quan (system luôn được include)
-          const relevant = VectorDB.findRelevant(query, trainPromptsCache, 6);
-          _showVectorDBBadge(trainPromptsCache.length, relevant.length);
-
-          // FIX: Nếu body đã có trainData (từ code tĩnh), MERGE thêm vào
-          // thay vì ghi đè. System prompts luôn được giữ nguyên.
-          const existingTrain = body.trainData || {};
-
-          const mergedTrain = {
-            // behavior: giữ existing + thêm từ relevant nếu chưa có
-            behavior: [
-              'Khi cần bôi đen / nhấn mạnh thông tin, dùng **text** (hai dấu sao bao quanh). Ví dụ: **Bị bẩn**, **X1216 Navy**. KHÔNG dùng <b> hay một dấu sao.',
-              ...(existingTrain.behavior || []),
-              ...relevant.filter(p => p.type==='system')
-                .map(p => p.content)
-                .filter(c => !(existingTrain.behavior||[]).includes(c))
-            ],
-            // qa, rules, products, complaints: hợp nhất, loại trùng
-            qa: _mergeArr(existingTrain.qa, relevant.filter(p => p.type==='qa' && p.content).map(p => ({q:p.question||'',a:p.content}))),
-            rules: _mergeStrArr(existingTrain.rules, relevant.filter(p => p.type==='rule').map(p => p.content)),
-            products: _mergeStrArr(existingTrain.products, relevant.filter(p => p.type==='product').map(p => p.content)),
-            complaints: _mergeStrArr(existingTrain.complaints, relevant.filter(p => p.type==='complaint').map(p => p.content)),
-          };
-
-          const hasData = Object.values(mergedTrain).some(v => v.length > 0);
-          if(hasData) body.trainData = mergedTrain;
-
-          opts = Object.assign({}, opts, { body: JSON.stringify(body) });
-        }
-      } catch(e){ console.warn('[VectorDB interceptor error]', e); }
+      const hasData = Object.values(mergedTrain).some(v => v.length > 0);
+      if(hasData) {
+        body.trainData = mergedTrain;
+        opts = Object.assign({}, opts, { body: JSON.stringify(body) });
+      }
+    } catch(e){
+      console.warn('[VectorDB interceptor error]', e);
     }
     return _orig.call(this, url, opts);
   };
 
-  // Helper: merge array of strings, deduplicate
-  function _mergeStrArr(existing, incoming){
-    const base = existing || [];
-    const set = new Set(base);
-    (incoming || []).forEach(v => { if(!set.has(v)){ set.add(v); base.push(v); } });
-    return base;
-  }
-  // Helper: merge array of {q,a} objects, deduplicate by q
-  function _mergeArr(existing, incoming){
-    const base = existing || [];
-    const keys = new Set(base.map(x => x.q));
-    (incoming || []).forEach(v => { if(!keys.has(v.q)){ keys.add(v.q); base.push(v); } });
-    return base;
+  // Merge 2 mảng prompt theo rowIndex (giữ thứ tự, không trùng)
+  function _mergeByRow(base, extra){
+    const seen = new Set((base || []).map(p => p.rowIndex));
+    const out = [...(base || [])];
+    (extra || []).forEach(p => {
+      if(!seen.has(p.rowIndex)) { seen.add(p.rowIndex); out.push(p); }
+    });
+    return out;
   }
 })();
 </script>
